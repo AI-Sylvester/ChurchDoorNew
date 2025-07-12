@@ -439,15 +439,27 @@ const exportPDF = () => {
               <TextField label="Cemetery Number" value={editData.cemetery_number || ''} onChange={(e) => handleEditChange('cemetery_number', e.target.value)} fullWidth />
               <TextField label="Old Card Number" value={editData.old_card_number || ''} onChange={(e) => handleEditChange('old_card_number', e.target.value)} fullWidth />
 
-              <Box sx={{ gridColumn: 'span 2', textAlign: 'center' }}>
-                {editFile ? (
-                  <img src={URL.createObjectURL(editFile)} alt="Selected Preview" style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }} />
-                ) : editData.family_pic ? (
-                  <img src={`${API_BASE_URL}/uploads/${editData.family_pic}`} alt="Current Family Pic" style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }} />
-                ) : (
-                  <Typography color="text.secondary">No Image Available</Typography>
-                )}
-              </Box>
+             <Box sx={{ gridColumn: 'span 2', textAlign: 'center' }}>
+  {editFile ? (
+    <img
+      src={URL.createObjectURL(editFile)}
+      alt="Selected Preview"
+      style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }}
+    />
+  ) : editData.family_pic ? (
+    <img
+      src={
+        editData.family_pic.startsWith('http')
+          ? editData.family_pic
+          : `${API_BASE_URL}/uploads/${editData.family_pic}`
+      }
+      alt="Current Family Pic"
+      style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }}
+    />
+  ) : (
+    <Typography color="text.secondary">No Image Available</Typography>
+  )}
+</Box>
 
               <input
                 type="file"

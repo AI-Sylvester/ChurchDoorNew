@@ -154,10 +154,9 @@ router.get('/:familyId', authMiddleware, async (req, res) => {
 router.put('/:familyId', authMiddleware, upload.single('family_pic'), async (req, res) => {
   const { familyId } = req.params;
   const updateData = req.body;
-
-  if (req.file) {
-    updateData.family_pic = req.file.filename;
-  }
+if (req.file) {
+  updateData.family_pic = req.file.path; // Cloudinary provides full URL
+}
 
   try {
     // Base update fields without family_pic
@@ -201,14 +200,13 @@ router.put('/:familyId', authMiddleware, upload.single('family_pic'), async (req
       updateData.old_card_number,
     ];
 
-    if (req.file) {
-      setClause += ', family_pic = $18';
-      values.push(updateData.family_pic);  // 18th value
-      values.push(familyId);                // 19th value - for WHERE
-    } else {
-      values.push(familyId);                // 18th value - for WHERE
-    }
-
+   if (req.file) {
+  setClause += ', family_pic = $18';
+  values.push(updateData.family_pic);  // Cloudinary image URL
+  values.push(familyId);               // $19
+} else {
+  values.push(familyId);               // $18
+}
     const familyIdPlaceholder = req.file ? '$19' : '$18';
 
     const query = `

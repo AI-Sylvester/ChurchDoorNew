@@ -17,8 +17,6 @@ import {
   Paper,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import API_BASE_URL from '../config';
-import axios from 'axios';
 
 import SpaceDashboardRoundedIcon from '@mui/icons-material/SpaceDashboardRounded';
 import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';
@@ -28,33 +26,21 @@ import GroupRoundedIcon from '@mui/icons-material/GroupRounded';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import Diversity3RoundedIcon from '@mui/icons-material/Diversity3Rounded';
 import MapRoundedIcon from '@mui/icons-material/MapRounded';
-import CloudSyncRoundedIcon from '@mui/icons-material/CloudSyncRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
-import SyncRoundedIcon from '@mui/icons-material/SyncRounded';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 
 const Layout = ({ children }) => {
   const [value, setValue] = useState(0);
   const [anchorEl, setAnchorEl] = useState(null);
-  const [syncing, setSyncing] = useState(false);
+ 
   const [openLogoutDialog, setOpenLogoutDialog] = useState(false);
   const scrollRef = useRef(null);
   const navigate = useNavigate();
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(false);
 
-  const handleSync = async () => {
-    try {
-      setSyncing(true);
-      const res = await axios.post(`${API_BASE_URL}/sync`);
-      alert(res.data.message || '✅ Sync completed');
-    } catch (err) {
-      alert('❌ Sync failed');
-    } finally {
-      setSyncing(false);
-    }
-  };
+
     const handleLogout = () => setOpenLogoutDialog(true);
 
   const navItems = [
@@ -66,27 +52,13 @@ const Layout = ({ children }) => {
     { path: '/add-member', icon: <PersonAddAltRoundedIcon />, label: 'Member' },
        { path: '/memlist', icon: <GroupRoundedIcon />, label: 'Members' },
        { path: '/anbiyamfam', icon: <Diversity3RoundedIcon />, label: 'Anbiyam' },
-       { path: 'sync', icon: <CloudSyncRoundedIcon />, label: 'Sync', action: handleSync },
-    { path: 'logout', icon: <LogoutRoundedIcon color="error" />, label: 'Logout', action: handleLogout },
+        { path: 'logout', icon: <LogoutRoundedIcon color="error" />, label: 'Logout', action: handleLogout },
   ];
 
   const handleAvatarClick = (e) => setAnchorEl(e.currentTarget);
   const handleCloseMenu = () => setAnchorEl(null);
 
-  const handleLogoutConfirm = async () => {
-    try {
-      setSyncing(true);
-      const res = await axios.post(`${API_BASE_URL}/sync`);
-      alert(res.data.message || '✅ Synced before logout');
-    } catch (err) {
-      console.error('Sync failed:', err);
-    } finally {
-      setSyncing(false);
-      localStorage.removeItem('token');
-      navigate('/login');
-    }
-  };
-
+ 
 
   const handleNavClick = (item, index) => {
     setValue(index);
@@ -124,21 +96,21 @@ const Layout = ({ children }) => {
   return (
     <Box sx={{ pb: 9 }}>
       {/* Top App Bar */}
-      <AppBar
-        position="fixed"
-        sx={{
-          background: 'linear-gradient(to right, #ededda, #c5c5be)',
-          color: '#1e1e2f',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-        }}
-      >
+    <AppBar
+  position="fixed"
+  sx={{
+    backgroundColor: '#f7e600', // Vatican yellow
+    color: '#000', // Black text
+    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+  }}
+>
         <Toolbar sx={{ justifyContent: 'space-between' }}>
           <Typography variant="h6" fontWeight={800}>
             Church Door
           </Typography>
           <Box>
             <IconButton onClick={handleAvatarClick}>
-              <Avatar sx={{ bgcolor: '#42a5f5' }}>A</Avatar>
+              <Avatar sx={{ bgcolor: '#0a151fff' }}>A</Avatar>
             </IconButton>
             <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleCloseMenu}>
               <MenuItem onClick={handleLogout}>Logout</MenuItem>
@@ -216,17 +188,9 @@ const Layout = ({ children }) => {
               setOpenLogoutDialog(false);
             }}
           >
-            Logout Without Sync
+            Logout 
           </Button>
-          <Button
-            variant="contained"
-            startIcon={<SyncRoundedIcon />}
-            onClick={handleLogoutConfirm}
-            disabled={syncing}
-            sx={{ backgroundColor: '#42a5f5', color: '#fff' }}
-          >
-            {syncing ? 'Syncing...' : 'Sync & Logout'}
-          </Button>
+      
         </DialogActions>
       </Dialog>
     </Box>

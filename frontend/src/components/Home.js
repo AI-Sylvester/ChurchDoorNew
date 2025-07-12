@@ -96,88 +96,91 @@ const Home = () => {
 </Paper>
 
       {/* Metric Cards */}
-      <Grid container spacing={4}>
-        <Grid item xs={12} sm={6} md={4}>
-          <Card
-            sx={{
-              borderRadius: 3,
-              background: 'linear-gradient(to bottom right, #e3f2fd, #bbdefb)',
-              boxShadow: 3,
-              p: 2
-            }}
-          >
-            <CardContent>
-              <Box display="flex" alignItems="center" gap={2}>
-                <Avatar sx={metricStyles.iconContainer}>
-                  <HomeWorkIcon />
-                </Avatar>
-                <Box>
-                  <Typography variant="subtitle1" fontWeight={600}>
-                    Total Families
-                  </Typography>
-                  <Typography sx={metricStyles.value} color="primary.dark">
-                    {counts.families}
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+{/* Metric Cards */}
+<Box display="flex" justifyContent="center">
+  <Grid container spacing={4} justifyContent="center">
+    <Grid item xs={12} sm={8} md={4}>
+      <Card
+        sx={{
+          borderRadius: 3,
+          background: 'linear-gradient(to bottom right, #e3f2fd, #bbdefb)',
+          boxShadow: 3,
+          p: 2
+        }}
+      >
+        <CardContent>
+          <Box display="flex" alignItems="center" gap={2}>
+            <Avatar sx={metricStyles.iconContainer}>
+              <HomeWorkIcon />
+            </Avatar>
+            <Box>
+              <Typography variant="subtitle1" fontWeight={600}>
+                Total Families
+              </Typography>
+              <Typography sx={metricStyles.value} color="primary.dark">
+                {counts.families}
+              </Typography>
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
+    </Grid>
 
-        <Grid item xs={12} sm={6} md={4}>
-          <Card
-            sx={{
-              borderRadius: 3,
-              background: 'linear-gradient(to bottom right, #fce4ec, #f8bbd0)',
-              boxShadow: 3,
-              p: 2
-            }}
-          >
-            <CardContent>
-              <Box display="flex" alignItems="center" gap={2}>
-                <Avatar sx={{ ...metricStyles.iconContainer, backgroundColor: '#ad1457' }}>
-                  <GroupIcon />
-                </Avatar>
-                <Box>
-                  <Typography variant="subtitle1" fontWeight={600}>
-                    Total Members
-                  </Typography>
-                  <Typography sx={metricStyles.value} color="error.dark">
-                    {counts.members}
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+    <Grid item xs={12} sm={8} md={4}>
+      <Card
+        sx={{
+          borderRadius: 3,
+          background: 'linear-gradient(to bottom right, #fce4ec, #f8bbd0)',
+          boxShadow: 3,
+          p: 2
+        }}
+      >
+        <CardContent>
+          <Box display="flex" alignItems="center" gap={2}>
+            <Avatar sx={{ ...metricStyles.iconContainer, backgroundColor: '#ad1457' }}>
+              <GroupIcon />
+            </Avatar>
+            <Box>
+              <Typography variant="subtitle1" fontWeight={600}>
+                Total Members
+              </Typography>
+              <Typography sx={metricStyles.value} color="error.dark">
+                {counts.members}
+              </Typography>
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
+    </Grid>
 
-        <Grid item xs={12} sm={6} md={4}>
-          <Card
-            sx={{
-              borderRadius: 3,
-              background: 'linear-gradient(to bottom right, #ede7f6, #d1c4e9)',
-              boxShadow: 3,
-              p: 2
-            }}
-          >
-            <CardContent>
-              <Box display="flex" alignItems="center" gap={2}>
-                <Avatar sx={{ ...metricStyles.iconContainer, backgroundColor: '#6a1b9a' }}>
-                  <LocationCityIcon />
-                </Avatar>
-                <Box>
-                  <Typography variant="subtitle1" fontWeight={600}>
-                    Total Anbiyams
-                  </Typography>
-                  <Typography sx={metricStyles.value} color="secondary.dark">
-                    {counts.anbiyams}
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+    <Grid item xs={12} sm={8} md={4}>
+      <Card
+        sx={{
+          borderRadius: 3,
+          background: 'linear-gradient(to bottom right, #ede7f6, #d1c4e9)',
+          boxShadow: 3,
+          p: 2
+        }}
+      >
+        <CardContent>
+          <Box display="flex" alignItems="center" gap={2}>
+            <Avatar sx={{ ...metricStyles.iconContainer, backgroundColor: '#6a1b9a' }}>
+              <LocationCityIcon />
+            </Avatar>
+            <Box>
+              <Typography variant="subtitle1" fontWeight={600}>
+                Total Anbiyams
+              </Typography>
+              <Typography sx={metricStyles.value} color="secondary.dark">
+                {counts.anbiyams}
+              </Typography>
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
+    </Grid>
+  </Grid>
+</Box>
     </Box>
   );
 };
