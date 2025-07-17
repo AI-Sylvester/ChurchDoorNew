@@ -185,4 +185,31 @@ router.get('/stats/members', authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch member count' });
   }
 });
+
+// GET /members/by-anbiyam/:anbiyam
+router.get('/members/by-anbiyam/:anbiyam', authMiddleware, async (req, res) => {
+  const { anbiyam } = req.params;
+
+  if (!anbiyam) {
+    return res.status(400).json({ error: 'Anbiyam name is required in path.' });
+  }
+
+  try {
+    const result = await db.query(
+      `SELECT m.*
+       FROM members m
+       JOIN families f ON m.family_id = f.id
+       WHERE f.anbiyam = $1 AND f.active = true
+       ORDER BY m.member_id`,
+      [anbiyam]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching members by Anbiyam:', error);
+    res.status(500).json({ message: 'Failed to fetch members' });
+  }
+});
+
 module.exports = router;
+
+

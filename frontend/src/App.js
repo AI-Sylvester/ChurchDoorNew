@@ -13,6 +13,8 @@ import FamilyDetailsView from './components/FamilyDetails';
 import AnbiyamManager from './components/AnbiyamManager';
 import AnbiyamFamilyView from './components/AnbiyamFamilies'
 import FamilyMap from './components/FamilyMap';
+import FamilyCard from './components/FamilyCard';
+
 function App() {
   return (
     <BrowserRouter>
@@ -109,6 +111,16 @@ function App() {
             <PrivateRoute>
               <Layout>
                 <FamilyDetailsView />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+         <Route
+          path="/familycard"
+          element={
+            <PrivateRoute>
+              <Layout>
+                <FamilyCard />
               </Layout>
             </PrivateRoute>
           }

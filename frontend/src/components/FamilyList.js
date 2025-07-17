@@ -33,6 +33,7 @@ import RoomIcon from '@mui/icons-material/Room';
 import InputAdornment from '@mui/material/InputAdornment';
 import IconButton from '@mui/material/IconButton';
 import MapSelector from './Mapselector'; // adjust path if needed
+import { Filesystem, Directory } from '@capacitor/filesystem';
 const FamilyList = () => {
   const [families, setFamilies] = useState([]);
   const [error, setError] = useState('');
@@ -207,9 +208,16 @@ const handleEdit = async (familyId) => {
     return filtered.sort((a, b) => a.family_id - b.family_id);
   }, [families, searchQuery]);
 
-const exportPDF = () => {
+const exportPDF = async () => {
   const doc = new jsPDF('p', 'pt', 'a4');
 
+  // Title
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.setTextColor('#0B3D91');
+  doc.text('Family Records', 220, 30); // Approx. centered
+
+  // Table
   autoTable(doc, {
     head: [['Family ID', 'Name', 'Mobile 1', 'Mobile 2', 'Anbiyam', 'Address']],
     body: filteredFamilies.map(fam => [
@@ -218,9 +226,7 @@ const exportPDF = () => {
       fam.mobile_number || '',
       fam.mobile_number2 || '',
       fam.anbiyam || '',
-      [fam.address_line1, fam.address_line2, fam.city, fam.pincode]
-        .filter(Boolean)
-        .join(', ')
+      [fam.address_line1, fam.address_line2, fam.city, fam.pincode].filter(Boolean).join(', ')
     ]),
     styles: {
       fontSize: 10,
@@ -231,34 +237,52 @@ const exportPDF = () => {
       lineWidth: 0.1,
     },
     headStyles: {
-      fillColor: [0, 0, 0],
+      fillColor: [11, 61, 145],
       textColor: [255, 255, 255],
       fontStyle: 'bold',
       halign: 'center',
     },
     alternateRowStyles: {
-      fillColor: [240, 240, 240],
+      fillColor: [245, 249, 255],
     },
-    startY: 40,
+    startY: 50,
     margin: { top: 40, left: 20, right: 20 },
     theme: 'grid',
   });
 
-  // Format the date and time
+  // File name with timestamp
   const now = new Date();
-  const timestamp = now
-    .toLocaleString('en-GB', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    })
-    .replace(/[/:, ]/g, '-'); // Replace problematic characters
+  const timestamp = now.toISOString().replace(/T/, '_').replace(/:/g, '-').slice(0, 16);
+  const fileName = `family-records-${timestamp}.pdf`;
 
-  doc.save(`family-records-${timestamp}.pdf`);
+  // Convert to base64
+  const blob = doc.output('blob');
+  const base64Data = await blobToBase64(blob);
+
+  try {
+    await Filesystem.writeFile({
+      path: fileName,
+      data: base64Data,
+      directory: Directory.Documents,
+    });
+    alert('✅ PDF saved successfully!');
+  } catch (error) {
+    console.error('❌ Error saving PDF:', error);
+    alert('Error saving PDF file.');
+  }
+};
+
+// Helper: Convert blob to base64
+const blobToBase64 = (blob) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result.split(',')[1]; // remove data:...base64,
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 };
   return (
     <Box sx={{ p: 3 }}>

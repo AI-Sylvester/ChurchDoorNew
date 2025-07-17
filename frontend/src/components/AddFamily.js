@@ -117,7 +117,7 @@ const [uploadSuccess, setUploadSuccess] = useState(false);
     {/* Heading */}
     <Box
       sx={{
-        backgroundColor: '#ededda',
+        backgroundColor: '#03a8f5ff',
         color: '#000',
         p: 2,
         borderRadius: 2,
@@ -316,7 +316,7 @@ const [uploadSuccess, setUploadSuccess] = useState(false);
 
         <Box sx={{ flex: '1 1 23%', minWidth: '230px' }}>
           <TextField
-            label="Old Card Number"
+            label="Card Number"
             name="old_card_number"
             value={form.old_card_number}
             onChange={handleChange}
@@ -436,12 +436,12 @@ const [uploadSuccess, setUploadSuccess] = useState(false);
   <DialogContent>
     <Box sx={{ height: 300 }}>
       <MapSelector
-        value={form.location}
-        onChange={(loc) => {
-          setForm(prev => ({ ...prev, location: loc }));
-          setMapDialogOpen(false); // close after selection
-        }}
-      />
+  value={form.location}
+  onChange={(loc) => {
+    setForm(prev => ({ ...prev, location: loc }));
+    setMapDialogOpen(false);
+  }}
+/>
     </Box>
   </DialogContent>
 </Dialog>

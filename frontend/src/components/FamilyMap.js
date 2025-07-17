@@ -5,12 +5,14 @@ import {
   TextField,
   CircularProgress,
   MenuItem,
+  Button,
 } from '@mui/material';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import axios from 'axios';
 import API_BASE_URL from '../config';
 import { Icon } from 'leaflet';
+import { Tune } from '@mui/icons-material'; // filter icon
 
 // Custom icon for map markers
 const customIcon = new Icon({
@@ -20,7 +22,7 @@ const customIcon = new Icon({
   popupAnchor: [0, -30],
 });
 
-const initialCenter = [10.7905, 78.7047]; // fallback if nothing available
+const initialCenter = [10.7905, 78.7047]; // fallback
 
 const FamilyMap = () => {
   const [families, setFamilies] = useState([]);
@@ -29,11 +31,12 @@ const FamilyMap = () => {
   const [selectedAnbiyam, setSelectedAnbiyam] = useState('');
   const [selectedFamilyId, setSelectedFamilyId] = useState('');
   const [searchText, setSearchText] = useState('');
-  const [mapCenter, setMapCenter] = useState(null); // will update based on geolocation or average
+  const [mapCenter, setMapCenter] = useState(null);
+  const [showFilters, setShowFilters] = useState(false); // 🔁 toggle filters
 
   const token = localStorage.getItem('token');
 
-  // Try getting user location
+  // Geolocation setup
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -41,7 +44,6 @@ const FamilyMap = () => {
         setMapCenter([latitude, longitude]);
       },
       () => {
-        // Do nothing, fallback will be calculated from family locations
         setMapCenter(null);
       }
     );
@@ -61,7 +63,7 @@ const FamilyMap = () => {
         const uniqueAnbiyams = [...new Set(familyData.map(f => f.anbiyam).filter(Boolean))];
         setAnbiyamList(uniqueAnbiyams);
 
-        // If no geolocation set, compute center from family data
+        // Auto-center logic
         if (!mapCenter && familyData.length > 0) {
           const validLocations = familyData
             .map(f => f.location?.split(',').map(Number))
@@ -102,51 +104,77 @@ const FamilyMap = () => {
         Family Locations Map
       </Typography>
 
-      <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
-        <TextField
-          label="Filter by Anbiyam"
-          select
-          value={selectedAnbiyam}
-          onChange={(e) => {
-            setSelectedAnbiyam(e.target.value);
-            setSelectedFamilyId('');
-          }}
-          size="small"
-          sx={{ flex: 1, minWidth: 250 }}
-        >
-          <MenuItem value="">All</MenuItem>
-          {anbiyamList.map(anbiyam => (
-            <MenuItem key={anbiyam} value={anbiyam}>{anbiyam}</MenuItem>
-          ))}
-        </TextField>
+      {/* Toggle Filter Button */}
+      <Box sx={{ textAlign: 'right', mb: 1 }}>
+  <Button
+    variant="contained"
+    size="small"
+    startIcon={<Tune />}
+    onClick={() => setShowFilters(prev => !prev)}
+    sx={{
+      borderRadius: 2,
+      backgroundColor: '#0B3D91',
+      color: '#fff',
+      textTransform: 'none',
+      fontWeight: 500,
+      '&:hover': {
+        backgroundColor: '#062f6a',
+      },
+    }}
+  >
+    {showFilters ? 'Hide Filters' : 'Show Filters'}
+  </Button>
+</Box>
 
-        <TextField
-          label="Filter by Family ID"
-          select
-          value={selectedFamilyId}
-          onChange={(e) => setSelectedFamilyId(e.target.value)}
-          size="small"
-          sx={{ flex: 1, minWidth: 250 }}
-        >
-          <MenuItem value="">All</MenuItem>
-          {families
-            .filter(f => !selectedAnbiyam || f.anbiyam === selectedAnbiyam)
-            .map(fam => (
-              <MenuItem key={fam.family_id} value={fam.family_id}>
-                {fam.family_id}
-              </MenuItem>
+      {/* Filters Section (conditionally rendered) */}
+      {showFilters && (
+        <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+          <TextField
+            label="Filter by Anbiyam"
+            select
+            value={selectedAnbiyam}
+            onChange={(e) => {
+              setSelectedAnbiyam(e.target.value);
+              setSelectedFamilyId('');
+            }}
+            size="small"
+            sx={{ flex: 1, minWidth: 250 }}
+          >
+            <MenuItem value="">All</MenuItem>
+            {anbiyamList.map(anbiyam => (
+              <MenuItem key={anbiyam} value={anbiyam}>{anbiyam}</MenuItem>
             ))}
-        </TextField>
+          </TextField>
 
-        <TextField
-          label="Search (Name, Address, Mobile)"
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          size="small"
-          sx={{ flex: 1, minWidth: 250 }}
-        />
-      </Box>
+          <TextField
+            label="Filter by Family ID"
+            select
+            value={selectedFamilyId}
+            onChange={(e) => setSelectedFamilyId(e.target.value)}
+            size="small"
+            sx={{ flex: 1, minWidth: 250 }}
+          >
+            <MenuItem value="">All</MenuItem>
+            {families
+              .filter(f => !selectedAnbiyam || f.anbiyam === selectedAnbiyam)
+              .map(fam => (
+                <MenuItem key={fam.family_id} value={fam.family_id}>
+                  {fam.family_id}
+                </MenuItem>
+              ))}
+          </TextField>
 
+          <TextField
+            label="Search (Name, Address, Mobile)"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            size="small"
+            sx={{ flex: 1, minWidth: 250 }}
+          />
+        </Box>
+      )}
+
+      {/* Map Display */}
       {loading || !mapCenter ? (
         <Box textAlign="center" py={5}>
           <CircularProgress />
@@ -161,7 +189,6 @@ const FamilyMap = () => {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution="© OpenStreetMap contributors"
           />
-
           {filteredFamilies.map(f => {
             const [lat, lng] = f.location.split(',').map(Number);
             return (

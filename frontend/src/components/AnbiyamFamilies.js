@@ -8,7 +8,9 @@ import axios from 'axios';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import API_BASE_URL from '../config';
-
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { isPlatform } from '@ionic/react'; // Optional: for platform check
+import { saveAs } from 'file-saver'; // Keep for web fallback
 const AnbiyamFamilyView = () => {
   const [anbiyams, setAnbiyams] = useState([]);
   const [selectedAnbiyam, setSelectedAnbiyam] = useState('');
@@ -58,29 +60,80 @@ const AnbiyamFamilyView = () => {
     fetchFamilies(selectedName);
   };
 
-  const exportToPDF = () => {
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    const title = `Family Details - (${selectedAnbiyam})`;
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const textWidth = doc.getTextWidth(title);
-    const centerX = (pageWidth - textWidth) / 2;
-    doc.text(title, centerX, 20);
-    const tableData = families.map((fam, index) => ([
-      index + 1,
-      fam.family_id,
-      fam.head_name,
-      fam.mobile_number,
-      `${fam.address_line1 || ''}, ${fam.address_line2 || ''}, ${fam.city || ''}`
-    ]));
-    autoTable(doc, {
-      startY: 30,
-      head: [['S.No', 'Family ID', 'Head Name', 'Mobile', 'Address']],
-      body: tableData,
-    });
-    doc.save(`Families_${selectedAnbiyam}.pdf`);
-  };
+ const exportToPDF = async () => {
+  const doc = new jsPDF();
 
+  // Title
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  const title = `Family Details - (${selectedAnbiyam || 'All'})`;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const textWidth = doc.getTextWidth(title);
+  const centerX = (pageWidth - textWidth) / 2;
+  doc.setTextColor('#0B3D91');
+  doc.text(title, centerX, 25);
+
+  // Prepare table data
+  const tableData = families.map((fam, index) => [
+    index + 1,
+    fam.family_id || '-',
+    fam.head_name || '-',
+    fam.mobile_number || '-',
+    [fam.address_line1, fam.address_line2, fam.city].filter(Boolean).join(', ') || '-',
+  ]);
+
+  // Render table
+  autoTable(doc, {
+    startY: 40,
+    head: [['S.No', 'Family ID', 'Head Name', 'Mobile', 'Address']],
+    body: tableData,
+    theme: 'grid',
+    headStyles: {
+      fillColor: [11, 61, 145],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      halign: 'center',
+    },
+    alternateRowStyles: {
+      fillColor: [245, 249, 255],
+    },
+    styles: {
+      fontSize: 10,
+      cellPadding: 4,
+      textColor: 20,
+    },
+    margin: { top: 20, left: 15, right: 15 },
+  });
+
+  // Timestamped filename
+  const now = new Date();
+  const timestamp = now.toISOString().slice(0, 16).replace('T', '_').replace(/:/g, '-');
+  const fileName = `Families_${selectedAnbiyam || 'All'}_${timestamp}.pdf`;
+
+  const pdfBlob = doc.output('blob');
+
+  if (isPlatform('android') || isPlatform('ios')) {
+    // Save inside app Documents directory for mobile
+    const base64 = await blobToBase64(pdfBlob);
+    await Filesystem.writeFile({
+      path: fileName,
+      data: base64,
+      directory: Directory.Documents,
+    });
+    alert(`PDF saved in app's Documents folder: ${fileName}`);
+  } else {
+    // Fallback for web
+    saveAs(pdfBlob, fileName);
+  }
+};
+
+// Helper to convert blob to base64
+const blobToBase64 = (blob) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onloadend = () => resolve(reader.result.split(',')[1]); // Remove data:...base64,
+  reader.onerror = reject;
+  reader.readAsDataURL(blob);
+});
   return (
     <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
       <Grid
@@ -115,17 +168,7 @@ const AnbiyamFamilyView = () => {
       </Grid>
 
       <Box mt={3}>
-        {selectedAnbiyam && (
-          <Typography
-            variant="h6"
-            align="center"
-            gutterBottom
-            sx={{ mb: 2 }}
-          >
-            Family Details - ({selectedAnbiyam})
-          </Typography>
-        )}
-
+       
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
         {loading ? (

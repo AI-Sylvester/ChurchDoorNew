@@ -167,7 +167,7 @@ const AddMember = () => {
     <Box sx={{ mx: 'auto', mt: 2, px: 2 }}>
       <Box
         sx={{
-          backgroundColor: '#ededda',
+          backgroundColor: '#03a8f5ff',
           color: '#000',
           p: 2,
           borderRadius: 2,

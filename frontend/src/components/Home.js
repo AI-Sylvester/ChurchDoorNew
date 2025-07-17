@@ -2,36 +2,16 @@ import React, { useEffect, useState } from 'react';
 import {
   Box,
   Grid,
-  Paper,
   Typography,
   CircularProgress,
   Card,
   CardContent,
-  Avatar
+  Avatar,
 } from '@mui/material';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import GroupIcon from '@mui/icons-material/Group';
 import LocationCityIcon from '@mui/icons-material/LocationCity';
 import API_BASE_URL from '../config';
-
-const metricStyles = {
-  iconContainer: {
-    width: 56,
-    height: 56,
-    backgroundColor: '#0B3D91',
-    color: '#fff',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: '50%',
-    boxShadow: '0 3px 6px rgba(0,0,0,0.2)'
-  },
-  value: {
-    fontSize: '2rem',
-    fontWeight: 'bold',
-    mt: 1
-  }
-};
 
 const Home = () => {
   const [counts, setCounts] = useState({ families: 0, members: 0, anbiyams: 0 });
@@ -74,113 +54,79 @@ const Home = () => {
     );
   }
 
+  const metrics = [
+    {
+      title: 'Total Families',
+      count: counts.families,
+      icon: <HomeWorkIcon fontSize="large" />,
+      color: '#fbc02d',
+    },
+    {
+      title: 'Total Members',
+      count: counts.members,
+      icon: <GroupIcon fontSize="large" />,
+      color: '#1976d2',
+    },
+    {
+      title: 'Total Anbiyams',
+      count: counts.anbiyams,
+      icon: <LocationCityIcon fontSize="large" />,
+      color: '#7b1fa2',
+    },
+  ];
+
   return (
-    <Box sx={{ px: 3, py: 4 }}>
-   {/* Header Section */}
-<Paper
-  elevation={2}
-  sx={{
-    p: 2,
-    borderRadius: 2,
-    mb: 3,
-    backgroundColor: '#fefefe',
-    borderLeft: '4px solid #42a5f5',
-  }}
->
-  <Typography variant="h6" fontWeight={600} color="primary" gutterBottom>
-    Welcome to Church Door
-  </Typography>
-  <Typography variant="body2" color="text.secondary">
-    Manage families, members, and Anbiyams all in one place.
-  </Typography>
-</Paper>
+    <Box sx={{ px: { xs: 2, md: 4 }, py: 5, bgcolor: '#ffffffff' }}>
+      
 
-      {/* Metric Cards */}
-{/* Metric Cards */}
-<Box display="flex" justifyContent="center">
-  <Grid container spacing={4} justifyContent="center">
-    <Grid item xs={12} sm={8} md={4}>
-      <Card
-        sx={{
-          borderRadius: 3,
-          background: 'linear-gradient(to bottom right, #e3f2fd, #bbdefb)',
-          boxShadow: 3,
-          p: 2
-        }}
-      >
-        <CardContent>
-          <Box display="flex" alignItems="center" gap={2}>
-            <Avatar sx={metricStyles.iconContainer}>
-              <HomeWorkIcon />
-            </Avatar>
-            <Box>
-              <Typography variant="subtitle1" fontWeight={600}>
-                Total Families
-              </Typography>
-              <Typography sx={metricStyles.value} color="primary.dark">
-                {counts.families}
-              </Typography>
-            </Box>
-          </Box>
-        </CardContent>
-      </Card>
-    </Grid>
-
-    <Grid item xs={12} sm={8} md={4}>
-      <Card
-        sx={{
-          borderRadius: 3,
-          background: 'linear-gradient(to bottom right, #fce4ec, #f8bbd0)',
-          boxShadow: 3,
-          p: 2
-        }}
-      >
-        <CardContent>
-          <Box display="flex" alignItems="center" gap={2}>
-            <Avatar sx={{ ...metricStyles.iconContainer, backgroundColor: '#ad1457' }}>
-              <GroupIcon />
-            </Avatar>
-            <Box>
-              <Typography variant="subtitle1" fontWeight={600}>
-                Total Members
-              </Typography>
-              <Typography sx={metricStyles.value} color="error.dark">
-                {counts.members}
-              </Typography>
-            </Box>
-          </Box>
-        </CardContent>
-      </Card>
-    </Grid>
-
-    <Grid item xs={12} sm={8} md={4}>
-      <Card
-        sx={{
-          borderRadius: 3,
-          background: 'linear-gradient(to bottom right, #ede7f6, #d1c4e9)',
-          boxShadow: 3,
-          p: 2
-        }}
-      >
-        <CardContent>
-          <Box display="flex" alignItems="center" gap={2}>
-            <Avatar sx={{ ...metricStyles.iconContainer, backgroundColor: '#6a1b9a' }}>
-              <LocationCityIcon />
-            </Avatar>
-            <Box>
-              <Typography variant="subtitle1" fontWeight={600}>
-                Total Anbiyams
-              </Typography>
-              <Typography sx={metricStyles.value} color="secondary.dark">
-                {counts.anbiyams}
-              </Typography>
-            </Box>
-          </Box>
-        </CardContent>
-      </Card>
-    </Grid>
-  </Grid>
-</Box>
+      <Grid container spacing={4} justifyContent="center">
+        {metrics.map((metric, index) => (
+          <Grid item xs={12} sm={6} md={4} key={index}>
+            <Card
+              sx={{
+                borderRadius: 3,
+                backgroundColor: '#ffffff',
+                border: '1px solid #e0e0e0',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: '0 6px 20px rgba(0,0,0,0.1)',
+                },
+              }}
+            >
+              <CardContent>
+                <Box display="flex" alignItems="center" gap={2}>
+                  <Avatar
+                    sx={{
+                      width: 56,
+                      height: 56,
+                      backgroundColor: metric.color,
+                      color: '#fff',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                    }}
+                  >
+                    {metric.icon}
+                  </Avatar>
+                  <Box>
+                    <Typography variant="subtitle1" fontWeight={600} color="text.secondary">
+                      {metric.title}
+                    </Typography>
+                    <Typography
+                      variant="h4"
+                      fontWeight={700}
+                      color="text.primary"
+                      mt={0.5}
+                    >
+                      {metric.count}
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
     </Box>
   );
 };

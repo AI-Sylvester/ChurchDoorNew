@@ -18,6 +18,7 @@ import {
   Avatar,
   Grid
 } from '@mui/material';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 
 import API_BASE_URL from '../config';
 import jsPDF from 'jspdf';
@@ -127,6 +128,8 @@ const InfoLine = ({ label, value }) => (
     if (typeof value === 'boolean') return value ? 'Yes' : 'No';
     return value;
   };
+
+
 const exportPDF = async () => {
   const doc = new jsPDF({
     orientation: 'landscape',
@@ -137,145 +140,99 @@ const exportPDF = async () => {
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 40;
   const lineHeight = 22;
-  const colGap = 340;
-  let yPos = margin;
+   let yPos = margin;
 
-  // Title
   doc.setFontSize(20);
   doc.setTextColor('#0B3D91');
   doc.setFont('helvetica', 'bold');
   doc.text('Family Profile', pageWidth / 2, yPos, { align: 'center' });
-yPos += 60; // More space after title
-
-
-  // Helper function to convert image URL to base64
-  const toDataURL = (url) =>
-    fetch(url)
-      .then((response) => response.blob())
-      .then(
-        (blob) =>
-          new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-          })
-      );
-
-  // Add family picture if exists
-  const imgSize = 100;
-  let textStartX = margin;
-  let detailStartY = yPos;
-
-  if (familyDetails?.family_pic) {
-    try {
-     const imgUrl = familyDetails.family_pic;
-      const imgData = await toDataURL(imgUrl);
-      doc.addImage(imgData, 'JPEG', margin, yPos, imgSize, imgSize);
-      yPos += imgSize + 15;
-
-      // Head name under picture
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(12);
-      doc.setTextColor('#0B3D91');
-      doc.text(`Head: ${familyDetails?.head_name || '-'}`, margin, yPos);
-    } catch (err) {
-      console.warn('Failed to load family picture for PDF', err);
-    }
-    textStartX = margin + imgSize + 20;
-  } else {
-    yPos += 10;
-    detailStartY = yPos;
-  }
+  yPos += 60;
 
   const familyFields = [
     { label: 'Family ID', value: familyDetails?.family_id || '-' },
     { label: 'Address', value: `${familyDetails?.address_line1 || ''}, ${familyDetails?.address_line2 || ''}` },
     { label: 'City & Pincode', value: `${familyDetails?.city || ''} - ${familyDetails?.pincode || ''}` },
     { label: 'Contact', value: familyDetails?.mobile_number + (familyDetails?.mobile_number2 ? `, ${familyDetails.mobile_number2}` : '') || '-' },
-    { label: 'Location', value: familyDetails?.location || '-' },
-    { label: 'Native', value: familyDetails?.native || '-' },
-    { label: 'Resident From', value: familyDetails?.resident_from ? new Date(familyDetails.resident_from).toLocaleDateString() : '-' },
-    { label: 'House Type', value: familyDetails?.house_type || '-' },
-    { label: 'Subscription', value: familyDetails?.subscription || '-' },
     { label: 'Anbiyam', value: familyDetails?.anbiyam || '-' },
-    { label: 'Cemetery', value: familyDetails?.cemetery || '-' },
-    { label: 'Cemetery No.', value: familyDetails?.cemetery_number || '-' },
-    { label: 'Active', value: familyDetails?.active ? 'Yes' : 'No' },
-    { label: 'Total Members', value: members.length },
+    { label: 'Total Members', value: members.length.toString() },
   ];
 
-  const col1 = familyFields.slice(0, 7);
-  const col2 = familyFields.slice(7, 14);
-
-  // Background box
-  const maxLines = Math.max(col1.length, col2.length);
-  const boxHeight = maxLines * lineHeight + 20;
-  doc.setDrawColor('#0B3D91');
-  doc.setFillColor('#E8F0FE');
-  doc.roundedRect(textStartX - 10, detailStartY - 15, pageWidth - textStartX - margin + 10, boxHeight, 5, 5, 'F');
-
-  // Render left column
-  col1.forEach((item, i) => {
-    const y = detailStartY + i * lineHeight;
+  familyFields.forEach((item, index) => {
+    const y = yPos + index * lineHeight;
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
+    doc.setFontSize(12);
     doc.setTextColor('#0B3D91');
-    doc.text(`${item.label}:`, textStartX, y);
+    doc.text(`${item.label}:`, margin, y);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor('#000000');
-    doc.text(`${item.value}`, textStartX + 90, y);
+    doc.setTextColor('#000');
+    doc.text(item.value, margin + 100, y);
   });
 
-  // Render right column
-  col2.forEach((item, i) => {
-    const y = detailStartY + i * lineHeight;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
-    doc.setTextColor('#0B3D91');
-    doc.text(`${item.label}:`, textStartX + colGap, y);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor('#000000');
-    doc.text(`${item.value}`, textStartX + colGap + 90, y);
-  });
+  yPos += familyFields.length * lineHeight + 20;
 
-  // Prepare for table
-  yPos = detailStartY + maxLines * lineHeight + 40;
- const excludedKeys = ['member_id', 'active'];
-  const filteredAttributes = memberAttributes.filter(attr => !excludedKeys.includes(attr.key))
-  // Members table
-  const tableColumnHeaders = filteredAttributes.map(attr => attr.label);
+  const memberAttributes = [
+    { label: 'Name', key: 'name' },
+    { label: 'Age', key: 'age' },
+    { label: 'DOB', key: 'dob' },
+    { label: 'Sex', key: 'sex' },
+    { label: 'Relationship', key: 'relationship' },
+    { label: 'Profession', key: 'profession' },
+  ];
+
+  const tableColumnHeaders = memberAttributes.map(attr => attr.label);
   const tableRows = members.map(member =>
-    filteredAttributes.map(attr => {
+    memberAttributes.map(attr => {
       const val = member[attr.key];
       if (!val) return '-';
-      if (
-        ['dob', 'baptism_date', 'holy_communion_date', 'confirmation_date', 'marriage_date'].includes(attr.key)
-      ) {
-        return new Date(val).toLocaleDateString();
-      }
-      if (typeof val === 'boolean') return val ? 'Yes' : 'No';
+      if (attr.key === 'dob') return new Date(val).toLocaleDateString();
       return val.toString();
     })
   );
 
-  // Render table
   autoTable(doc, {
     startY: yPos,
     head: [tableColumnHeaders],
     body: tableRows,
-    styles: { fontSize: 9, cellPadding: 4 },
-    headStyles: { fillColor: '#0B3D91', textColor: '#fff', fontStyle: 'bold' },
     theme: 'striped',
+    styles: { fontSize: 10 },
+    headStyles: { fillColor: [11, 61, 145], textColor: [255, 255, 255] },
     margin: { left: margin, right: margin },
     tableWidth: pageWidth - margin * 2,
   });
 
-  // Save file with timestamp
   const now = new Date();
-  const formattedDate = now.toISOString().slice(0, 16).replace('T', '_').replace(':', '-');
-  const fileName = `Family_Profile_${familyDetails?.family_id || 'export'}_${formattedDate}.pdf`;
-  doc.save(fileName);
+  const filename = `Family_${familyDetails?.family_id || 'Export'}_${now.toISOString().slice(0, 16).replace(/[:T]/g, '-')}.pdf`;
+
+  // Convert PDF to base64
+  const pdfBlob = doc.output('blob');
+  const base64 = await blobToBase64(pdfBlob);
+
+  // Save using Capacitor Filesystem
+  try {
+    await Filesystem.writeFile({
+      path: filename,
+      data: base64,
+      directory: Directory.Documents,
+    });
+
+    alert(`PDF saved successfully: ${filename}`);
+  } catch (error) {
+    console.error('Failed to save PDF file:', error);
+    alert('Error saving file');
+  }
+};
+
+// Helper: Blob to base64
+const blobToBase64 = (blob) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const base64String = reader.result.split(',')[1]; // remove data:*/*;base64,
+      resolve(base64String);
+    };
+    reader.readAsDataURL(blob);
+  });
 };
 
 

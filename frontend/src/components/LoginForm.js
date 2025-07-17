@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../config';
-
 import {
   Box,
   Button,
@@ -12,6 +11,7 @@ import {
   Fade,
   Stack,
 } from '@mui/material';
+import logo from './logo.png'; // Replace with your actual path
 
 const Login = () => {
   const [mode, setMode] = useState('login');
@@ -76,70 +76,80 @@ const Login = () => {
     <Box
       sx={{
         height: '100vh',
-        background: 'linear-gradient(to bottom right, #fdfdfd, #c5c5be)',
+        background: 'linear-gradient(to bottom right, #fdfdfd, #f7f7ef)',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        fontFamily: "'Quicksand', 'Segoe UI', sans-serif",
+        px: 2,
       }}
     >
       <Fade in>
         <Box
           sx={{
-            bgcolor: '#ffffff',
-            p: 4,
-            borderRadius: 4,
-            boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
-            width: { xs: '90%', sm: 400 },
+            bgcolor: '#fff',
+            p: { xs: 3, sm: 4 },
+           
+            boxShadow: '0 6px 25px rgba(0, 0, 0, 0.15)',
+            width: '100%',
+            maxWidth: 360,
             textAlign: 'center',
-            borderTop: '5px solid #c5c5be',
+            position: 'relative',
+        
           }}
         >
-          <Typography
-            variant="h4"
-            sx={{ fontWeight: 700, mb: 1, color: '#2C3E50' }}
-          >
-            Church Door
-          </Typography>
+          {/* Logo */}
+          <Box sx={{ mb: 2 }}>
+            <Box
+              component="img"
+              src={logo}
+              alt="Logo"
+              sx={{
+                height: 70,
+                width: 70,
+                borderRadius: '50%',
+                border: '3px solid #f7e600',
+                objectFit: 'cover',
+                mx: 'auto',
+                mb: 1,
+              }}
+            />
+      <Typography
+  variant="h4"
+  sx={{
+    fontWeight: 400,
+    fontFamily: "'Cinzel', serif",
+    color: '#2C3E50',
+
+  }}
+>
+  Church Door
+</Typography>
+          </Box>
 
           <Typography
-            variant="subtitle1"
+            variant="subtitle2"
             sx={{
-              mb: 3,
+              mb: 2,
               fontWeight: 600,
-              color: '#8B1A1A',
-              fontSize: '1rem',
+              color: '#666',
+              fontSize: '0.95rem',
             }}
           >
-            {mode === 'login' ? 'Login to continue' : 'Create a new account'}
+            {mode === 'login' ? 'Login ' : 'Register'}
           </Typography>
 
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
           {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
-          <Box
-            component="form"
-            onSubmit={handleSubmit}
-            noValidate
-            sx={{ display: 'flex', flexDirection: 'column' }}
-          >
+          <Box component="form" onSubmit={handleSubmit} noValidate>
             <TextField
               placeholder="Username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              autoComplete="username"
               fullWidth
-              sx={{
-                mb: 2,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#c5c5be',
-                    boxShadow: '0 0 6px #c5c5be',
-                  },
-                },
-              }}
+              autoComplete="username"
+              sx={{ mb: 2 }}
             />
 
             {mode === 'register' && (
@@ -149,18 +159,9 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                autoComplete="email"
                 fullWidth
-                sx={{
-                  mb: 2,
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#c5c5be',
-                      boxShadow: '0 0 6px #c5c5be',
-                    },
-                  },
-                }}
+                autoComplete="email"
+                sx={{ mb: 2 }}
               />
             )}
 
@@ -170,18 +171,9 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
               fullWidth
-              sx={{
-                mb: 3,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#c5c5be',
-                    boxShadow: '0 0 6px #c5c5be',
-                  },
-                },
-              }}
+              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+              sx={{ mb: 3 }}
             />
 
             <Button
@@ -189,13 +181,13 @@ const Login = () => {
               variant="contained"
               fullWidth
               sx={{
-                bgcolor: '#8c8c89',
-                fontWeight: 600,
+                bgcolor: '#f7e600',
+                color: '#000',
+                fontWeight: 700,
                 py: 1.4,
                 borderRadius: 2,
-                fontSize: '0.95rem',
                 '&:hover': {
-                  bgcolor: '#6f6f6d',
+                  bgcolor: '#e6d900',
                 },
               }}
             >
@@ -214,15 +206,13 @@ const Login = () => {
                 variant="outlined"
                 fullWidth
                 sx={{
-                  borderColor: '#c5c5be',
-                  color: '#2C3E50',
+                  borderColor: '#f7e600',
+                  color: '#333',
                   fontWeight: 600,
                   py: 1.3,
                   borderRadius: 2,
                   '&:hover': {
-                    borderColor: '#8B1A1A',
-                    color: '#8B1A1A',
-                    bgcolor: 'rgba(139, 26, 26, 0.05)',
+                    bgcolor: 'rgba(247, 230, 0, 0.08)',
                   },
                 }}
               >
@@ -234,11 +224,11 @@ const Login = () => {
                 variant="text"
                 fullWidth
                 sx={{
-                  color: '#666',
+                  color: '#888',
                   fontWeight: 500,
                   fontSize: '0.875rem',
                   '&:hover': {
-                    color: '#333',
+                    color: '#444',
                   },
                 }}
               >

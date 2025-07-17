@@ -14,6 +14,7 @@ import {
   DialogActions,
   Button,
   BottomNavigationAction,
+  BottomNavigation,
   Paper,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -29,9 +30,10 @@ import MapRoundedIcon from '@mui/icons-material/MapRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-
+import ContactsIcon from '@mui/icons-material/Contacts';
+import logo from './logo.png'; // adjust path as needed
 const Layout = ({ children }) => {
-  const [value, setValue] = useState(0);
+
   const [anchorEl, setAnchorEl] = useState(null);
  
   const [openLogoutDialog, setOpenLogoutDialog] = useState(false);
@@ -39,19 +41,20 @@ const Layout = ({ children }) => {
   const navigate = useNavigate();
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(false);
-
+const [selectedPath, setSelectedPath] = useState('/home');
 
     const handleLogout = () => setOpenLogoutDialog(true);
 
   const navItems = [
     { path: '/home', icon: <SpaceDashboardRoundedIcon />, label: 'Home' },
-     { path: '/familylist', icon: <ListAltRoundedIcon />, label: 'List' },
-      { path: '/familydet', icon: <InfoOutlinedIcon />, label: 'Details' },
-     { path: '/familymap', icon: <MapRoundedIcon />, label: 'Map' },
-    { path: '/add-family', icon: <GroupsRoundedIcon />, label: 'Family' },
-    { path: '/add-member', icon: <PersonAddAltRoundedIcon />, label: 'Member' },
+      { path: '/familycard', icon: <ContactsIcon />, label: 'Card' },
+        { path: '/familymap', icon: <MapRoundedIcon />, label: 'Map' },
+           { path: '/familydet', icon: <InfoOutlinedIcon />, label: 'Details' },
+     { path: '/familylist', icon: <GroupsRoundedIcon />, label: 'Families' },
        { path: '/memlist', icon: <GroupRoundedIcon />, label: 'Members' },
-       { path: '/anbiyamfam', icon: <Diversity3RoundedIcon />, label: 'Anbiyam' },
+       { path: '/add-family', icon: <ListAltRoundedIcon />, label: 'Register' },
+    { path: '/add-member', icon: <PersonAddAltRoundedIcon />, label: 'Member' },
+         { path: '/anbiyamfam', icon: <Diversity3RoundedIcon />, label: 'Anbiyam' },
         { path: 'logout', icon: <LogoutRoundedIcon color="error" />, label: 'Logout', action: handleLogout },
   ];
 
@@ -60,12 +63,6 @@ const Layout = ({ children }) => {
 
  
 
-  const handleNavClick = (item, index) => {
-    setValue(index);
-    if (item.path === 'logout') item.action();
-    else if (item.path === 'sync') item.action();
-    else navigate(item.path);
-  };
 
   const scroll = (direction) => {
     if (scrollRef.current) {
@@ -99,85 +96,170 @@ const Layout = ({ children }) => {
     <AppBar
   position="fixed"
   sx={{
-    backgroundColor: '#f7e600', // Vatican yellow
-    color: '#000', // Black text
+    backgroundColor: '#f7e600',
+    color: '#000',
     boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
   }}
 >
-        <Toolbar sx={{ justifyContent: 'space-between' }}>
-          <Typography variant="h6" fontWeight={800}>
-            Church Door
-          </Typography>
-          <Box>
-            <IconButton onClick={handleAvatarClick}>
-              <Avatar sx={{ bgcolor: '#0a151fff' }}>A</Avatar>
-            </IconButton>
-            <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleCloseMenu}>
-              <MenuItem onClick={handleLogout}>Logout</MenuItem>
-            </Menu>
-          </Box>
-        </Toolbar>
-      </AppBar>
+  <Toolbar sx={{ justifyContent: 'space-between' }}>
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+     <Box
+    component="img"
+    src={logo}
+    alt="Logo"
+    sx={{
+      height: 20,
+      width: 20,
+      border: '2px solid #000',       // Square border
+      borderRadius: 1,                 // Small corner rounding (0 = perfect square)
+      objectFit: 'contain',
+      backgroundColor: '#fff',         // Optional
+      p: 0.5,                          // Optional padding
+    }}
+  />
+     <Typography
+  variant="h6"
+  sx={{
+    fontWeight: 200,
+    fontFamily: "'Cinzel', serif",
+    color: '#2C3E50',
+  }}
+>
+  Church Door
+</Typography>
+
+    </Box>
+    <Box>
+      <IconButton onClick={handleAvatarClick}>
+       <Avatar sx={{ bgcolor: '#0a151fff', width: 30, height: 30, fontSize: 14 }}>A</Avatar>
+      </IconButton>
+      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleCloseMenu}>
+        <MenuItem onClick={handleLogout}>Logout</MenuItem>
+      </Menu>
+    </Box>
+  </Toolbar>
+</AppBar>
 
       {/* Main content */}
       <Box sx={{ mt: 8, px: 2 }}>{children}</Box>
 
       {/* Bottom Fixed Footer with Scrollable Nav */}
-      <Paper
-        sx={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          bgcolor: '#fff',
-          zIndex: 1000,
-          borderTop: '1px solid #ddd',
-          display: 'flex',
-          alignItems: 'center',
-        }}
-        elevation={8}
-      >
-        {showLeft && (
-          <IconButton onClick={() => scroll('left')} size="small">
-            <ArrowBackIosNewIcon fontSize="small" />
-          </IconButton>
-        )}
+ {/* Bottom Fixed Footer with Scrollable Nav */}
+<Paper
+  sx={{
+    position: 'fixed',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    bgcolor: '#fff',
+    zIndex: 1000,
+    borderTop: '1px solid #ddd',
+    display: 'flex',
+    alignItems: 'center',
+  }}
+  elevation={8}
+>
+ <BottomNavigation
+  value={selectedPath === '/home' ? '/home' : false}
+  onChange={() => {
+    setSelectedPath('/home');
+    navigate('/home');
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+    }
+  }}
+  showLabels
+  sx={{ flex: '0 0 auto' }}
+>
+  <BottomNavigationAction
+    label="Home"
+    icon={<SpaceDashboardRoundedIcon />}
+    value="/home"
+    sx={{
+      minWidth: 80,
+      color: selectedPath === '/home' ? '#000' : '#555',
+      '&.Mui-selected': {
+        backgroundColor: '#f7e600',
+        color: '#000',
+        borderRadius: 2,
+        fontWeight: 'bold',
+      },
+    }}
+  />
+</BottomNavigation>
 
-        <Box
-          ref={scrollRef}
-          sx={{
-            display: 'flex',
-            overflowX: 'auto',
-            flex: 1,
-            '::-webkit-scrollbar': { display: 'none' },
-          }}
-        >
-          {navItems.map((item, index) => (
-            <BottomNavigationAction
-              key={item.label}
-              label={item.label}
-              icon={item.icon}
-              onClick={() => handleNavClick(item, index)}
-              sx={{
-                flex: '0 0 auto',
-                minWidth: 80,
-                color: value === index ? '#1976d2' : '#555',
-              }}
-            />
-          ))}
-        </Box>
+  {/* Scrollable Nav for Remaining Items */}
+  {showLeft && (
+    <IconButton onClick={() => scroll('left')} size="small">
+      <ArrowBackIosNewIcon fontSize="small" />
+    </IconButton>
+  )}
 
-        {showRight && (
-          <IconButton onClick={() => scroll('right')} size="small">
-            <ArrowForwardIosIcon fontSize="small" />
-          </IconButton>
-        )}
-      </Paper>
+  <Box
+    ref={scrollRef}
+    sx={{
+      overflowX: 'auto',
+      display: 'flex',
+      flex: 1,
+      '::-webkit-scrollbar': { display: 'none' },
+    }}
+  >
+   <BottomNavigation
+  value={selectedPath}
+  onChange={(event, newValue) => {
+    const item = navItems.find((i) => i.path === newValue);
+    if (item) {
+      if (item.path === 'logout') item.action();
+      else {
+        setSelectedPath(item.path);
+        navigate(item.path);
+      }
+    }
+  }}
+  showLabels
+  sx={{
+    display: 'flex',
+    flexDirection: 'row',
+    px: 1,
+    py: 0.5,
+    bgcolor: 'transparent',
+    flexWrap: 'nowrap',
+  }}
+>
+  {navItems.slice(1).map((item) => (
+    <BottomNavigationAction
+      key={item.label}
+      value={item.path}
+      label={item.label}
+      icon={item.icon}
+      sx={{
+        flex: '0 0 auto',
+        minWidth: 80,
+        color: selectedPath === item.path ? '#000' : '#555',
+        '&.Mui-selected': {
+          backgroundColor: '#f7e600',
+          color: '#000',
+          borderRadius: 2,
+          fontWeight: 'bold',
+        },
+      }}
+    />
+  ))}
+</BottomNavigation>
+
+  </Box>
+
+  {showRight && (
+    <IconButton onClick={() => scroll('right')} size="small">
+      <ArrowForwardIosIcon fontSize="small" />
+    </IconButton>
+  )}
+</Paper>
 
       {/* Logout Confirmation Dialog */}
       <Dialog open={openLogoutDialog} onClose={() => setOpenLogoutDialog(false)}>
         <DialogTitle>Confirm Logout</DialogTitle>
-        <DialogContent>Do you want to sync your data before logging out?</DialogContent>
+        <DialogContent>Do you want to log out?</DialogContent>
         <DialogActions>
           <Button
             variant="outlined"

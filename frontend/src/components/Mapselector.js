@@ -3,53 +3,95 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// Fix marker icon issue in Leaflet
+// Fix marker icon issue
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-const LocationMarker = ({ onChange }) => {
-  const [position, setPosition] = useState(null);
+// ✅ Moved out to avoid ESLint warning
+const DEFAULT_POS = [10.7905, 78.7047]; // Trichy
+
+const DraggableMarker = ({ position, onChange }) => {
+  const [markerPos, setMarkerPos] = useState(position);
 
   useMapEvents({
     click(e) {
-      setPosition(e.latlng);
-      onChange(`${e.latlng.lat},${e.latlng.lng}`);
+      const { lat, lng } = e.latlng;
+      const newPos = [lat, lng];
+      setMarkerPos(newPos);
+      onChange(`${lat},${lng}`);
     },
   });
 
-  return position ? <Marker position={position} /> : null;
+  const handleDragEnd = (e) => {
+    const { lat, lng } = e.target.getLatLng();
+    const newPos = [lat, lng];
+    setMarkerPos(newPos);
+    onChange(`${lat},${lng}`);
+  };
+
+  return (
+    <Marker
+      position={markerPos}
+      draggable
+      eventHandlers={{ dragend: handleDragEnd }}
+    />
+  );
 };
 
 const MapSelector = ({ value, onChange }) => {
-  const [initialPos, setInitialPos] = useState([10.7905, 78.7047]); // Default: Trichy
+  const [position, setPosition] = useState(DEFAULT_POS);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setInitialPos([pos.coords.latitude, pos.coords.longitude]);
-        setLoading(false);
-      },
-      (err) => {
-        console.warn('Geolocation failed, using default:', err);
-        setLoading(false);
+    let isMounted = true;
+
+    const setFromValue = () => {
+      if (value) {
+        const [lat, lng] = value.split(',').map(Number);
+        if (!isNaN(lat) && !isNaN(lng)) {
+          setPosition([lat, lng]);
+          setLoading(false);
+          return true;
+        }
       }
-    );
-  }, []);
+      return false;
+    };
+
+    if (!setFromValue()) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          if (!isMounted) return;
+          const coords = [pos.coords.latitude, pos.coords.longitude];
+          setPosition(coords);
+          onChange(`${coords[0]},${coords[1]}`);
+          setLoading(false);
+        },
+        () => {
+          if (!isMounted) return;
+          onChange(`${DEFAULT_POS[0]},${DEFAULT_POS[1]}`);
+          setLoading(false);
+        }
+      );
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [value, onChange]); // ✅ no need for DEFAULT_POS anymore
 
   if (loading) return <div>Loading map...</div>;
 
   return (
-    <div style={{ height: '250px', width: '100%', borderRadius: '8px', overflow: 'hidden' }}>
-      <MapContainer center={initialPos} zoom={15} style={{ height: '100%', width: '100%' }}>
+    <div style={{ height: 300, width: '100%', borderRadius: 8, overflow: 'hidden' }}>
+      <MapContainer center={position} zoom={15} style={{ height: '100%', width: '100%' }}>
         <TileLayer
-          attribution='&copy; OpenStreetMap'
+          attribution='&copy; OpenStreetMap contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <LocationMarker onChange={onChange} />
+        <DraggableMarker position={position} onChange={onChange} />
       </MapContainer>
     </div>
   );
