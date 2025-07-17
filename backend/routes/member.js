@@ -209,6 +209,7 @@ router.get('/by-anbiyam/:anbiyam', authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch members' });
   }
 });
+
 router.get('/stats/gender', authMiddleware, async (req, res) => {
   try {
     const result = await db.query(`

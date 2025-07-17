@@ -60,17 +60,6 @@ const filteredFamilies = sortedFamilies.filter((fam) => {
   );
 });
 
-  const handleSwipeStart = (e) => {
-    setStartX(e.touches[0].clientX);
-  };
-
-  const handleSwipeEnd = (e) => {
-    const endX = e.changedTouches[0].clientX;
-    const deltaX = endX - startX;
-    if (deltaX > 100 && selectedFamily?.mobile_number) {
-      window.location.href = `tel:${selectedFamily.mobile_number}`;
-    }
-  };
 
   return (
     <Box sx={{ p: 2 }}>
@@ -92,7 +81,7 @@ const filteredFamilies = sortedFamilies.filter((fam) => {
         <Stack spacing={1}>
           {filteredFamilies.length > 0 ? (
             filteredFamilies.map((fam) => (
-              <Card
+             <Card
   key={fam.family_id}
   sx={{
     display: 'flex',
@@ -105,6 +94,14 @@ const filteredFamilies = sortedFamilies.filter((fam) => {
     '&:hover': {
       bgcolor: '#e0e0e0',
     },
+  }}
+  onTouchStart={(e) => setStartX(e.touches[0].clientX)}
+  onTouchEnd={(e) => {
+    const endX = e.changedTouches[0].clientX;
+    const deltaX = endX - startX;
+    if (deltaX > 100 && fam.mobile_number) {
+      window.location.href = `tel:${fam.mobile_number}`;
+    }
   }}
 >
   <Avatar
@@ -150,8 +147,7 @@ const filteredFamilies = sortedFamilies.filter((fam) => {
         onClose={() => setSelectedFamily(null)}
         maxWidth="sm"
         fullWidth
-        onTouchStart={handleSwipeStart}
-        onTouchEnd={handleSwipeEnd}
+    
       >
         <DialogTitle sx={{ m: 0, p: 2 }}>
           Family Details

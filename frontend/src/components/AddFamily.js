@@ -12,7 +12,7 @@ import {
   FormControlLabel,
   Dialog,
   DialogTitle,
-  DialogContent,
+  DialogContent,DialogActions,
   IconButton,
   InputAdornment,
 Autocomplete ,
@@ -431,19 +431,21 @@ const [uploadSuccess, setUploadSuccess] = useState(false);
         </Typography>
       )}
     </Paper>
-    <Dialog open={mapDialogOpen} onClose={() => setMapDialogOpen(false)} maxWidth="sm" fullWidth>
+   <Dialog open={mapDialogOpen} onClose={() => setMapDialogOpen(false)} maxWidth="sm" fullWidth>
   <DialogTitle>Select Location</DialogTitle>
   <DialogContent>
     <Box sx={{ height: 300 }}>
       <MapSelector
-  value={form.location}
-  onChange={(loc) => {
-    setForm(prev => ({ ...prev, location: loc }));
-    setMapDialogOpen(false);
-  }}
-/>
+        value={form.location}
+        onChange={(loc) => {
+          setForm(prev => ({ ...prev, location: loc }));
+        }}
+      />
     </Box>
   </DialogContent>
+  <DialogActions>
+    <Button onClick={() => setMapDialogOpen(false)}>Save</Button>
+  </DialogActions>
 </Dialog>
   </Box>
   

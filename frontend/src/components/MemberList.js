@@ -1,4 +1,3 @@
-// updated component with enhanced dialog, 5-column layout, and restored View button
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
@@ -21,12 +20,19 @@ import {
   Grid,
   TextField,
   FormControl,
+  IconButton,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
 } from '@mui/material';
+import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
+import ClearIcon from '@mui/icons-material/Clear';
 import API_BASE_URL from '../config';
-
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { saveAs } from 'file-saver';
+import { useTheme, useMediaQuery } from '@mui/material';
 const MemberList = () => {
   const [members, setMembers] = useState([]);
   const [error, setError] = useState('');
@@ -35,6 +41,10 @@ const MemberList = () => {
   const [editMember, setEditMember] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useState([]);
+  const [genderFilter, setGenderFilter] = useState('all');
+const theme = useTheme();
+const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -90,13 +100,80 @@ const MemberList = () => {
     }
   };
 
+  const filterChips = [
+    { label: 'Child (0-3)', key: 'child' },
+    { label: 'Kids (4-15)', key: 'kids' },
+    { label: 'Youth (16-27)', key: 'youth' },
+    { label: 'Sr. Citizen (55+)', key: 'senior' },
+  ];
+
+  const toggleFilter = (key) => {
+    setFilters((prev) =>
+      prev.includes(key) ? prev.filter((f) => f !== key) : [...prev, key]
+    );
+  };
+
   const filteredMembers = members.filter((m) => {
     const query = searchQuery.toLowerCase();
-    return Object.values(m).some(val =>
+    const matchesSearch = Object.values(m).some((val) =>
       val && val.toString().toLowerCase().includes(query)
     );
+
+    const age = parseInt(m.age, 10);
+    const sex = (m.sex || '').toLowerCase();
+    const marital = (m.marital_status || '').toLowerCase();
+
+const matchesGender = genderFilter === 'all' || sex === genderFilter;
+
+    const passesFilters = filters.every((f) => {
+      if (f === 'child') return age >= 0 && age <= 3;
+      if (f === 'kids') return age > 3 && age <= 15;
+      if (f === 'youth') return age >= 16 && age <= 27 && marital === 'single';
+      if (f === 'senior') return age >= 55;
+      return true;
+    });
+
+    return matchesSearch && matchesGender && passesFilters;
+  });
+const handleMemberPDFExport = () => {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const title = 'Filtered Member List';
+  const timestamp = new Date().toISOString().slice(0, 16).replace('T', '_').replace(/:/g, '-');
+  const fileName = `Members_${genderFilter}_${timestamp}.pdf`;
+
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor('#0B3D91');
+  doc.text(title, (pageWidth - doc.getTextWidth(title)) / 2, 20);
+
+  autoTable(doc, {
+    startY: 30,
+    head: [['S.No', 'ID', 'Name', 'Gender', 'Mobile', 'Age', 'Profession']],
+    body: filteredMembers.map((mem, index) => [
+      index + 1,
+      mem.member_id || '-',
+      mem.name || '-',
+      mem.sex || '-',
+      mem.mobile || '-',
+      mem.age || '-',
+      mem.profession || '-',
+    ]),
+    theme: 'grid',
+    headStyles: {
+      fillColor: [11, 61, 145],
+      textColor: 255,
+      fontStyle: 'bold',
+      halign: 'center',
+    },
+    alternateRowStyles: { fillColor: [245, 249, 255] },
+    styles: { fontSize: 10, cellPadding: 4, textColor: 20 },
+    margin: { left: 15, right: 15 },
   });
 
+  const pdfBlob = doc.output('blob');
+  saveAs(pdfBlob, fileName);
+};
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" fontWeight={700} color="#0B3D91" mb={2}>
@@ -113,6 +190,140 @@ const MemberList = () => {
         onChange={(e) => setSearchQuery(e.target.value)}
       />
 
+  <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} flexWrap="wrap" justifyContent="space-between" alignItems={isMobile ? 'stretch' : 'center'} mb={2} gap={2}>
+  
+  {/* Gender Filter */}
+  <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems="center" gap={1}>
+    {isMobile ? (
+      <FormControl fullWidth size="small">
+        <InputLabel>Gender</InputLabel>
+        <Select
+          value={genderFilter}
+          label="Gender"
+          onChange={(e) => setGenderFilter(e.target.value)}
+        >
+            <MenuItem value="All">All</MenuItem>
+          <MenuItem value="male">Male</MenuItem>
+          <MenuItem value="female">Female</MenuItem>
+        </Select>
+      </FormControl>
+    ) : (
+      ['all', 'male', 'female'].map((key) => {
+  const label = key.charAt(0).toUpperCase() + key.slice(1);
+  const count = key === 'all' 
+    ? members.length 
+    : members.filter((m) => (m.sex || '').toLowerCase() === key).length;
+  const selected = genderFilter === key;
+
+  return (
+    <Button
+      key={key}
+      onClick={() => setGenderFilter(key)}
+      sx={{
+        borderRadius: 20,
+        px: 2,
+        textTransform: 'none',
+        backgroundColor: selected ? '#1976d2' : '#fff',
+        color: selected ? '#fff' : '#555',
+        border: `1px solid ${selected ? '#1976d2' : '#ccc'}`,
+        '&:hover': {
+          backgroundColor: selected ? '#1565c0' : '#f9f9f9',
+        },
+      }}
+      startIcon={
+        selected ? (
+          <RadioButtonCheckedIcon sx={{ fontSize: 18 }} />
+        ) : (
+          <RadioButtonUncheckedIcon sx={{ fontSize: 18 }} />
+        )
+      }
+    >
+      {label} ({count})
+    </Button>
+  );
+})
+    )}
+  </Box>
+
+  {/* Age Group Filters */}
+  <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} gap={1}>
+    {isMobile ? (
+      <FormControl fullWidth size="small">
+        <InputLabel>Age Group</InputLabel>
+        <Select
+          multiple
+          value={filters}
+          onChange={(e) => setFilters(e.target.value)}
+          renderValue={(selected) => selected.map(f => filterChips.find(c => c.key === f)?.label).join(', ')}
+        >
+          {filterChips.map(({ label, key }) => (
+            <MenuItem key={key} value={key}>
+              {label}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    ) : (
+      filterChips.map(({ label, key }) => {
+        const count = members.filter((m) => {
+          const age = parseInt(m.age, 10);
+          const marital = (m.marital_status || '').toLowerCase();
+          if (key === 'child') return age >= 0 && age <= 3;
+          if (key === 'kids') return age > 3 && age <= 15;
+          if (key === 'youth') return age >= 16 && age <= 27 && marital === 'single';
+          if (key === 'senior') return age >= 55;
+          return false;
+        }).length;
+
+        return (
+          <Button
+            key={key}
+            variant={filters.includes(key) ? 'contained' : 'outlined'}
+            size="small"
+            color="primary"
+            onClick={() => toggleFilter(key)}
+            sx={{
+              borderRadius: 20,
+              textTransform: 'none',
+              fontWeight: 'bold',
+              backgroundColor: filters.includes(key) ? '#1976d2' : '#f0f0f0',
+              color: filters.includes(key) ? '#fff' : '#333',
+              '&:hover': {
+                backgroundColor: filters.includes(key) ? '#1565c0' : '#e0e0e0',
+              },
+            }}
+          >
+            {label} ({count})
+          </Button>
+        );
+      })
+    )}
+  </Box>
+
+  {/* Action Buttons */}
+  <Box display="flex" gap={1} alignItems="center">
+    <Button
+      variant="contained"
+      color="secondary"
+      onClick={handleMemberPDFExport}
+      sx={{ borderRadius: 20, textTransform: 'none', fontWeight: 600 }}
+    >
+      Export PDF
+    </Button>
+    {(filters.length > 0 || genderFilter !== 'all') && (
+      <IconButton
+        size="small"
+        color="error"
+        onClick={() => {
+          setFilters([]);
+         setGenderFilter('all');
+        }}
+      >
+        <ClearIcon />
+      </IconButton>
+    )}
+  </Box>
+</Box>
       {loading && (
         <Box display="flex" justifyContent="center" py={4}>
           <CircularProgress />
@@ -128,21 +339,32 @@ const MemberList = () => {
       )}
 
       {filteredMembers.length > 0 && (
-        <Box sx={{ width: '100%', overflowX: 'auto' }}>
+       <Box sx={{ overflowX: 'auto' }}>
   <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 3, minWidth: 800 }}>
-    <Table size="small">
-      <TableHead sx={{ backgroundColor: '#0B3D91' }}>
+    <Table size="small" stickyHeader>
+      <TableHead>
         <TableRow>
-          <TableCell sx={{ color: '#fff', fontWeight: 600 }}>ID</TableCell>
-          <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Name</TableCell>
-          <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Sex</TableCell>
-          <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Age</TableCell>
-          <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Profession</TableCell>
-          <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Mobile</TableCell>
-          <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Residing</TableCell>
-          <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Actions</TableCell>
+          {[
+            'ID', 'Name', 'Sex', 'Age',
+            'Profession', 'Mobile', 'Residing', 'Actions'
+          ].map((head, index) => (
+            <TableCell
+              key={index}
+              sx={{
+                backgroundColor: '#0B3D91',
+                color: '#fff',
+                fontWeight: 600,
+                position: 'sticky',
+                top: 0,
+                zIndex: 1
+              }}
+            >
+              {head}
+            </TableCell>
+          ))}
         </TableRow>
       </TableHead>
+
       <TableBody>
         {filteredMembers.map((m) => (
           <TableRow key={m.member_id} hover>
@@ -190,8 +412,8 @@ const MemberList = () => {
                       <Typography variant="caption" color="text.secondary" fontWeight={500}>{label}</Typography>
                       <Typography variant="body2" fontWeight={600}>{
                         isDate && value ? new Date(value).toLocaleDateString('en-GB') :
-                        isBoolean ? (value ? 'Yes' : 'No') :
-                        value || '-'
+                          isBoolean ? (value ? 'Yes' : 'No') :
+                            value || '-'
                       }</Typography>
                     </Grid>
                   );
