@@ -57,7 +57,7 @@ const AnbiyamFamilyView = () => {
     if (!token) return;
     try {
       const res = await axios.get(
-        `${API_BASE_URL}/members/by-anbiyam/${encodeURIComponent(anbiyamName)}`,
+        `${API_BASE_URL}/member/by-anbiyam/${encodeURIComponent(anbiyamName)}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setMembers(res.data);

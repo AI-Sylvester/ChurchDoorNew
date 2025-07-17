@@ -187,7 +187,7 @@ router.get('/stats/members', authMiddleware, async (req, res) => {
 });
 
 // GET /members/by-anbiyam/:anbiyam
-router.get('/members/by-anbiyam/:anbiyam', authMiddleware, async (req, res) => {
+router.get('/by-anbiyam/:anbiyam', authMiddleware, async (req, res) => {
   const { anbiyam } = req.params;
 
   if (!anbiyam) {
