@@ -209,7 +209,38 @@ router.get('/by-anbiyam/:anbiyam', authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch members' });
   }
 });
+router.get('/stats/gender', authMiddleware, async (req, res) => {
+  try {
+    const result = await db.query(`
+      SELECT
+        COUNT(*) FILTER (WHERE sex = 'Male') AS male_count,
+        COUNT(*) FILTER (WHERE sex = 'Female') AS female_count
+      FROM members
+      WHERE family_id IN (SELECT id FROM families WHERE active = true)`);
 
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching gender stats:', error);
+    res.status(500).json({ message: 'Failed to fetch gender stats' });
+  }
+});
+
+router.get('/stats/age-groups', authMiddleware, async (req, res) => {
+  try {
+    const result = await db.query(`
+      SELECT
+        COUNT(*) FILTER (WHERE age < 16) AS child_count,
+        COUNT(*) FILTER (WHERE age >= 16 AND age < 28 AND marital_status = 'Single') AS youth_count,
+        COUNT(*) FILTER (WHERE age >= 55) AS senior_citizen_count
+      FROM members
+      WHERE family_id IN (SELECT id FROM families WHERE active = true)`);
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching age group stats:', error);
+    res.status(500).json({ message: 'Failed to fetch age group stats' });
+  }
+});
 module.exports = router;
 
 

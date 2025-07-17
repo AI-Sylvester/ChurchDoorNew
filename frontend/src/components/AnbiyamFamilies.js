@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import {
   Paper, Typography, CircularProgress, Alert, Grid, FormControl,
   InputLabel, Select, MenuItem, Box, Table, TableHead, TableRow,
-  TableCell, TableBody, Button, useTheme, useMediaQuery, Tabs, Tab
+  TableCell, TableBody, Button, useTheme, useMediaQuery, Tabs, Tab,Dialog, DialogTitle, DialogContent, DialogActions,
 } from '@mui/material';
 import axios from 'axios';
 import jsPDF from 'jspdf';
@@ -24,7 +24,7 @@ const AnbiyamFamilyView = () => {
   const token = localStorage.getItem('token');
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
+const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
   useEffect(() => {
     if (!token) return;
     const fetchAnbiyams = async () => {
@@ -82,58 +82,98 @@ const AnbiyamFamilyView = () => {
     setTabIndex(newValue);
   };
 
-  const exportToPDF = async () => {
-    const doc = new jsPDF();
-    const title = `Family Details - (${selectedAnbiyam || 'All'})`;
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const textWidth = doc.getTextWidth(title);
-    const centerX = (pageWidth - textWidth) / 2;
+ const handlePDFExport = async (type) => {
+  setPdfDialogOpen(false);
 
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(16);
-    doc.setTextColor('#0B3D91');
-    doc.text(title, centerX, 25);
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const title = `Anbiyam: ${selectedAnbiyam || 'All'}`;
+  const timestamp = new Date().toISOString().slice(0, 16).replace('T', '_').replace(/:/g, '-');
+  const fileName = `Anbiyam_Report_${selectedAnbiyam || 'All'}_${timestamp}.pdf`;
 
-    const tableData = families.map((fam, index) => [
-      index + 1,
-      fam.family_id || '-',
-      fam.head_name || '-',
-      fam.mobile_number || '-',
-      [fam.address_line1, fam.address_line2, fam.city].filter(Boolean).join(', ') || '-',
-    ]);
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor('#0B3D91');
+  doc.text(title, (pageWidth - doc.getTextWidth(title)) / 2, 20);
+
+  let currentY = 30;
+
+  if (type === 'families' || type === 'both') {
+    doc.setFontSize(12);
+    doc.setTextColor(40);
+    doc.text('Families List', 15, currentY);
+    currentY += 5;
 
     autoTable(doc, {
-      startY: 40,
+      startY: currentY + 5,
       head: [['S.No', 'Family ID', 'Head Name', 'Mobile', 'Address']],
-      body: tableData,
+      body: families.map((fam, index) => [
+        index + 1,
+        fam.family_id || '-',
+        fam.head_name || '-',
+        fam.mobile_number || '-',
+        [fam.address_line1, fam.address_line2, fam.city].filter(Boolean).join(', ') || '-',
+      ]),
       theme: 'grid',
       headStyles: {
         fillColor: [11, 61, 145],
-        textColor: [255, 255, 255],
+        textColor: 255,
         fontStyle: 'bold',
         halign: 'center',
       },
       alternateRowStyles: { fillColor: [245, 249, 255] },
       styles: { fontSize: 10, cellPadding: 4, textColor: 20 },
-      margin: { top: 20, left: 15, right: 15 },
+      margin: { left: 15, right: 15 },
     });
 
-    const timestamp = new Date().toISOString().slice(0, 16).replace('T', '_').replace(/:/g, '-');
-    const fileName = `Families_${selectedAnbiyam || 'All'}_${timestamp}.pdf`;
-    const pdfBlob = doc.output('blob');
+    currentY = doc.lastAutoTable.finalY + 10;
+  }
 
-    if (isPlatform('android') || isPlatform('ios')) {
-      const base64 = await blobToBase64(pdfBlob);
-      await Filesystem.writeFile({
-        path: fileName,
-        data: base64,
-        directory: Directory.Documents,
-      });
-      alert(`PDF saved in app's Documents folder: ${fileName}`);
-    } else {
-      saveAs(pdfBlob, fileName);
-    }
-  };
+  if (type === 'members' || type === 'both') {
+    doc.setFontSize(12);
+    doc.setTextColor(40);
+    doc.text('Members List', 15, currentY);
+    currentY += 5;
+
+    autoTable(doc, {
+      startY: currentY + 5,
+      head: [['S.No', 'Member ID', 'Name', 'Gender', 'Mobile', 'Age']],
+      body: members.map((mem, index) => [
+        index + 1,
+        mem.member_id || '-',
+        mem.name || '-',
+        mem.sex || '-',
+        mem.mobile || '-',
+        mem.age || '-',
+      ]),
+      theme: 'grid',
+      headStyles: {
+        fillColor: [11, 61, 145],
+        textColor: 255,
+        fontStyle: 'bold',
+        halign: 'center',
+      },
+      alternateRowStyles: { fillColor: [245, 249, 255] },
+      styles: { fontSize: 10, cellPadding: 4, textColor: 20 },
+      margin: { left: 15, right: 15 },
+    });
+  }
+
+  const pdfBlob = doc.output('blob');
+
+  if (isPlatform('android') || isPlatform('ios')) {
+    const base64 = await blobToBase64(pdfBlob);
+    await Filesystem.writeFile({
+      path: fileName,
+      data: base64,
+      directory: Directory.Documents,
+    });
+    alert(`PDF saved in Documents folder: ${fileName}`);
+  } else {
+    saveAs(pdfBlob, fileName);
+  }
+};
+
 
   const blobToBase64 = (blob) =>
     new Promise((resolve, reject) => {
@@ -189,11 +229,11 @@ const AnbiyamFamilyView = () => {
             <>
               {tabIndex === 0 && (
                 <>
-                  <Box display="flex" justifyContent="flex-end" my={2}>
-                    <Button variant="outlined" onClick={exportToPDF}>
-                      Export to PDF
-                    </Button>
-                  </Box>
+             <Box display="flex" justifyContent="flex-end" my={2}>
+  <Button variant="outlined" onClick={() => setPdfDialogOpen(true)}>
+    Export to PDF
+  </Button>
+</Box>
 
                   <Box sx={{ overflowX: 'auto' }}>
                     <Table sx={{ minWidth: 650 }}>
@@ -234,7 +274,7 @@ const AnbiyamFamilyView = () => {
                         <TableCell sx={{ color: 'white' }}>Name</TableCell>
                         <TableCell sx={{ color: 'white' }}>Gender</TableCell>
                         <TableCell sx={{ color: 'white' }}>Mobile</TableCell>
-                        <TableCell sx={{ color: 'white' }}>Relation</TableCell>
+                        <TableCell sx={{ color: 'white' }}>Age</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -243,9 +283,9 @@ const AnbiyamFamilyView = () => {
                           <TableCell>{index + 1}</TableCell>
                           <TableCell>{mem.member_id}</TableCell>
                           <TableCell>{mem.name}</TableCell>
-                          <TableCell>{mem.gender}</TableCell>
-                          <TableCell>{mem.mobile_number}</TableCell>
-                          <TableCell>{mem.relation}</TableCell>
+                          <TableCell>{mem.sex}</TableCell>
+                          <TableCell>{mem.mobile}</TableCell>
+                          <TableCell>{mem.age}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -256,7 +296,25 @@ const AnbiyamFamilyView = () => {
           )}
         </Box>
       )}
+      <Dialog open={pdfDialogOpen} onClose={() => setPdfDialogOpen(false)}>
+  <DialogTitle>Select What to Export</DialogTitle>
+  <DialogContent dividers>
+    <Button onClick={() => handlePDFExport('families')} fullWidth sx={{ mb: 1 }}>
+      Export Families
+    </Button>
+    <Button onClick={() => handlePDFExport('members')} fullWidth sx={{ mb: 1 }}>
+      Export Members
+    </Button>
+    <Button onClick={() => handlePDFExport('both')} fullWidth>
+      Export Both
+    </Button>
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={() => setPdfDialogOpen(false)}>Cancel</Button>
+  </DialogActions>
+</Dialog>
     </Paper>
+    
   );
 };
 
