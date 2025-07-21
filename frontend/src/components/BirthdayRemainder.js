@@ -104,7 +104,7 @@ const BirthdayReminders = () => {
   return (
     <Box p={3}>
       <Typography variant="h5" fontWeight={700} color="primary" mb={1}>
-        🎂 Birthday Reminders
+        Birthday Reminders
       </Typography>
       <Typography variant="subtitle1" color="textSecondary" mb={2}>
         Today is <strong>{todayStr}</strong>
