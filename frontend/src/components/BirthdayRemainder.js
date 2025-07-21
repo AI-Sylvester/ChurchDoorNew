@@ -35,24 +35,41 @@ const BirthdayReminders = () => {
 
     fetchBirthdays();
   }, [token]);
-
-  const renderList = (members) => (
-    <List dense>
-      {members.length === 0 && (
-        <ListItem>
-          <ListItemText primary="No birthdays" />
-        </ListItem>
-      )}
-      {members.map((m) => (
-        <ListItem key={m.member_id}>
-          <ListItemText
-            primary={`${m.name} (${m.member_id})`}
-            secondary={`DOB: ${new Date(m.dob).toLocaleDateString('en-GB')}`}
-          />
-        </ListItem>
-      ))}
-    </List>
-  );
+const renderList = (members) => (
+  <List dense>
+    {members.length === 0 && (
+      <ListItem>
+        <ListItemText primary="No birthdays" />
+      </ListItem>
+    )}
+    {members.map((m) => (
+      <ListItem key={m.member_id} alignItems="flex-start">
+        <ListItemText
+          primary={`${m.name} (${m.member_id})`}
+          secondary={
+            <>
+              <Typography component="span" variant="body2">
+                DOB: {new Date(m.dob).toLocaleDateString('en-GB')}
+              </Typography>
+              <br />
+              <Typography component="span" variant="body2">
+                Mobile: {m.mobile || 'N/A'}
+              </Typography>
+              <br />
+              <Typography component="span" variant="body2">
+                Family Head: {m.head_name || 'N/A'}
+              </Typography>
+              <br />
+              <Typography component="span" variant="body2">
+                Anbiyam: {m.anbiyam || 'N/A'}
+              </Typography>
+            </>
+          }
+        />
+      </ListItem>
+    ))}
+  </List>
+);
 
   if (loading) {
     return <Box textAlign="center" py={4}><CircularProgress /></Box>;
