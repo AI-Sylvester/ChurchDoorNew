@@ -252,11 +252,15 @@ router.get('/birthdays', authMiddleware, async (req, res) => {
     const currentMonth = moment().format('MM');
 
     const result = await db.query(`
-      SELECT m.*
-      FROM members m
-      JOIN families f ON m.family_id = f.id
-      WHERE f.active = true
-      AND m.dob IS NOT NULL
+     SELECT 
+  m.*, 
+  f.anbiyam_code, 
+  a.anbiyam_name 
+FROM members m
+JOIN families f ON m.family_id = f.id
+JOIN anbiyams a ON f.anbiyam_code = a.anbiyam_code
+WHERE f.active = true
+  AND m.dob IS NOT NULL
     `);
 
     const todayList = [];

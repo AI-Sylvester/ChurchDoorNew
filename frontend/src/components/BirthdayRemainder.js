@@ -9,6 +9,8 @@ import {
   ListItemText,
   Divider,
   CircularProgress,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import API_BASE_URL from '../config';
 
@@ -16,6 +18,7 @@ const BirthdayReminders = () => {
   const [data, setData] = useState({ today: [], thisWeek: [], thisMonth: [] });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [tab, setTab] = useState(0);
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -47,7 +50,7 @@ const BirthdayReminders = () => {
         <ListItem key={m.member_id}>
           <ListItemText
             primary={`${m.name} (${m.member_id})`}
-            secondary={`DOB: ${new Date(m.dob).toLocaleDateString('en-GB')}`}
+            secondary={`DOB: ${new Date(m.dob).toLocaleDateString('en-GB')} | Anbiyam: ${m.tat || 'N/A'}`}
           />
         </ListItem>
       ))}
@@ -62,26 +65,22 @@ const BirthdayReminders = () => {
     return <Typography color="error">{error}</Typography>;
   }
 
+  const tabLabels = ['Today', 'This Week', 'This Month'];
+  const tabData = [data.today, data.thisWeek, data.thisMonth];
+
   return (
     <Box p={3}>
       <Typography variant="h5" fontWeight={700} mb={2} color="primary">🎂 Birthday Reminders</Typography>
 
-      <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
-        <Typography variant="h6">Today</Typography>
-        <Divider sx={{ my: 1 }} />
-        {renderList(data.today)}
-      </Paper>
-
-      <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
-        <Typography variant="h6">This Week</Typography>
-        <Divider sx={{ my: 1 }} />
-        {renderList(data.thisWeek)}
-      </Paper>
-
       <Paper variant="outlined" sx={{ p: 2 }}>
-        <Typography variant="h6">This Month</Typography>
-        <Divider sx={{ my: 1 }} />
-        {renderList(data.thisMonth)}
+        <Tabs value={tab} onChange={(e, newValue) => setTab(newValue)} indicatorColor="primary" textColor="primary" centered>
+          {tabLabels.map((label, index) => (
+            <Tab label={label} key={index} />
+          ))}
+        </Tabs>
+
+        <Divider sx={{ my: 2 }} />
+        {renderList(tabData[tab])}
       </Paper>
     </Box>
   );
