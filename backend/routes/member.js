@@ -258,7 +258,7 @@ router.get('/birthdays', authMiddleware, async (req, res) => {
   a.anbiyam_name 
 FROM members m
 JOIN families f ON m.family_id = f.id
-JOIN anbiyams a ON f.anbiyam_code = a.anbiyam_code
+JOIN anbiyam a ON f.anbiyam_code = a.anbiyam_code
 WHERE f.active = true
   AND m.dob IS NOT NULL
     `);

@@ -3,62 +3,38 @@ import axios from 'axios';
 import {
   Box,
   Typography,
-  CircularProgress,
+  Paper,
   List,
   ListItem,
   ListItemText,
-  Tabs,
-  Tab,
-  Paper,
   Divider,
+  CircularProgress,
 } from '@mui/material';
 import API_BASE_URL from '../config';
 
 const BirthdayReminders = () => {
   const [data, setData] = useState({ today: [], thisWeek: [], thisMonth: [] });
-  const [anbiyams, setAnbiyams] = useState({});
   const [loading, setLoading] = useState(false);
-  const [tab, setTab] = useState(0);
   const [error, setError] = useState('');
   const token = localStorage.getItem('token');
 
   useEffect(() => {
-    const fetchAll = async () => {
+    const fetchBirthdays = async () => {
       setLoading(true);
       try {
-        const [bdayRes, anbiyamRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/member/birthdays`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get(`${API_BASE_URL}/api/anbiyams`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
-
-        setData(bdayRes.data);
-        const anbiyamMap = {};
-        anbiyamRes.data.forEach((a) => {
-          anbiyamMap[a.code] = a.name;
+        const res = await axios.get(`${API_BASE_URL}/member/birthdays`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-        setAnbiyams(anbiyamMap);
+        setData(res.data);
       } catch (err) {
-        console.error(err);
         setError('Failed to fetch birthday reminders');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAll();
+    fetchBirthdays();
   }, [token]);
-
-  const handleTabChange = (event, newValue) => setTab(newValue);
-
-  const getCurrentList = () => {
-    if (tab === 0) return data.today;
-    if (tab === 1) return data.thisWeek;
-    return data.thisMonth;
-  };
 
   const renderList = (members) => (
     <List dense>
@@ -71,36 +47,41 @@ const BirthdayReminders = () => {
         <ListItem key={m.member_id}>
           <ListItemText
             primary={`${m.name} (${m.member_id})`}
-            secondary={`DOB: ${new Date(m.dob).toLocaleDateString('en-GB')} | Anbiyam: ${anbiyams[m.anbiyam_code] || 'N/A'}`}
+            secondary={`DOB: ${new Date(m.dob).toLocaleDateString('en-GB')}`}
           />
         </ListItem>
       ))}
     </List>
   );
 
-  if (loading) return <Box textAlign="center" py={4}><CircularProgress /></Box>;
-  if (error) return <Typography color="error">{error}</Typography>;
+  if (loading) {
+    return <Box textAlign="center" py={4}><CircularProgress /></Box>;
+  }
+
+  if (error) {
+    return <Typography color="error">{error}</Typography>;
+  }
 
   return (
     <Box p={3}>
-      <Typography variant="h5" fontWeight={700} mb={2} color="primary">
-        🎂 Birthday Reminders
-      </Typography>
+      <Typography variant="h5" fontWeight={700} mb={2} color="primary">🎂 Birthday Reminders</Typography>
 
-      <Paper elevation={1} sx={{ mb: 2 }}>
-        <Tabs value={tab} onChange={handleTabChange} variant="fullWidth" indicatorColor="primary" textColor="primary">
-          <Tab label={`Today (${data.today.length})`} />
-          <Tab label={`This Week (${data.thisWeek.length})`} />
-          <Tab label={`This Month (${data.thisMonth.length})`} />
-        </Tabs>
+      <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
+        <Typography variant="h6">Today</Typography>
+        <Divider sx={{ my: 1 }} />
+        {renderList(data.today)}
+      </Paper>
+
+      <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
+        <Typography variant="h6">This Week</Typography>
+        <Divider sx={{ my: 1 }} />
+        {renderList(data.thisWeek)}
       </Paper>
 
       <Paper variant="outlined" sx={{ p: 2 }}>
-        <Typography variant="h6" mb={1}>
-          {tab === 0 ? 'Today' : tab === 1 ? 'This Week' : 'This Month'}
-        </Typography>
-        <Divider sx={{ mb: 2 }} />
-        {renderList(getCurrentList())}
+        <Typography variant="h6">This Month</Typography>
+        <Divider sx={{ my: 1 }} />
+        {renderList(data.thisMonth)}
       </Paper>
     </Box>
   );
