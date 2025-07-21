@@ -49,6 +49,7 @@ const [selectedPath, setSelectedPath] = useState('/home');
     { path: '/home', icon: <SpaceDashboardRoundedIcon />, label: 'Home' },
       { path: '/familycard', icon: <ContactsIcon />, label: 'Card' },
         { path: '/familymap', icon: <MapRoundedIcon />, label: 'Map' },
+                 { path: '/birthdays', icon: <Diversity3RoundedIcon />, label: 'Birthday' },
            { path: '/familydet', icon: <InfoOutlinedIcon />, label: 'Details' },
      { path: '/familylist', icon: <GroupsRoundedIcon />, label: 'Families' },
        { path: '/memlist', icon: <GroupRoundedIcon />, label: 'Members' },

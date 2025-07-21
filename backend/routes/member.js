@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const authMiddleware = require('../middleware/authMiddleware');
-
+const moment = require('moment'); // if not already installed, install with: npm install moment
 // Utility to calculate age from DOB
 const calculateAge = (dob) => {
   if (!dob) return null;
@@ -242,6 +242,64 @@ router.get('/stats/age-groups', authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch age group stats' });
   }
 });
+
+
+router.get('/birthdays', authMiddleware, async (req, res) => {
+  try {
+    const today = moment().format('MM-DD');
+    const startOfWeek = moment().startOf('week').format('MM-DD');
+    const endOfWeek = moment().endOf('week').format('MM-DD');
+    const currentMonth = moment().format('MM');
+
+    const result = await db.query(`
+      SELECT m.*
+      FROM members m
+      JOIN families f ON m.family_id = f.id
+      WHERE f.active = true
+      AND m.dob IS NOT NULL
+    `);
+
+    const todayList = [];
+    const thisWeekList = [];
+    const thisMonthList = [];
+
+    result.rows.forEach(member => {
+      const dob = moment(member.dob);
+      if (!dob.isValid()) return;
+
+      const dobMonthDay = dob.format('MM-DD');
+      const dobMonth = dob.format('MM');
+
+      if (dobMonthDay === today) {
+        todayList.push(member);
+      }
+
+      if (
+        moment(dobMonthDay, 'MM-DD').isBetween(
+          moment(startOfWeek, 'MM-DD').subtract(1, 'day'),
+          moment(endOfWeek, 'MM-DD').add(1, 'day')
+        )
+      ) {
+        thisWeekList.push(member);
+      }
+
+      if (dobMonth === currentMonth) {
+        thisMonthList.push(member);
+      }
+    });
+
+    res.json({
+      today: todayList,
+      thisWeek: thisWeekList,
+      thisMonth: thisMonthList,
+    });
+  } catch (error) {
+    console.error('Error fetching birthday reminders:', error);
+    res.status(500).json({ message: 'Failed to fetch birthday reminders' });
+  }
+});
+
+
 module.exports = router;
 
 

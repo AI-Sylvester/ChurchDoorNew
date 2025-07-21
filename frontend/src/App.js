@@ -14,6 +14,7 @@ import AnbiyamManager from './components/AnbiyamManager';
 import AnbiyamFamilyView from './components/AnbiyamFamilies'
 import FamilyMap from './components/FamilyMap';
 import FamilyCard from './components/FamilyCard';
+import BirthdayReminders from './components/BirthdayRemainder';
 
 function App() {
   return (
@@ -121,6 +122,16 @@ function App() {
             <PrivateRoute>
               <Layout>
                 <FamilyCard />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+          <Route
+          path="/birthdays"
+          element={
+            <PrivateRoute>
+              <Layout>
+                <BirthdayReminders />
               </Layout>
             </PrivateRoute>
           }

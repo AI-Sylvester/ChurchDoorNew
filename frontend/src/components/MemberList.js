@@ -247,21 +247,27 @@ const handleMemberPDFExport = () => {
 
   {/* Age Group Filters */}
   <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} gap={1}>
-    {isMobile ? (
-      <FormControl fullWidth size="small">
-        <InputLabel>Age Group</InputLabel>
-        <Select
-          multiple
-          value={filters}
-          onChange={(e) => setFilters(e.target.value)}
-          renderValue={(selected) => selected.map(f => filterChips.find(c => c.key === f)?.label).join(', ')}
-        >
-          {filterChips.map(({ label, key }) => (
-            <MenuItem key={key} value={key}>
-              {label}
-            </MenuItem>
-          ))}
-        </Select>
+   {isMobile ? (
+  <FormControl fullWidth size="small">
+    <InputLabel>Age Group</InputLabel>
+    <Select
+      value={filters[0] || ''}
+      onChange={(e) => setFilters([e.target.value])}
+      renderValue={(selected) =>
+        filterChips.find((c) => c.key === selected)?.label || ''
+      }
+      MenuProps={{
+        PaperProps: {
+          sx: { maxHeight: 200 }, // Optional: limits dropdown height on mobile
+        },
+      }}
+    >
+      {filterChips.map(({ label, key }) => (
+        <MenuItem key={key} value={key}>
+          {label}
+        </MenuItem>
+      ))}
+    </Select>
       </FormControl>
     ) : (
       filterChips.map(({ label, key }) => {

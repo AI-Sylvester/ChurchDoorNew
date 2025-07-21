@@ -28,7 +28,8 @@ const FamilyCard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showImage, setShowImage] = useState(false);
   const [startX, setStartX] = useState(null);
-
+const [members, setMembers] = useState([]);
+const [membersLoading, setMembersLoading] = useState(false);
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -83,7 +84,20 @@ const filteredFamilies = sortedFamilies.filter((fam) => {
             filteredFamilies.map((fam) => (
              <Card
   key={fam.family_id}
-  sx={{
+  onClick={async () => {
+    try {
+      setMembersLoading(true);
+      setSelectedFamily(fam);
+      const res = await axios.get(`${API_BASE_URL}/member/byFamily/${fam.family_id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setMembers(res.data);
+    } catch (err) {
+      console.error('Failed to fetch members:', err);
+    } finally {
+      setMembersLoading(false);
+    }
+  }} sx={{
     display: 'flex',
     alignItems: 'center',
     p: 1.2,
@@ -176,6 +190,7 @@ const filteredFamilies = sortedFamilies.filter((fam) => {
                   onClick={() => setShowImage(true)}
                 />
               </Grid>
+            
               <Grid item xs={8}>
               {Object.entries(selectedFamily)
   .filter(([key]) => !['id','created_by', 'family_pic', 'location'].includes(key))
@@ -211,6 +226,26 @@ const filteredFamilies = sortedFamilies.filter((fam) => {
           ) : (
             <Typography>Loading...</Typography>
           )}
+            <Box mt={2}>
+  <Typography variant="h6" gutterBottom>
+    Members
+  </Typography>
+
+  {membersLoading ? (
+    <CircularProgress size={24} />
+  ) : members.length > 0 ? (
+    members.map((member) => (
+      <Box key={member.member_id} sx={{ mb: 1, pl: 1 }}>
+        <Typography fontWeight={500}>{member.name}</Typography>
+        <Typography variant="body2" color="text.secondary">
+          Age: {member.age} | Gender: {member.gender} | Marital: {member.marital_status}
+        </Typography>
+      </Box>
+    ))
+  ) : (
+    <Typography color="text.secondary">No members found.</Typography>
+  )}
+</Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setSelectedFamily(null)}>Close</Button>
