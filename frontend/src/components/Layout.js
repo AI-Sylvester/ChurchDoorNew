@@ -31,6 +31,7 @@ import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import ContactsIcon from '@mui/icons-material/Contacts';
+import CakeRoundedIcon from '@mui/icons-material/CakeRounded';
 import logo from './logo.png'; // adjust path as needed
 const Layout = ({ children }) => {
 
@@ -49,7 +50,7 @@ const [selectedPath, setSelectedPath] = useState('/home');
     { path: '/home', icon: <SpaceDashboardRoundedIcon />, label: 'Home' },
       { path: '/familycard', icon: <ContactsIcon />, label: 'Card' },
         { path: '/familymap', icon: <MapRoundedIcon />, label: 'Map' },
-                 { path: '/birthdays', icon: <Diversity3RoundedIcon />, label: 'Birthday' },
+                 { path: '/birthdays', icon: <CakeRoundedIcon />, label: 'Birthday' },
            { path: '/familydet', icon: <InfoOutlinedIcon />, label: 'Details' },
      { path: '/familylist', icon: <GroupsRoundedIcon />, label: 'Families' },
        { path: '/memlist', icon: <GroupRoundedIcon />, label: 'Members' },

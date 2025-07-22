@@ -11,6 +11,7 @@ import {
   ListItemText,
   Divider,
   CircularProgress,
+  Collapse,
 } from '@mui/material';
 import API_BASE_URL from '../config';
 
@@ -19,12 +20,14 @@ const BirthdayReminders = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [tabIndex, setTabIndex] = useState(0);
+  const [expandedId, setExpandedId] = useState(null);
   const token = localStorage.getItem('token');
 
   const tabLabels = [
     { label: 'Today', key: 'today' },
-    { label: 'This Week', key: 'thisWeek' },
-    { label: 'This Month', key: 'thisMonth' },
+    { label: 'Week', key: 'thisWeek' },
+      { label: 'Month', key: 'thisMonth' }, // NEW TAB
+    
   ];
 
   useEffect(() => {
@@ -34,7 +37,11 @@ const BirthdayReminders = () => {
         const res = await axios.get(`${API_BASE_URL}/member/birthdays`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setData(res.data);
+        setData({
+          today: res.data.today || [],
+          thisWeek: res.data.thisWeek || [],
+           thisMonth: res.data.thisMonth || [], // ADD THIS
+        });
       } catch (err) {
         setError('Failed to fetch birthday reminders');
       } finally {
@@ -45,41 +52,57 @@ const BirthdayReminders = () => {
     fetchBirthdays();
   }, [token]);
 
-  const renderList = (members) => (
+  const toggleExpand = (id) => {
+    setExpandedId((prev) => (prev === id ? null : id));
+  };
+
+const renderList = (members) => {
+  // If current tab is "thisWeek", sort by DOB ascending
+const sortedMembers = ['thisWeek', 'thisMonth'].includes(tabLabels[tabIndex].key)
+  ? [...members].sort((a, b) => new Date(b.dob) - new Date(a.dob))
+  : members;
+  return (
     <List dense>
-      {members.length === 0 && (
+      {sortedMembers.length === 0 && (
         <ListItem>
           <ListItemText primary="No birthdays" />
         </ListItem>
       )}
-      {members.map((m) => (
-        <ListItem key={m.member_id} alignItems="flex-start">
-          <ListItemText
-            primary={`${m.name} (${m.member_id})`}
-            secondary={
-              <>
-                <Typography component="span" variant="body2">
-                  DOB: {new Date(m.dob).toLocaleDateString('en-GB')}
+      {sortedMembers.map((m, index) => (
+        <React.Fragment key={m.member_id}>
+          <ListItem button onClick={() => toggleExpand(m.member_id)}>
+            <ListItemText
+              primary={
+                <Typography variant="subtitle1" fontWeight={600}>
+                  {m.name}
                 </Typography>
-                <br />
-                <Typography component="span" variant="body2">
-                  Mobile: {m.mobile || 'N/A'}
-                </Typography>
-                <br />
-                <Typography component="span" variant="body2">
-                  Family Head: {m.head_name || 'N/A'}
-                </Typography>
-                <br />
-                <Typography component="span" variant="body2">
-                  Anbiyam: {m.anbiyam || 'N/A'}
-                </Typography>
-              </>
-            }
-          />
-        </ListItem>
+              }
+              secondary={
+                <>
+                  <Typography component="span" variant="body2">
+                    DOB: {new Date(m.dob).toLocaleDateString('en-GB')}
+                  </Typography>
+                  <br />
+                  <Typography component="span" variant="body2">
+                    Anbiyam: {m.anbiyam || 'N/A'}
+                  </Typography>
+                </>
+              }
+            />
+          </ListItem>
+          <Collapse in={expandedId === m.member_id} timeout="auto" unmountOnExit>
+            <Box px={4} pb={2}>
+              <Typography variant="body2">Member ID: {m.member_id}</Typography>
+              <Typography variant="body2">Mobile: {m.mobile || 'N/A'}</Typography>
+              <Typography variant="body2">Family Head: {m.head_name || 'N/A'}</Typography>
+            </Box>
+          </Collapse>
+          {index < sortedMembers.length - 1 && <Divider />}
+        </React.Fragment>
       ))}
     </List>
   );
+};
 
   if (loading) {
     return (
@@ -118,7 +141,7 @@ const BirthdayReminders = () => {
           textColor="primary"
           indicatorColor="primary"
         >
-          {tabLabels.map((tab, idx) => (
+          {tabLabels.map((tab) => (
             <Tab
               key={tab.key}
               label={`${tab.label} (${data[tab.key]?.length || 0})`}
@@ -128,9 +151,7 @@ const BirthdayReminders = () => {
 
         <Divider sx={{ mb: 1 }} />
 
-        <Box sx={{ p: 2 }}>
-          {renderList(data[currentKey])}
-        </Box>
+        <Box sx={{ p: 2 }}>{renderList(data[currentKey])}</Box>
       </Paper>
     </Box>
   );
