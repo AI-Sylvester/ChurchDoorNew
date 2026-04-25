@@ -16,10 +16,16 @@ import {
   Paper,
   Alert,
   Avatar,
-  Grid
+  useTheme,
+  useMediaQuery,
+  Stack,
+  InputAdornment,
+  Switch,
+  FormControlLabel
 } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
 import { Filesystem, Directory } from '@capacitor/filesystem';
-
+import { Capacitor } from '@capacitor/core';
 import API_BASE_URL from '../config';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -31,6 +37,9 @@ const FamilyDetailsView = () => {
   const [error, setError] = useState('');
   const [loadingFamily, setLoadingFamily] = useState(false);
   const [loadingMembers, setLoadingMembers] = useState(false);
+  const [detailedView, setDetailedView] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const token = localStorage.getItem('token');
 
@@ -108,14 +117,11 @@ const FamilyDetailsView = () => {
     { label: 'Active', key: 'active' },
   ];
 const InfoLine = ({ label, value }) => (
-  <Box display="flex" mb={1}>
-    <Typography
-      variant="body2"
-      sx={{ fontWeight: 600, minWidth: 130, color: '#0B3D91' }}
-    >
-      {label}:
+  <Box display="flex" justifyContent="space-between" mb={1.5} pb={1} sx={{ borderBottom: '1px dashed rgba(0,0,0,0.05)' }}>
+    <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+      {label}
     </Typography>
-    <Typography variant="body2" color="text.secondary">
+    <Typography variant="body2" sx={{ fontWeight: 700, color: '#1E293B', textAlign: 'right', pl: 2 }}>
       {value || '-'}
     </Typography>
   </Box>
@@ -140,36 +146,74 @@ const exportPDF = async () => {
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 40;
   const lineHeight = 22;
-   let yPos = margin;
+  let yPos = margin;
 
   doc.setFontSize(20);
   doc.setTextColor('#0B3D91');
   doc.setFont('helvetica', 'bold');
   doc.text('Family Profile', pageWidth / 2, yPos, { align: 'center' });
-  yPos += 60;
+  yPos += 40;
 
   const familyFields = [
     { label: 'Family ID', value: familyDetails?.family_id || '-' },
     { label: 'Address', value: `${familyDetails?.address_line1 || ''}, ${familyDetails?.address_line2 || ''}` },
     { label: 'City & Pincode', value: `${familyDetails?.city || ''} - ${familyDetails?.pincode || ''}` },
-    { label: 'Contact', value: familyDetails?.mobile_number + (familyDetails?.mobile_number2 ? `, ${familyDetails.mobile_number2}` : '') || '-' },
+    {
+      label: 'Contact',
+      value:
+        familyDetails?.mobile_number +
+        (familyDetails?.mobile_number2 ? `, ${familyDetails.mobile_number2}` : '') || '-',
+    },
     { label: 'Anbiyam', value: familyDetails?.anbiyam || '-' },
     { label: 'Total Members', value: members.length.toString() },
   ];
 
-  familyFields.forEach((item, index) => {
-    const y = yPos + index * lineHeight;
-    doc.setFont('helvetica', 'bold');
+  const topY = yPos;
+  const totalWidth = pageWidth - margin * 2;
+  const leftColumnWidth = (totalWidth * 3) / 4;
+  const rightColumnWidth = totalWidth / 4;
+
+  const leftX = margin;
+  const rightX = margin + leftColumnWidth + 10; // padding between sections
+  const imageWidth = rightColumnWidth - 20;
+  const imageHeight = 120;
+
+  // 🔵 LEFT: Family Details (with wrapped values)
+  let currentY = topY;
+
+  familyFields.forEach(({ label, value }) => {
     doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
     doc.setTextColor('#0B3D91');
-    doc.text(`${item.label}:`, margin, y);
+    doc.text(`${label}:`, leftX, currentY);
+
     doc.setFont('helvetica', 'normal');
     doc.setTextColor('#000');
-    doc.text(item.value, margin + 100, y);
+
+    const wrappedValue = doc.splitTextToSize(value || '-', leftColumnWidth - 100);
+    doc.text(wrappedValue, leftX + 100, currentY);
+
+    currentY += lineHeight * wrappedValue.length;
   });
 
-  yPos += familyFields.length * lineHeight + 20;
+  const detailsHeight = currentY - topY;
 
+  // 🔵 RIGHT: Family Image
+  if (familyDetails?.family_pic) {
+    try {
+      const imgBase64 = await toBase64(familyDetails.family_pic);
+      const imageY = topY;
+
+      doc.addImage(imgBase64, 'JPEG', rightX, imageY, imageWidth, imageHeight);
+    } catch (err) {
+      console.error('Error loading image:', err);
+    }
+  }
+
+  // 🔽 Adjust yPos after tallest block
+  yPos = topY + Math.max(detailsHeight, imageHeight) + 30;
+
+  // 🔽 Member Table
   const memberAttributes = [
     { label: 'Name', key: 'name' },
     { label: 'Age', key: 'age' },
@@ -200,77 +244,106 @@ const exportPDF = async () => {
     tableWidth: pageWidth - margin * 2,
   });
 
+  // 🔽 Save PDF
   const now = new Date();
-  const filename = `Family_${familyDetails?.family_id || 'Export'}_${now.toISOString().slice(0, 16).replace(/[:T]/g, '-')}.pdf`;
+  const filename = `Family_${familyDetails?.family_id || 'Export'}_${now
+    .toISOString()
+    .slice(0, 16)
+    .replace(/[:T]/g, '-')}.pdf`;
 
-  // Convert PDF to base64
-  const pdfBlob = doc.output('blob');
-  const base64 = await blobToBase64(pdfBlob);
+  if (Capacitor.getPlatform() === 'web') {
+    doc.save(filename);
+  } else {
+    const pdfBlob = doc.output('blob');
+    const base64 = await blobToBase64(pdfBlob);
 
-  // Save using Capacitor Filesystem
-  try {
-    await Filesystem.writeFile({
-      path: filename,
-      data: base64,
-      directory: Directory.Documents,
-    });
-
-    alert(`PDF saved successfully: ${filename}`);
-  } catch (error) {
-    console.error('Failed to save PDF file:', error);
-    alert('Error saving file');
+    try {
+      await Filesystem.writeFile({
+        path: filename,
+        data: base64,
+        directory: Directory.Documents,
+      });
+      alert(`PDF saved successfully: ${filename}`);
+    } catch (error) {
+      console.error('Failed to save PDF file:', error);
+      alert('Error saving file');
+    }
   }
 };
 
-// Helper: Blob to base64
-const blobToBase64 = (blob) => {
-  return new Promise((resolve, reject) => {
+// 📦 Helper: Blob to Base64
+const blobToBase64 = (blob) =>
+  new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = reject;
     reader.onload = () => {
-      const base64String = reader.result.split(',')[1]; // remove data:*/*;base64,
+      const base64String = reader.result.split(',')[1];
       resolve(base64String);
     };
     reader.readAsDataURL(blob);
   });
-};
 
+// 📷 Helper: Convert image URL to base64
+const toBase64 = (url) =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = function () {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const dataURL = canvas.toDataURL('image/jpeg');
+      resolve(dataURL);
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
 
   return (
-    <Container maxWidth="lg" sx={{ py: 3 }}>
-      {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap">
-        <Typography variant="h5" fontWeight={700} color="#0B3D91">
-          Family Profile
-        </Typography>
-
-      <Autocomplete
-  freeSolo
-  disableClearable
-  options={familyIds}
-  value={selectedId}
-  onInputChange={(event, newValue) => {
-    setSelectedId(newValue);
-  }}
-  onChange={(event, newValue) => {
-    setSelectedId(newValue);
-    handleIdChange({ target: { value: newValue } });
-  }}
-  renderInput={(params) => (
-    <TextField
-      {...params}
-      label="Select or Type Family ID"
-      size="small"
-      InputProps={{
-        ...params.InputProps,
-        type: 'search',
-      }}
-    />
-  )}
-  sx={{ minWidth: 200 }}
-/>
-
-      </Box>
+    <Box sx={{ backgroundColor: '#f8fafc', minHeight: '100vh', pt: 4, pb: 10 }}>
+      <Container maxWidth="lg">
+        {/* Floating Search Bar */}
+        <Box mb={5} display="flex" justifyContent="center">
+          <Autocomplete
+            freeSolo
+            disableClearable
+            options={familyIds}
+            value={selectedId}
+            onInputChange={(event, newValue) => {
+              setSelectedId(newValue);
+            }}
+            onChange={(event, newValue) => {
+              setSelectedId(newValue);
+              handleIdChange({ target: { value: newValue } });
+            }}
+            sx={{ width: { xs: '100%', md: 600 } }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                placeholder="Search by Family ID..."
+                InputProps={{
+                  ...params.InputProps,
+                  type: 'search',
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: '#94A3B8' }} />
+                    </InputAdornment>
+                  ),
+                  sx: { 
+                    borderRadius: 8, 
+                    backgroundColor: '#fff', 
+                    boxShadow: '0 8px 30px rgba(0,0,0,0.08)', 
+                    '& fieldset': { border: 'none' },
+                    px: 1,
+                    py: 0.5
+                  }
+                }}
+              />
+            )}
+          />
+        </Box>
 
       {(loadingFamily || loadingMembers) && (
         <Box display="flex" justifyContent="center" my={4}>
@@ -285,113 +358,205 @@ const blobToBase64 = (blob) => {
       )}
       
 {familyDetails && (
-  <Card
-    sx={{
-      p: 3,
-      mb: 4,
-      backgroundColor: '#F5F9FF',
-      borderRadius: 3,
-      boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-    }}
-  >
-    <Grid container spacing={3} alignItems="center">
-      {/* Avatar Section */}
-      <Grid item xs={12} md={3} textAlign="center">
+  <Box mb={5}>
+    {/* Hero Cover & Avatar */}
+    <Box sx={{ position: 'relative', mb: { xs: 8, md: 6 } }}>
+      <Box 
+        sx={{ 
+          height: 180, 
+          background: 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)', 
+          borderRadius: 4,
+          boxShadow: '0 10px 30px rgba(30, 58, 138, 0.2)' 
+        }} 
+      />
+      <Box 
+        sx={{ 
+          position: 'absolute', 
+          bottom: -50, 
+          left: { xs: '50%', md: 40 },
+          transform: { xs: 'translateX(-50%)', md: 'none' },
+          display: 'flex',
+          alignItems: 'flex-end',
+          gap: 3
+        }}
+      >
         <Avatar
           src={familyDetails.family_pic || ''}
           sx={{
-            width: 120,
-            height: 120,
+            width: 140,
+            height: 140,
             bgcolor: '#0B3D91',
             fontWeight: 700,
-            fontSize: 32,
-            border: '3px solid #fff',
-            boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
-            mx: 'auto',
+            fontSize: 40,
+            border: '6px solid #f8fafc',
+            boxShadow: '0 8px 20px rgba(0, 0, 0, 0.15)',
           }}
         >
-          {!familyDetails.family_pic && '?'}
+          {!familyDetails.family_pic && familyDetails.head_name?.charAt(0).toUpperCase()}
         </Avatar>
-        <Typography variant="subtitle1" fontWeight={600} color="#0B3D91" mt={2}>
-          Head: {familyDetails.head_name}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Family ID: {familyDetails.family_id}
-        </Typography>
-          <Typography variant="body2" color="text.secondary" mt={1}>
-    Total Members: {members.length}
-  </Typography>
-      </Grid>
+        <Box sx={{ display: { xs: 'none', md: 'block' }, pb: 2 }}>
+          <Typography variant="h3" fontWeight={800} color="#1E293B">
+            {familyDetails.head_name}
+          </Typography>
+          <Typography variant="h6" color="text.secondary" fontWeight={600}>
+            ID: {familyDetails.family_id}
+          </Typography>
+        </Box>
+      </Box>
+    </Box>
 
-      {/* Info Section */}
-      <Grid item xs={12} md={9}>
-        <Grid container spacing={2}>
-          {/* Column 1 */}
-          <Grid item xs={12} sm={4}>
-            <InfoLine label="Address" value={`${familyDetails.address_line1}, ${familyDetails.address_line2}`} />
-            <InfoLine label="City & Pincode" value={`${familyDetails.city} - ${familyDetails.pincode}`} />
-            <InfoLine label="Contact" value={`${familyDetails.mobile_number}${familyDetails.mobile_number2 ? `, ${familyDetails.mobile_number2}` : ''}`} />
-            <InfoLine label="Location" value={familyDetails.location} />
-          </Grid>
+    {/* Mobile Name (Shown below avatar on mobile) */}
+    <Box sx={{ display: { xs: 'block', md: 'none' }, textAlign: 'center', mb: 4 }}>
+      <Typography variant="h4" fontWeight={800} color="#1E293B">
+        {familyDetails.head_name}
+      </Typography>
+      <Typography variant="subtitle1" color="text.secondary" fontWeight={600}>
+        ID: {familyDetails.family_id}
+      </Typography>
+    </Box>
 
-          {/* Column 2 */}
-          <Grid item xs={12} sm={4}>
-            <InfoLine label="Native" value={familyDetails.native} />
-            <InfoLine
-              label="Resident From"
-              value={familyDetails.resident_from ? new Date(familyDetails.resident_from).toLocaleDateString() : '-'}
-            />
-            <InfoLine label="House Type" value={familyDetails.house_type} />
-            <InfoLine label="Subscription" value={familyDetails.subscription} />
-          </Grid>
+    {/* Quick Stat Badges */}
+    <Stack direction="row" spacing={2} justifyContent={{ xs: 'center', md: 'flex-start' }} flexWrap="wrap" useFlexGap sx={{ mb: 5, ml: { xs: 0, md: 5 } }}>
+      <Box sx={{ px: 2.5, py: 0.8, borderRadius: 50, bgcolor: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6', fontWeight: 700, fontSize: '0.875rem' }}>
+        {members.length} Members
+      </Box>
+      <Box sx={{ px: 2.5, py: 0.8, borderRadius: 50, bgcolor: familyDetails.active ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: familyDetails.active ? '#10B981' : '#EF4444', fontWeight: 700, fontSize: '0.875rem' }}>
+        {familyDetails.active ? 'Active' : 'Inactive'}
+      </Box>
+      {familyDetails.anbiyam && (
+        <Box sx={{ px: 2.5, py: 0.8, borderRadius: 50, bgcolor: 'rgba(124, 58, 237, 0.1)', color: '#7C3AED', fontWeight: 700, fontSize: '0.875rem' }}>
+          Anbiyam: {familyDetails.anbiyam}
+        </Box>
+      )}
+    </Stack>
 
-          {/* Column 3 */}
-          <Grid item xs={12} sm={4}>
-            <InfoLine label="Anbiyam" value={familyDetails.anbiyam} />
-            <InfoLine label="Cemetery" value={familyDetails.cemetery} />
-            <InfoLine label="Cemetery No." value={familyDetails.cemetery_number} />
-            <InfoLine label="Active" value={familyDetails.active ? 'Yes' : 'No'} />
-          </Grid>
-        </Grid>
-      </Grid>
-    </Grid>
-  </Card>
+    {/* Info Cards */}
+    <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} gap={3}>
+      {/* Location & Contact Card */}
+      <Box flex={1}>
+        <Card sx={{ p: 3, borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.05)', height: '100%' }}>
+          <Typography variant="h6" fontWeight={800} color="#0B3D91" mb={3}>
+            Contact & Location
+          </Typography>
+          <InfoLine label="Address" value={`${familyDetails.address_line1}, ${familyDetails.address_line2}`} />
+          <InfoLine label="City & Pincode" value={`${familyDetails.city} - ${familyDetails.pincode}`} />
+          <InfoLine label="Contact" value={`${familyDetails.mobile_number}${familyDetails.mobile_number2 ? `, ${familyDetails.mobile_number2}` : ''}`} />
+          <InfoLine label="Location" value={familyDetails.location} />
+          <InfoLine label="Native" value={familyDetails.native} />
+          <InfoLine label="Resident From" value={familyDetails.resident_from ? new Date(familyDetails.resident_from).toLocaleDateString() : '-'} />
+        </Card>
+      </Box>
+
+      {/* Church & Origin Card */}
+      <Box flex={1}>
+        <Card sx={{ p: 3, borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.05)', height: '100%' }}>
+          <Typography variant="h6" fontWeight={800} color="#0B3D91" mb={3}>
+            Church Details
+          </Typography>
+          <InfoLine label="House Type" value={familyDetails.house_type} />
+          <InfoLine label="Subscription" value={familyDetails.subscription} />
+          <InfoLine label="Anbiyam" value={familyDetails.anbiyam} />
+          <InfoLine label="Cemetery" value={familyDetails.cemetery} />
+          <InfoLine label="Cemetery No." value={familyDetails.cemetery_number} />
+        </Card>
+      </Box>
+    </Box>
+  </Box>
 )}
 
+    {/* Members Section Header */}
     {members.length > 0 && (
-  <Box sx={{ overflowX: 'auto', width: '100%' }}>
-    <TableContainer
-      component={Paper}
-      sx={{
-        borderRadius: 2,
-        boxShadow: 2,
-        minWidth: 800, // Ensure horizontal scroll on smaller screens
-      }}
-    >
-      <Table size="small">
-        <TableHead sx={{ backgroundColor: '#0B3D91' }}>
-          <TableRow>
-            <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Member ID</TableCell>
-            {memberAttributes.slice(1).map((attr) => (
-              <TableCell key={attr.key} sx={{ color: '#fff', fontWeight: 700 }}>
-                {attr.label}
-              </TableCell>
-            ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {members.map((member) => (
-            <TableRow key={member.member_id} hover>
-              <TableCell sx={{ fontWeight: 500 }}>{member.member_id}</TableCell>
-              {memberAttributes.slice(1).map((attr) => (
-                <TableCell key={attr.key}>{formatValue(attr.key, member[attr.key])}</TableCell>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mt={4} mb={2} px={1}>
+        <Typography variant="h6" fontWeight={800} color="#1E293B">
+          Family Members
+        </Typography>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={detailedView}
+              onChange={(e) => setDetailedView(e.target.checked)}
+              color="primary"
+            />
+          }
+          label={<Typography variant="body2" fontWeight={600} color="text.secondary">Detailed View</Typography>}
+        />
+      </Box>
+    )}
+
+    {members.length > 0 && (
+  <>
+    {isMobile ? (
+      <Stack spacing={2} sx={{ mb: 2 }}>
+        {members.map((member) => (
+          <Card key={member.member_id} sx={{ p: 2, borderRadius: 3, boxShadow: '0 4px 12px rgba(0,0,0,0.05)', borderLeft: '4px solid #0B3D91' }}>
+            <Typography variant="h6" color="#0B3D91" fontWeight={700} mb={0.5}>
+              {member.name}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" mb={2}>
+              ID: {member.member_id}
+            </Typography>
+            <Box display="flex" flexWrap="wrap" gap={1.5}>
+              {memberAttributes.slice(2).map((attr) => {
+                if (!detailedView && !['age', 'relationship'].includes(attr.key)) return null;
+                const val = formatValue(attr.key, member[attr.key]);
+                if (val === '-') return null; // Hide empty values to keep the card compact
+                return (
+                  <Box key={attr.key} sx={{ width: 'calc(50% - 6px)' }}>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      {attr.label}
+                    </Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      {val}
+                    </Typography>
+                  </Box>
+                );
+              })}
+            </Box>
+          </Card>
+        ))}
+      </Stack>
+    ) : (
+      <Box sx={{ overflowX: 'auto', width: '100%', mb: 2 }}>
+        <TableContainer
+          component={Paper}
+          sx={{
+            borderRadius: 2,
+            boxShadow: 2,
+            minWidth: 800, // Ensure horizontal scroll on smaller screens
+          }}
+        >
+          <Table size="small">
+            <TableHead sx={{ backgroundColor: '#0B3D91' }}>
+              <TableRow>
+                <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Member ID</TableCell>
+                {memberAttributes.slice(1).map((attr) => {
+                  if (!detailedView && !['name', 'age', 'relationship'].includes(attr.key)) return null;
+                  return (
+                    <TableCell key={attr.key} sx={{ color: '#fff', fontWeight: 700 }}>
+                      {attr.label}
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {members.map((member) => (
+                <TableRow key={member.member_id} hover>
+                  <TableCell sx={{ fontWeight: 500 }}>{member.member_id}</TableCell>
+                  {memberAttributes.slice(1).map((attr) => {
+                    if (!detailedView && !['name', 'age', 'relationship'].includes(attr.key)) return null;
+                    return (
+                      <TableCell key={attr.key}>{formatValue(attr.key, member[attr.key])}</TableCell>
+                    );
+                  })}
+                </TableRow>
               ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
-  </Box>
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
+    )}
+  </>
 )}
       <Box display="flex" justifyContent={{ xs: 'center', md: 'flex-end' }} mt={2}>
   <button
@@ -410,7 +575,8 @@ const blobToBase64 = (blob) => {
     Export to PDF
   </button>
 </Box>
-    </Container>
+      </Container>
+    </Box>
     
   );
 };

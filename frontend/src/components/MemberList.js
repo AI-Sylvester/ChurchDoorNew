@@ -24,14 +24,23 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Stack,
+  Card,
+  CardActionArea,
+  Collapse,
+  Avatar,
 } from '@mui/material';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import EditIcon from '@mui/icons-material/Edit';
+import CloseIcon from '@mui/icons-material/Close';
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import ClearIcon from '@mui/icons-material/Clear';
 import API_BASE_URL from '../config';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { saveAs } from 'file-saver';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory,Encoding } from '@capacitor/filesystem';
 import { useTheme, useMediaQuery } from '@mui/material';
 const MemberList = () => {
   const [members, setMembers] = useState([]);
@@ -43,6 +52,8 @@ const MemberList = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState([]);
   const [genderFilter, setGenderFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('active');
+  const [showFilters, setShowFilters] = useState(false);
 const theme = useTheme();
 const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const token = localStorage.getItem('token');
@@ -53,8 +64,9 @@ const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
       try {
         const res = await axios.get(`${API_BASE_URL}/member/all`, {
           headers: { Authorization: `Bearer ${token}` },
+          params: { limit: 10000 } // Fetch all for client-side filtering
         });
-        setMembers(res.data);
+        setMembers(res.data.members || (Array.isArray(res.data) ? res.data : []));
         setError('');
       } catch (err) {
         console.error(err);
@@ -123,8 +135,9 @@ const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const sex = (m.sex || '').toLowerCase();
     const marital = (m.marital_status || '').toLowerCase();
 
-const matchesGender = genderFilter === 'all' || sex === genderFilter;
-
+    const matchesGender = genderFilter === 'all' || sex === genderFilter;
+    const matchesStatus = statusFilter === 'all' || (statusFilter === 'active' ? m.active === true : m.active === false);
+ 
     const passesFilters = filters.every((f) => {
       if (f === 'child') return age >= 0 && age <= 3;
       if (f === 'kids') return age > 3 && age <= 15;
@@ -132,65 +145,120 @@ const matchesGender = genderFilter === 'all' || sex === genderFilter;
       if (f === 'senior') return age >= 55;
       return true;
     });
-
-    return matchesSearch && matchesGender && passesFilters;
+ 
+    return matchesSearch && matchesGender && matchesStatus && passesFilters;
   });
-const handleMemberPDFExport = () => {
+
+const handleMemberPDFExport = async (filteredMembers, genderFilter = '', logoBase64 = '', filters = []) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
+
+  // === LOGO (Optional) ===
+  if (logoBase64) {
+    try {
+      doc.addImage(logoBase64, 'PNG', 15, 10, 20, 20);
+    } catch (e) {
+      console.warn('⚠️ Image not added:', e);
+    }
+  }
+
+  // === TITLE ===
   const title = 'Filtered Member List';
-  const timestamp = new Date().toISOString().slice(0, 16).replace('T', '_').replace(/:/g, '-');
-  const fileName = `Members_${genderFilter}_${timestamp}.pdf`;
-
   doc.setFontSize(16);
-  doc.setFont('helvetica', 'bold');
   doc.setTextColor('#0B3D91');
-  doc.text(title, (pageWidth - doc.getTextWidth(title)) / 2, 20);
+  doc.setFont('helvetica', 'bold');
+  doc.text(title, pageWidth / 2, 20, { align: 'center' });
 
+  // === FILTER SUBTEXT ===
+  doc.setFontSize(10);
+  doc.setTextColor('#000');
+  const filterLabelMap = {
+    child: 'Child (0-3)',
+    kids: 'Kids (4-15)',
+    youth: 'Youth (16-27)',
+    senior: 'Sr. Citizen (55+)',
+  };
+  const genderLabel = genderFilter.charAt(0).toUpperCase() + genderFilter.slice(1);
+  const ageLabels = filters.map((f) => filterLabelMap[f]).join(', ') || 'None';
+  const filterText = `Gender: ${genderLabel} | Age Groups: ${ageLabels}`;
+  doc.text(filterText, pageWidth / 2, 28, { align: 'center' });
+
+  // === TABLE ===
   autoTable(doc, {
-    startY: 30,
+    startY: 35,
     head: [['S.No', 'ID', 'Name', 'Gender', 'Mobile', 'Age', 'Profession']],
-    body: filteredMembers.map((mem, index) => [
-      index + 1,
-      mem.member_id || '-',
-      mem.name || '-',
-      mem.sex || '-',
-      mem.mobile || '-',
-      mem.age || '-',
-      mem.profession || '-',
+    body: filteredMembers.map((m, i) => [
+      i + 1,
+      m.member_id || '-',
+      m.name || '-',
+      m.sex || '-',
+      m.mobile || '-',
+      m.age || '-',
+      m.profession || '-',
     ]),
-    theme: 'grid',
-    headStyles: {
-      fillColor: [11, 61, 145],
-      textColor: 255,
-      fontStyle: 'bold',
-      halign: 'center',
-    },
-    alternateRowStyles: { fillColor: [245, 249, 255] },
-    styles: { fontSize: 10, cellPadding: 4, textColor: 20 },
-    margin: { left: 15, right: 15 },
+    styles: { fontSize: 9, cellPadding: 3 },
+    headStyles: { fillColor: [22, 160, 133], textColor: 255, fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [240, 240, 240] },
+    margin: { left: 10, right: 10 },
   });
 
-  const pdfBlob = doc.output('blob');
-  saveAs(pdfBlob, fileName);
+  // === EXPORT PDF ===
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const fileName = `Members_${genderFilter || 'Export'}_${timestamp}.pdf`;
+
+  try {
+    if (Capacitor.getPlatform() === 'web') {
+      doc.save(fileName);
+    } else {
+      // ✅ Use same working logic from your working export
+      const arrayBuffer = doc.output('arraybuffer');
+      const uint8Array = new Uint8Array(arrayBuffer);
+      const base64 = btoa(String.fromCharCode(...uint8Array));
+
+      await Filesystem.writeFile({
+        path: fileName,
+        data: base64,
+        directory: Directory.Documents,
+        encoding: Encoding.Base64,
+      });
+
+      alert(`✅ PDF saved to device: ${fileName}`);
+    }
+  } catch (err) {
+    console.error('❌ Error saving PDF:', err);
+    alert('❌ Failed to generate/save PDF.');
+  }
 };
+
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" fontWeight={700} color="#0B3D91" mb={2}>
-        All Members
-      </Typography>
+    <Box sx={{ p: { xs: 2, sm: 3 } }}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="h5" fontWeight={700} color="#0B3D91">
+          All Members
+        </Typography>
+        {isMobile && (
+          <IconButton 
+            onClick={() => setShowFilters(!showFilters)} 
+            color="primary" 
+            sx={{ bgcolor: 'rgba(30, 58, 138, 0.1)' }}
+          >
+            {showFilters ? <CloseIcon /> : <FilterListIcon />}
+          </IconButton>
+        )}
+      </Box>
 
-      <TextField
-        label="Search members"
-        variant="outlined"
-        size="small"
-        fullWidth
-        sx={{ mb: 2 }}
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-      />
-
-  <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} flexWrap="wrap" justifyContent="space-between" alignItems={isMobile ? 'stretch' : 'center'} mb={2} gap={2}>
+      <Collapse in={!isMobile || showFilters}>
+        <Box className="glass-panel" sx={{ p: { xs: 2, sm: 3 }, borderRadius: 3, mb: 3 }}>
+          <TextField
+            label="Search members"
+            variant="outlined"
+            size="small"
+            fullWidth
+            sx={{ mb: 2, backgroundColor: 'white' }}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} flexWrap="wrap" justifyContent="space-between" alignItems={isMobile ? 'stretch' : 'center'} mb={2} gap={2}>
   
   {/* Gender Filter */}
   <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems="center" gap={1}>
@@ -202,7 +270,7 @@ const handleMemberPDFExport = () => {
           label="Gender"
           onChange={(e) => setGenderFilter(e.target.value)}
         >
-            <MenuItem value="All">All</MenuItem>
+            <MenuItem value="all">All</MenuItem>
           <MenuItem value="male">Male</MenuItem>
           <MenuItem value="female">Female</MenuItem>
         </Select>
@@ -242,6 +310,52 @@ const handleMemberPDFExport = () => {
     </Button>
   );
 })
+    )}
+  </Box>
+
+  {/* Status Filter */}
+  <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems="center" gap={1}>
+    {isMobile ? (
+      <FormControl fullWidth size="small">
+        <InputLabel>Status</InputLabel>
+        <Select
+          value={statusFilter}
+          label="Status"
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <MenuItem value="all">All</MenuItem>
+          <MenuItem value="active">Active</MenuItem>
+          <MenuItem value="inactive">Inactive</MenuItem>
+        </Select>
+      </FormControl>
+    ) : (
+      ['active', 'inactive', 'all'].map((key) => {
+        const label = key.charAt(0).toUpperCase() + key.slice(1);
+        const count = key === 'all' 
+          ? members.length 
+          : members.filter((m) => (key === 'active' ? m.active === true : m.active === false)).length;
+        const selected = statusFilter === key;
+
+        return (
+          <Button
+            key={key}
+            onClick={() => setStatusFilter(key)}
+            sx={{
+              borderRadius: 20,
+              px: 2,
+              textTransform: 'none',
+              backgroundColor: selected ? (key === 'inactive' ? '#d32f2f' : '#1976d2') : '#fff',
+              color: selected ? '#fff' : '#555',
+              border: `1px solid ${selected ? (key === 'inactive' ? '#d32f2f' : '#1976d2') : '#ccc'}`,
+              '&:hover': {
+                backgroundColor: selected ? (key === 'inactive' ? '#b71c1c' : '#1565c0') : '#f9f9f9',
+              },
+            }}
+          >
+            {label} ({count})
+          </Button>
+        );
+      })
     )}
   </Box>
 
@@ -311,7 +425,8 @@ const handleMemberPDFExport = () => {
     <Button
       variant="contained"
       color="secondary"
-      onClick={handleMemberPDFExport}
+     onClick={() => handleMemberPDFExport(filteredMembers, genderFilter, '', filters)}
+
       sx={{ borderRadius: 20, textTransform: 'none', fontWeight: 600 }}
     >
       Export PDF
@@ -322,14 +437,17 @@ const handleMemberPDFExport = () => {
         color="error"
         onClick={() => {
           setFilters([]);
-         setGenderFilter('all');
+          setGenderFilter('all');
+          setStatusFilter('active');
         }}
       >
         <ClearIcon />
       </IconButton>
     )}
+    </Box>
   </Box>
 </Box>
+</Collapse>
       {loading && (
         <Box display="flex" justifyContent="center" py={4}>
           <CircularProgress />
@@ -345,54 +463,105 @@ const handleMemberPDFExport = () => {
       )}
 
       {filteredMembers.length > 0 && (
-       <Box sx={{ overflowX: 'auto' }}>
-  <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 3, minWidth: 800 }}>
-    <Table size="small" stickyHeader>
-      <TableHead>
-        <TableRow>
-          {[
-            'ID', 'Name', 'Sex', 'Age',
-            'Profession', 'Mobile', 'Residing', 'Actions'
-          ].map((head, index) => (
-            <TableCell
-              key={index}
-              sx={{
-                backgroundColor: '#0B3D91',
-                color: '#fff',
-                fontWeight: 600,
-                position: 'sticky',
-                top: 0,
-                zIndex: 1
-              }}
-            >
-              {head}
-            </TableCell>
-          ))}
-        </TableRow>
-      </TableHead>
+        <>
+          {isMobile ? (
+            <Stack spacing={2} sx={{ mb: 3 }}>
+              {filteredMembers.map((m) => (
+                <Card 
+                  key={m.member_id} 
+                  sx={{ 
+                    borderRadius: 3, 
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)', 
+                    position: 'relative',
+                    border: '1px solid rgba(0,0,0,0.05)'
+                  }}
+                >
+                  <CardActionArea onClick={() => handleView(m)} sx={{ p: 1.5 }}>
+                    <Box display="flex" alignItems="center" gap={1.5}>
+                      <Avatar 
+                        sx={{ 
+                          width: 42, 
+                          height: 42, 
+                          bgcolor: m.sex === 'Male' ? '#EFF6FF' : '#FFF1F2', 
+                          color: m.sex === 'Male' ? '#3B82F6' : '#F43F5E',
+                          fontWeight: 800,
+                          fontSize: '1rem',
+                          borderRadius: 2
+                        }}
+                      >
+                        {m.name.charAt(0).toUpperCase()}
+                      </Avatar>
+                      <Box flex={1} sx={{ minWidth: 0 }}>
+                        <Typography variant="subtitle2" fontWeight={700} color="#1E293B" noWrap>
+                          {m.name} - {m.relationship || 'Member'}
+                        </Typography>
+                        <Typography variant="caption" color="textSecondary" display="block" noWrap sx={{ mt: 0.2 }}>
+                          {m.member_id} - {m.address_line2 || 'No Address'}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </CardActionArea>
+                  <IconButton
+                    onClick={(e) => { e.stopPropagation(); handleEdit(m); }}
+                    sx={{ position: 'absolute', bottom: 6, right: 8, color: '#6366F1' }}
+                    size="small"
+                  >
+                    <EditIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Card>
+              ))}
+            </Stack>
+          ) : (
+            <Box sx={{ overflowX: 'auto' }}>
+              <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 3, minWidth: 800 }}>
+                <Table size="small" stickyHeader>
+                  <TableHead>
+                    <TableRow>
+                      {[
+                        'ID', 'Name', 'Sex', 'Age',
+                        'Profession', 'Mobile', 'Residing', 'Actions'
+                      ].map((head, index) => (
+                        <TableCell
+                          key={index}
+                          sx={{
+                            backgroundColor: '#0B3D91',
+                            color: '#fff',
+                            fontWeight: 600,
+                            position: 'sticky',
+                            top: 0,
+                            zIndex: 1
+                          }}
+                        >
+                          {head}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  </TableHead>
 
-      <TableBody>
-        {filteredMembers.map((m) => (
-          <TableRow key={m.member_id} hover>
-            <TableCell>{m.member_id}</TableCell>
-            <TableCell>{m.name}</TableCell>
-            <TableCell>{m.sex || '-'}</TableCell>
-            <TableCell>{m.age ?? '-'}</TableCell>
-            <TableCell>{m.profession || '-'}</TableCell>
-            <TableCell>{m.mobile || '-'}</TableCell>
-            <TableCell>{m.residing_here ? 'Yes' : 'No'}</TableCell>
-            <TableCell>
-              <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} gap={1}>
-                <Button variant="outlined" size="small" onClick={() => handleView(m)}>View</Button>
-                <Button variant="contained" size="small" onClick={() => handleEdit(m)}>Edit</Button>
-              </Box>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  </TableContainer>
-</Box>
+                  <TableBody>
+                    {filteredMembers.map((m) => (
+                      <TableRow key={m.member_id} hover>
+                        <TableCell>{m.member_id}</TableCell>
+                        <TableCell>{m.name}</TableCell>
+                        <TableCell>{m.sex || '-'}</TableCell>
+                        <TableCell>{m.age ?? '-'}</TableCell>
+                        <TableCell>{m.profession || '-'}</TableCell>
+                        <TableCell>{m.mobile || '-'}</TableCell>
+                        <TableCell>{m.residing_here ? 'Yes' : 'No'}</TableCell>
+                        <TableCell>
+                          <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} gap={1}>
+                            <Button variant="outlined" size="small" onClick={() => handleView(m)}>View</Button>
+                            <Button variant="contained" size="small" onClick={() => handleEdit(m)}>Edit</Button>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+          )}
+        </>
       )}
 
       <Dialog open={dialogOpen} onClose={handleClose} maxWidth="xl" fullWidth>

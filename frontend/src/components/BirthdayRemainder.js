@@ -1,142 +1,262 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
-  Box,
-  Typography,
-  Tabs,
-  Tab,
-  Paper,
-  List,
-  ListItem,
-  ListItemText,
-  Divider,
-  CircularProgress,
-  Collapse,
+  Box, Typography, Tabs, Tab, Paper, List, ListItem, ListItemText,
+  Divider, CircularProgress, Collapse, ToggleButtonGroup, ToggleButton,
+  Button, Dialog, DialogTitle, DialogContent, DialogActions,
+  FormControl, InputLabel, Select, MenuItem
 } from '@mui/material';
 import API_BASE_URL from '../config';
+import { getRandomGreeting } from '../utils/quotes';
 
 const BirthdayReminders = () => {
-  const [data, setData] = useState({ today: [], thisWeek: [], thisMonth: [] });
+  const [bdayData, setBdayData] = useState({ today: [], thisWeek: [], thisMonth: [] });
+  const [weddingData, setWeddingData] = useState({ today: [], thisWeek: [], thisMonth: [] });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [tabIndex, setTabIndex] = useState(0);
+  const [reminderType, setReminderType] = useState('birthday');
   const [expandedId, setExpandedId] = useState(null);
+  const [wishModalOpen, setWishModalOpen] = useState(false);
+  const [currentWish, setCurrentWish] = useState('');
+  const [copySuccess, setCopySuccess] = useState(false);
+  const [anbiyams, setAnbiyams] = useState([]);
+  const [selectedAnbiyam, setSelectedAnbiyam] = useState('All');
+  const [isAdmin] = useState(localStorage.getItem('isAdmin') === 'true');
+  const userAnbiyam = localStorage.getItem('anbiyam');
   const token = localStorage.getItem('token');
+
+  const handleGenerateWish = (member) => {
+    const greetingMsg = getRandomGreeting(reminderType);
+    
+    const headName = member.head_name || "குடும்பத்தினர்";
+    
+    // Translate relationship to Tamil
+    const relMap = {
+      "Head": "குடும்பத் தலைவர்",
+      "Spouse": "துணைவர்",
+      "Child": "பிள்ளை",
+      "Parent": "பெற்றோர்",
+      "Other": "உறவினர்"
+    };
+    const tamilRel = member.relationship ? relMap[member.relationship] || member.relationship : "";
+    const name = member.name;
+
+    const eventText = reminderType === 'birthday' ? 'பிறந்தநாள்' : 'திருமண நாள்';
+    const icon = reminderType === 'birthday' ? '🎉' : '🎊';
+
+    let introText = "";
+    if (member.relationship === 'Head' || member.name === headName) {
+      introText = `குடும்பத் தலைவர் ${name} அவர்களுக்கு`;
+    } else {
+      introText = `${headName} அவர்களின் ${tamilRel} ${name} அவர்களுக்கு`;
+    }
+      
+    const fullWish = `அன்புடையீர் வணக்கம்,\n\n${member.anbiyam ? `${member.anbiyam} அன்பியம் சார்பாக, ` : ""}${introText} எங்களின் மனமார்ந்த இனிய ${eventText} நல்வாழ்த்துக்கள்! ${icon}\n\n${greetingMsg}`;
+    
+    setCurrentWish(fullWish);
+    setCopySuccess(false);
+    setWishModalOpen(true);
+  };
+
+  const handleCopyWish = () => {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(currentWish)
+        .then(() => setCopySuccess(true))
+        .catch(err => console.error("Clipboard write failed", err));
+    } else {
+      // Fallback for non-HTTPS environments (like local IP access)
+      const textArea = document.createElement("textarea");
+      textArea.value = currentWish;
+      textArea.style.position = "fixed";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        setCopySuccess(true);
+      } catch (err) {
+        console.error('Fallback copy failed', err);
+      }
+      document.body.removeChild(textArea);
+    }
+  };
 
   const tabLabels = [
     { label: 'Today', key: 'today' },
     { label: 'Week', key: 'thisWeek' },
-      { label: 'Month', key: 'thisMonth' }, // NEW TAB
-    
+    { label: 'Month', key: 'thisMonth' },
   ];
 
   useEffect(() => {
-    const fetchBirthdays = async () => {
+    const fetchReminders = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(`${API_BASE_URL}/member/birthdays`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const [bdayRes, weddingRes] = await Promise.all([
+          axios.get(`${API_BASE_URL}/member/birthdays`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${API_BASE_URL}/member/weddings`, { headers: { Authorization: `Bearer ${token}` } })
+        ]);
+        
+        setBdayData({
+          today: bdayRes.data.today || [],
+          thisWeek: bdayRes.data.thisWeek || [],
+          thisMonth: bdayRes.data.thisMonth || [],
         });
-        setData({
-          today: res.data.today || [],
-          thisWeek: res.data.thisWeek || [],
-           thisMonth: res.data.thisMonth || [], // ADD THIS
+        
+        setWeddingData({
+          today: weddingRes.data.today || [],
+          thisWeek: weddingRes.data.thisWeek || [],
+          thisMonth: weddingRes.data.thisMonth || [],
         });
       } catch (err) {
-        setError('Failed to fetch birthday reminders');
+        setError('Failed to fetch reminders');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchBirthdays();
-  }, [token]);
+    const fetchAnbiyams = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/anbiyam`, { headers: { Authorization: `Bearer ${token}` } });
+        setAnbiyams(res.data);
+        
+        // If user has a specific Anbiyam assigned and is NOT an admin, default filter to it
+        if (!isAdmin && userAnbiyam) {
+          setSelectedAnbiyam(userAnbiyam);
+        }
+      } catch (err) {
+        console.error('Failed to fetch Anbiyams');
+      }
+    };
 
-  const toggleExpand = (id) => {
-    setExpandedId((prev) => (prev === id ? null : id));
+    fetchReminders();
+    fetchAnbiyams();
+  }, [token, isAdmin, userAnbiyam]);
+
+  const toggleExpand = (id) => setExpandedId((prev) => (prev === id ? null : id));
+
+  const currentData = reminderType === 'birthday' ? bdayData : weddingData;
+  const currentKey = tabLabels[tabIndex].key;
+  const dateField = reminderType === 'birthday' ? 'dob' : 'marriage_date';
+
+  const renderList = (members) => {
+    // Filter by Anbiyam
+    const filteredMembers = members.filter(m => 
+      selectedAnbiyam === 'All' || m.anbiyam === selectedAnbiyam
+    );
+
+    const sortedMembers = ['thisWeek', 'thisMonth'].includes(currentKey)
+      ? [...filteredMembers].sort((a, b) => new Date(b[dateField]) - new Date(a[dateField]))
+      : filteredMembers;
+
+    return (
+      <List dense>
+        {sortedMembers.length === 0 && (
+          <ListItem>
+            <ListItemText primary={`No ${reminderType === 'birthday' ? 'birthdays' : 'anniversaries'}`} />
+          </ListItem>
+        )}
+        {sortedMembers.map((m, index) => (
+          <React.Fragment key={m.member_id}>
+            <ListItem button onClick={() => toggleExpand(m.member_id)}>
+              <ListItemText
+                primary={
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    {m.name}
+                  </Typography>
+                }
+                secondary={
+                  <>
+                    <Typography component="span" variant="body2">
+                      {reminderType === 'birthday' ? 'DOB: ' : 'Anniversary: '}
+                      {new Date(m[dateField]).toLocaleDateString('en-GB')}
+                    </Typography>
+                    <br />
+                    <Typography component="span" variant="body2">
+                      Anbiyam: {m.anbiyam || 'N/A'}
+                    </Typography>
+                  </>
+                }
+              />
+            </ListItem>
+            <Collapse in={expandedId === m.member_id} timeout="auto" unmountOnExit>
+              <Box px={4} pb={2}>
+                <Typography variant="body2">Member ID: {m.member_id}</Typography>
+                <Typography variant="body2">Mobile: {m.mobile || 'N/A'}</Typography>
+                <Typography variant="body2">Family Head: {m.head_name || 'N/A'}</Typography>
+                <Button 
+                  variant="outlined" 
+                  size="small" 
+                  sx={{ mt: 1, borderColor: '#1E3A8A', color: '#1E3A8A' }}
+                  onClick={() => handleGenerateWish(m)}
+                >
+                  Generate Wish
+                </Button>
+              </Box>
+            </Collapse>
+            {index < sortedMembers.length - 1 && <Divider />}
+          </React.Fragment>
+        ))}
+      </List>
+    );
   };
 
-const renderList = (members) => {
-  // If current tab is "thisWeek", sort by DOB ascending
-const sortedMembers = ['thisWeek', 'thisMonth'].includes(tabLabels[tabIndex].key)
-  ? [...members].sort((a, b) => new Date(b.dob) - new Date(a.dob))
-  : members;
-  return (
-    <List dense>
-      {sortedMembers.length === 0 && (
-        <ListItem>
-          <ListItemText primary="No birthdays" />
-        </ListItem>
-      )}
-      {sortedMembers.map((m, index) => (
-        <React.Fragment key={m.member_id}>
-          <ListItem button onClick={() => toggleExpand(m.member_id)}>
-            <ListItemText
-              primary={
-                <Typography variant="subtitle1" fontWeight={600}>
-                  {m.name}
-                </Typography>
-              }
-              secondary={
-                <>
-                  <Typography component="span" variant="body2">
-                    DOB: {new Date(m.dob).toLocaleDateString('en-GB')}
-                  </Typography>
-                  <br />
-                  <Typography component="span" variant="body2">
-                    Anbiyam: {m.anbiyam || 'N/A'}
-                  </Typography>
-                </>
-              }
-            />
-          </ListItem>
-          <Collapse in={expandedId === m.member_id} timeout="auto" unmountOnExit>
-            <Box px={4} pb={2}>
-              <Typography variant="body2">Member ID: {m.member_id}</Typography>
-              <Typography variant="body2">Mobile: {m.mobile || 'N/A'}</Typography>
-              <Typography variant="body2">Family Head: {m.head_name || 'N/A'}</Typography>
-            </Box>
-          </Collapse>
-          {index < sortedMembers.length - 1 && <Divider />}
-        </React.Fragment>
-      ))}
-    </List>
-  );
-};
+  if (loading) return <Box textAlign="center" py={4}><CircularProgress /></Box>;
+  if (error) return <Typography color="error">{error}</Typography>;
 
-  if (loading) {
-    return (
-      <Box textAlign="center" py={4}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return <Typography color="error">{error}</Typography>;
-  }
-
-  const currentKey = tabLabels[tabIndex].key;
   const todayStr = new Date().toLocaleDateString('en-GB', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
+    weekday: 'long', year: 'numeric', month: 'short', day: 'numeric',
   });
 
   return (
     <Box p={3}>
-      <Typography variant="h5" fontWeight={700} color="primary" mb={1}>
-        Birthday Reminders
-      </Typography>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+        <Typography variant="h5" fontWeight={700} color="primary">
+          Reminders
+        </Typography>
+        <ToggleButtonGroup
+          color="primary"
+          value={reminderType}
+          exclusive
+          onChange={(e, newType) => { if (newType) setReminderType(newType); setExpandedId(null); }}
+          size="small"
+        >
+          <ToggleButton value="birthday">Birthdays</ToggleButton>
+          <ToggleButton value="wedding">Anniversaries</ToggleButton>
+        </ToggleButtonGroup>
+      </Box>
       <Typography variant="subtitle1" color="textSecondary" mb={2}>
         Today is <strong>{todayStr}</strong>
       </Typography>
 
+      <Box mb={3} display="flex" gap={2} alignItems="center">
+        <FormControl size="small" sx={{ minWidth: 200 }}>
+          <InputLabel>Filter by Anbiyam</InputLabel>
+          <Select
+            value={selectedAnbiyam}
+            label="Filter by Anbiyam"
+            onChange={(e) => setSelectedAnbiyam(e.target.value)}
+            disabled={!isAdmin && !!userAnbiyam}
+          >
+            <MenuItem value="All">All Anbiyams</MenuItem>
+            {anbiyams.map((anb) => (
+              <MenuItem key={anb.id} value={anb.name}>
+                {anb.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        {!isAdmin && userAnbiyam && (
+          <Typography variant="caption" color="primary" fontWeight={600}>
+            Showing only {userAnbiyam}
+          </Typography>
+        )}
+      </Box>
+
       <Paper elevation={3} sx={{ p: 1, mb: 3 }}>
         <Tabs
           value={tabIndex}
-          onChange={(e, newValue) => setTabIndex(newValue)}
+          onChange={(e, newValue) => { setTabIndex(newValue); setExpandedId(null); }}
           variant="fullWidth"
           textColor="primary"
           indicatorColor="primary"
@@ -144,15 +264,30 @@ const sortedMembers = ['thisWeek', 'thisMonth'].includes(tabLabels[tabIndex].key
           {tabLabels.map((tab) => (
             <Tab
               key={tab.key}
-              label={`${tab.label} (${data[tab.key]?.length || 0})`}
+              label={`${tab.label} (${currentData[tab.key]?.length || 0})`}
             />
           ))}
         </Tabs>
-
         <Divider sx={{ mb: 1 }} />
-
-        <Box sx={{ p: 2 }}>{renderList(data[currentKey])}</Box>
+        <Box sx={{ p: 2 }}>{renderList(currentData[currentKey])}</Box>
       </Paper>
+
+      <Dialog open={wishModalOpen} onClose={() => setWishModalOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontWeight: 700, color: '#1E3A8A' }}>Generated Wish</DialogTitle>
+        <DialogContent dividers>
+          <Paper elevation={0} sx={{ p: 2, backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+            <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', fontFamily: 'sans-serif' }}>
+              {currentWish}
+            </Typography>
+          </Paper>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setWishModalOpen(false)} color="inherit">Close</Button>
+          <Button onClick={handleCopyWish} variant="contained" color={copySuccess ? "success" : "primary"}>
+            {copySuccess ? "Copied!" : "Copy Text"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

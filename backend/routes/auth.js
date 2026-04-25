@@ -18,15 +18,35 @@ router.post('/login', async (req, res) => {
     }
 
     const user = userRes.rows[0];
+    
+    // Check if approved
+    if (!user.is_approved) {
+      return res.status(403).json({ message: 'Your account is pending admin approval' });
+    }
+
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
       console.log('Password mismatch');
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ userId: user.id, username: user.username }, JWT_SECRET, { expiresIn: '15m' });
+    const token = jwt.sign(
+      { 
+        userId: user.id, 
+        username: user.username, 
+        isAdmin: user.is_admin,
+        anbiyam: user.anbiyam 
+      }, 
+      JWT_SECRET, 
+      { expiresIn: '24h' }
+    );
     console.log('Login successful for:', username);
-    res.json({ token });
+    res.json({ 
+      token, 
+      isAdmin: user.is_admin, 
+      username: user.username,
+      anbiyam: user.anbiyam 
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
@@ -34,7 +54,7 @@ router.post('/login', async (req, res) => {
 });
 // Register route
 router.post('/register', async (req, res) => {
-  const { username, password, email } = req.body;
+  const { username, password, email, mobile, anbiyam } = req.body;
 
   try {
     // Check if user already exists
@@ -48,12 +68,12 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Insert user into DB
-    await db.query(
-      'INSERT INTO users (username, password, email) VALUES ($1, $2, $3)',
-      [username, hashedPassword, email]
+    await query(
+      'INSERT INTO users (username, password, email, mobile, anbiyam, is_approved, is_admin) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+      [username, hashedPassword, email, mobile, anbiyam, false, false]
     );
 
-    res.status(201).json({ message: 'User created successfully' });
+    res.status(201).json({ message: 'Registration successful! Please wait for admin approval.' });
   } catch (error) {
     console.error('Register error:', error);
     res.status(500).json({ message: 'Server error' });

@@ -35,10 +35,10 @@ const [membersLoading, setMembersLoading] = useState(false);
   useEffect(() => {
     const fetchFamilies = async () => {
       try {
-        const res = await axios.get(`${API_BASE_URL}/family/list`, {
+        const res = await axios.get(`${API_BASE_URL}/family/list?limit=10000`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setFamilies(res.data);
+        setFamilies(res.data.families || res.data);
       } catch (err) {
         console.error('Failed to fetch family data:', err);
       } finally {
@@ -127,11 +127,14 @@ const filteredFamilies = sortedFamilies.filter((fam) => {
   />
 
   <Box sx={{ flex: 1 }}>
-    <Typography fontWeight={600} fontSize="1rem" noWrap>
+    <Typography fontWeight={700} fontSize="1.05rem" color="#1E293B" noWrap>
       {fam.head_name}
     </Typography>
-    <Typography variant="body2" sx={{ color: '#555' }} noWrap>
-      {fam.mobile_number || 'No mobile'} • {fam.anbiyam || 'No Anbiyam'}
+    <Typography variant="caption" color="textSecondary" display="block" sx={{ fontWeight: 600 }}>
+      Card No: {fam.family_id}
+    </Typography>
+    <Typography variant="caption" color="textSecondary" display="block" noWrap>
+      {fam.address_line2 || 'No Address'}
     </Typography>
   </Box>
 

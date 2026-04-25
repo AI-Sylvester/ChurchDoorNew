@@ -22,7 +22,15 @@ import {
   Switch,
   Avatar,
   Tabs,
-  Tab,Stack ,
+  Tab,
+  Stack,
+  Pagination,
+  useMediaQuery,
+  useTheme,
+  Card,
+  CardActionArea,
+  Collapse,
+  Autocomplete,
 } from '@mui/material';
 import API_BASE_URL from '../config';
 import PrintIcon from '@mui/icons-material/Print';
@@ -32,14 +40,24 @@ import SearchIcon from '@mui/icons-material/Search';
 import RoomIcon from '@mui/icons-material/Room';
 import InputAdornment from '@mui/material/InputAdornment';
 import IconButton from '@mui/material/IconButton';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import EditIcon from '@mui/icons-material/Edit';
+import CloseIcon from '@mui/icons-material/Close';
 import MapSelector from './Mapselector'; // adjust path if needed
-import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+
+
+
 const FamilyList = () => {
   const [families, setFamilies] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('active'); // ✅ Added this line
+  const [showFilters, setShowFilters] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const [viewOpen, setViewOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -50,8 +68,25 @@ const [showEditMap, setShowEditMap] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [editFile, setEditFile] = useState(null);
   const [saving, setSaving] = useState(false);
-const [searchResults, setSearchResults] = useState({ active: false, inactive: false });
+  const [anbiyamList, setAnbiyamList] = useState([]);
   const token = localStorage.getItem('token');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const limit = 10;
+
+  useEffect(() => {
+    const fetchAnbiyams = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/anbiyam`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setAnbiyamList(res.data);
+      } catch (err) {
+        console.error('Failed to load anbiyams');
+      }
+    };
+    fetchAnbiyams();
+  }, [token]);
 
   const fetchFamilies = useCallback(async () => {
     setLoading(true);
@@ -62,8 +97,10 @@ const [searchResults, setSearchResults] = useState({ active: false, inactive: fa
           : `${API_BASE_URL}/family/list`;
       const res = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
+        params: { page, limit, search: searchQuery }
       });
-      setFamilies(res.data);
+      setFamilies(res.data.families || []);
+      setTotalPages(res.data.totalPages || 1);
       setError('');
     } catch (err) {
       console.error(err);
@@ -71,43 +108,20 @@ const [searchResults, setSearchResults] = useState({ active: false, inactive: fa
     } finally {
       setLoading(false);
     }
-  }, [token, activeTab]);
+  }, [token, activeTab, page, searchQuery, limit]);
 
   useEffect(() => {
     fetchFamilies();
   }, [fetchFamilies]);
-const handleSearch = () => {
-  const lower = searchQuery.toLowerCase().trim();
-  if (!lower) {
-    setSearchResults({ active: false, inactive: false });
+
+  const handleSearch = () => {
+    setPage(1); // Reset to page 1 on new search
     fetchFamilies();
-    return;
-  }
+  };
 
-  const activeHasResults = families.some((fam) =>
-    Object.values(fam).some((val) =>
-      val !== null && val !== undefined && val.toString().toLowerCase().includes(lower)
-    )
-  );
-
-  // For inactive tab, we need to fetch inactive families and check
-  // For simplicity, you can call API once again or if you have all data, filter similarly
-  // Let's assume you want to call API for inactive data:
-
-  axios.get(`${API_BASE_URL}/family/list-inactive`, {
-    headers: { Authorization: `Bearer ${token}` },
-  }).then(res => {
-    const inactiveFamilies = res.data;
-    const inactiveHasResults = inactiveFamilies.some((fam) =>
-      Object.values(fam).some((val) =>
-        val !== null && val !== undefined && val.toString().toLowerCase().includes(lower)
-      )
-    );
-    setSearchResults({ active: activeHasResults, inactive: inactiveHasResults });
-  }).catch(() => {
-    setSearchResults({ active: activeHasResults, inactive: false });
-  });
-};
+  const handlePageChange = (event, value) => {
+    setPage(value);
+  };
 
 const handleView = async (familyId) => {
   try {
@@ -197,18 +211,13 @@ const handleEdit = async (familyId) => {
   };
 
   const filteredFamilies = useMemo(() => {
-    const lower = searchQuery.toLowerCase();
-    const filtered = families.filter((fam) =>
-      Object.values(fam).some((val) =>
-        val !== null &&
-        val !== undefined &&
-        val.toString().toLowerCase().includes(lower)
-      )
-    );
-    return filtered.sort((a, b) => a.family_id - b.family_id);
-  }, [families, searchQuery]);
+    return families; // Server handles filtering and sorting now
+  }, [families]);
 
-const exportPDF = async () => {
+
+const exportPDF = async (filteredFamiliesRaw) => {
+  const filteredFamilies = Array.isArray(filteredFamiliesRaw) ? filteredFamiliesRaw : [];
+
   const doc = new jsPDF('p', 'pt', 'a4');
 
   // Title
@@ -221,11 +230,11 @@ const exportPDF = async () => {
   autoTable(doc, {
     head: [['Family ID', 'Name', 'Mobile 1', 'Mobile 2', 'Anbiyam', 'Address']],
     body: filteredFamilies.map(fam => [
-      fam.family_id,
-      fam.head_name,
-      fam.mobile_number || '',
-      fam.mobile_number2 || '',
-      fam.anbiyam || '',
+      fam.family_id ?? '',
+      fam.head_name ?? '',
+      fam.mobile_number ?? '',
+      fam.mobile_number2 ?? '',
+      fam.anbiyam ?? '',
       [fam.address_line1, fam.address_line2, fam.city, fam.pincode].filter(Boolean).join(', ')
     ]),
     styles: {
@@ -250,148 +259,237 @@ const exportPDF = async () => {
     theme: 'grid',
   });
 
-  // File name with timestamp
   const now = new Date();
   const timestamp = now.toISOString().replace(/T/, '_').replace(/:/g, '-').slice(0, 16);
   const fileName = `family-records-${timestamp}.pdf`;
 
-  // Convert to base64
-  const blob = doc.output('blob');
-  const base64Data = await blobToBase64(blob);
+  const base64Data = doc.output('datauristring').split(',')[1];
 
-  try {
-    await Filesystem.writeFile({
-      path: fileName,
-      data: base64Data,
-      directory: Directory.Documents,
-    });
-    alert('✅ PDF saved successfully!');
-  } catch (error) {
-    console.error('❌ Error saving PDF:', error);
-    alert('Error saving PDF file.');
+  if (Capacitor.getPlatform() === 'web') {
+    const link = document.createElement('a');
+    link.href = doc.output('bloburl');
+    link.download = fileName;
+    link.click();
+  } else {
+    try {
+      await Filesystem.writeFile({
+        path: fileName,
+        data: base64Data,
+        directory: Directory.Documents,
+        encoding: Encoding.BASE64,
+      });
+      alert('✅ PDF saved successfully!');
+    } catch (error) {
+      console.error('❌ Error saving PDF:', error);
+      alert('Error saving PDF on device.');
+    }
   }
 };
-
-// Helper: Convert blob to base64
-const blobToBase64 = (blob) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = reader.result.split(',')[1]; // remove data:...base64,
-      resolve(base64);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-};
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" fontWeight={700} color="#0B3D91" mb={2}>
-        Family Records
-      </Typography>
+    <Box sx={{ p: { xs: 2, sm: 3 } }}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h4" fontWeight={700} color="primary">
+          Family Records
+        </Typography>
+        {isMobile && (
+          <IconButton 
+            onClick={() => setShowFilters(!showFilters)} 
+            color="primary" 
+            sx={{ bgcolor: 'rgba(30, 58, 138, 0.1)' }}
+          >
+            {showFilters ? <CloseIcon /> : <FilterListIcon />}
+          </IconButton>
+        )}
+      </Box>
 
-<Stack direction="row" spacing={1} sx={{ mb: 3 }}>
+<Collapse in={!isMobile || showFilters}>
+<Box className="glass-panel" sx={{ p: { xs: 2, sm: 3 }, borderRadius: 3, mb: 3 }}>
+<Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
   <TextField
-    label="Search"
+    label="Search Families"
     variant="outlined"
-    size="small"
+    size="medium"
     fullWidth
     value={searchQuery}
     onChange={(e) => setSearchQuery(e.target.value)}
-    placeholder="Search by any field..."
+    placeholder="Search by name, ID, city, mobile..."
     onKeyDown={(e) => {
       if (e.key === 'Enter') {
         handleSearch();
       }
     }}
+    sx={{ backgroundColor: 'white', borderRadius: 1 }}
   />
   <Button
     variant="contained"
-    size="small"
+    color="primary"
     onClick={handleSearch}
-    sx={{ height: '40px', minWidth: '40px', p: 0 }}
+    sx={{ minWidth: { xs: '100%', sm: '60px' }, height: '56px' }}
   >
     <SearchIcon />
   </Button>
-  <Button
-    variant="outlined"
-    size="small"
-    onClick={exportPDF}
-    sx={{ height: '40px', minWidth: '40px', p: 0 }}
-  >
-    <PrintIcon />
-  </Button>
+ <Button
+  variant="outlined"
+  color="secondary"
+  onClick={() => exportPDF(filteredFamilies)}
+  sx={{ minWidth: { xs: '100%', sm: '60px' }, height: '56px' }}
+>
+  <PrintIcon />
+</Button>
 </Stack>
+</Box>
+</Collapse>
 
-      {/* ✅ Tabs for active/inactive */}
     <Tabs
   value={activeTab}
-  onChange={(e, newValue) => setActiveTab(newValue)}
-  sx={{ mb: 2 }}
+  onChange={(e, newValue) => {
+    setActiveTab(newValue);
+    setPage(1); // reset to page 1 on tab change
+  }}
+  sx={{ mb: 3 }}
+  indicatorColor="secondary"
+  textColor="secondary"
+  variant="fullWidth"
 >
-  <Tab label={`Active${searchResults.active ? ' *' : ''}`} value="active" />
-  <Tab label={`Inactive${searchResults.inactive ? ' *' : ''}`} value="inactive" />
+  <Tab label="Active" value="active" />
+  <Tab label="Inactive" value="inactive" />
 </Tabs>
   
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
       {loading ? (
-        <Box sx={{ textAlign: 'center', py: 4 }}>
-          <CircularProgress />
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <CircularProgress color="secondary" />
         </Box>
       ) : filteredFamilies.length === 0 ? (
-        <Typography>No family records found.</Typography>
+        <Box className="glass-panel" sx={{ p: 4, textAlign: 'center', borderRadius: 3 }}>
+            <Typography variant="h6" color="textSecondary">No family records found.</Typography>
+        </Box>
       ) : (
-        <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 3 }}>
-          <Table>
-            <TableHead sx={{ backgroundColor: '#0B3D91' }}>
-              <TableRow>
-                <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Family ID</TableCell>
-                <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Head Name</TableCell>
-                <TableCell sx={{ color: '#fff', fontWeight: 600 }}>City</TableCell>
-                <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Mobile</TableCell>
-                <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Anbiyam</TableCell>
-                <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Active</TableCell>
-                <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Picture</TableCell>
-                <TableCell sx={{ color: '#fff', fontWeight: 600, textAlign: 'center' }}>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
+        <>
+          {isMobile ? (
+            <Stack spacing={2} sx={{ mb: 3 }}>
               {filteredFamilies.map((fam) => (
-                <TableRow key={fam.family_id} hover>
-                  <TableCell>{fam.family_id}</TableCell>
-                  <TableCell>{fam.head_name}</TableCell>
-                  <TableCell>{fam.city}</TableCell>
-                  <TableCell>{fam.mobile_number}</TableCell>
-                    <TableCell>{fam.anbiyam || '-'}</TableCell>
-                  <TableCell>{fam.active ? 'Yes' : 'No'}</TableCell>
-                  <TableCell>
-                    {fam.family_pic ? (
+                <Card 
+                  key={fam.family_id} 
+                  sx={{ 
+                    borderRadius: 3, 
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)', 
+                    position: 'relative',
+                    border: '1px solid rgba(0,0,0,0.05)'
+                  }}
+                >
+                  <CardActionArea onClick={() => handleView(fam.family_id)} sx={{ p: 1.5 }}>
+                    <Box display="flex" alignItems="center" gap={1.5}>
                       <Avatar
-                        variant="square"
-                   src={fam.family_pic}
-                        alt={`${fam.head_name} picture`}
-                        sx={{ width: 32, height: 32, cursor: 'pointer' }}
-                        onClick={() => handleImageClick(fam.family_pic)}
-                      />
-                    ) : (
-                      <Typography color="text.secondary">No Image</Typography>
-                    )}
-                  </TableCell>
-                  <TableCell align="center" sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                    <Button size="small" variant="outlined" onClick={() => handleView(fam.family_id)}>
-                      View
-                    </Button>
-                    <Button size="small" variant="contained" onClick={() => handleEdit(fam.family_id)}>
-                      Edit
-                    </Button>
-                  </TableCell>
-                </TableRow>
+                        variant="rounded"
+                        src={fam.family_pic}
+                        sx={{ width: 45, height: 45, bgcolor: 'grey.100', borderRadius: 2 }}
+                      >
+                        {!fam.family_pic && fam.head_name.charAt(0)}
+                      </Avatar>
+                      <Box flex={1} sx={{ minWidth: 0 }}>
+                        <Typography variant="subtitle2" fontWeight={700} color="#1E293B" noWrap>
+                          {fam.head_name}
+                        </Typography>
+                        <Typography variant="caption" color="textSecondary" display="block" noWrap>
+                          {fam.address_line2 || 'No Address'}
+                        </Typography>
+                        <Box display="flex" alignItems="center" gap={1} mt={0.2}>
+                          <Typography variant="caption" color="textSecondary">
+                            ID: {fam.family_id}
+                          </Typography>
+                          <Box sx={{
+                            px: 1, py: 0.1, borderRadius: 1, display: 'inline-block',
+                            bgcolor: fam.active ? '#ECFDF5' : '#FEF2F2',
+                            color: fam.active ? '#10B981' : '#EF4444',
+                            fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase'
+                          }}>
+                            {fam.active ? 'Active' : 'Inactive'}
+                          </Box>
+                        </Box>
+                      </Box>
+                    </Box>
+                  </CardActionArea>
+                  <IconButton
+                    onClick={(e) => { e.stopPropagation(); handleEdit(fam.family_id); }}
+                    sx={{ position: 'absolute', bottom: 6, right: 8, color: '#6366F1' }}
+                    size="small"
+                  >
+                    <EditIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Card>
               ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+            </Stack>
+          ) : (
+          <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            <Table sx={{ minWidth: 650 }}>
+              <TableHead sx={{ backgroundColor: 'primary.main' }}>
+                <TableRow>
+                  <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Family ID</TableCell>
+                  <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Head Name</TableCell>
+                  <TableCell sx={{ color: '#fff', fontWeight: 600 }}>City</TableCell>
+                  <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Mobile</TableCell>
+                  <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Anbiyam</TableCell>
+                  <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Active</TableCell>
+                  <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Picture</TableCell>
+                  <TableCell sx={{ color: '#fff', fontWeight: 600, textAlign: 'center' }}>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredFamilies.map((fam) => (
+                  <TableRow key={fam.family_id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                    <TableCell fontWeight="500">{fam.family_id}</TableCell>
+                    <TableCell>{fam.head_name}</TableCell>
+                    <TableCell>{fam.city}</TableCell>
+                    <TableCell>{fam.mobile_number}</TableCell>
+                    <TableCell>{fam.anbiyam || '-'}</TableCell>
+                    <TableCell>
+                       <Box sx={{
+                           px: 1.5, py: 0.5, borderRadius: 50, display: 'inline-block',
+                           bgcolor: fam.active ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                           color: fam.active ? '#10B981' : '#EF4444',
+                           fontWeight: 600, fontSize: '0.8rem'
+                       }}>
+                         {fam.active ? 'Yes' : 'No'}
+                       </Box>
+                    </TableCell>
+                    <TableCell>
+                      {fam.family_pic ? (
+                        <Avatar
+                          variant="rounded"
+                          src={fam.family_pic}
+                          alt={`${fam.head_name}`}
+                          sx={{ width: 40, height: 40, cursor: 'pointer', boxShadow: 1 }}
+                          onClick={() => handleImageClick(fam.family_pic)}
+                        />
+                      ) : (
+                        <Avatar variant="rounded" sx={{ width: 40, height: 40, bgcolor: 'grey.300' }}>-</Avatar>
+                      )}
+                    </TableCell>
+                    <TableCell align="center">
+                      <Stack direction="row" spacing={1} justifyContent="center">
+                        <Button size="small" variant="outlined" onClick={() => handleView(fam.family_id)}>View</Button>
+                        <Button size="small" variant="contained" color="secondary" onClick={() => handleEdit(fam.family_id)}>Edit</Button>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          )}
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, mb: 2 }}>
+            <Pagination 
+              count={totalPages} 
+              page={page} 
+              onChange={handlePageChange} 
+              color="primary" 
+              size="large"
+            />
+          </Box>
+        </>
       )}
 
       {/* View Dialog */}
@@ -459,7 +557,18 @@ const blobToBase64 = (blob) => {
     />
   </Box>
 )}
-              <TextField label="Anbiyam" value={editData.anbiyam || ''} onChange={(e) => handleEditChange('anbiyam', e.target.value)} fullWidth />
+              <Autocomplete
+                fullWidth
+                options={anbiyamList.map((item) => item.name)}
+                value={editData.anbiyam || null}
+                onChange={(event, newValue) => {
+                  handleEditChange('anbiyam', newValue || '');
+                }}
+                renderInput={(params) => (
+                  <TextField {...params} label="Anbiyam" />
+                )}
+                freeSolo
+              />
               <TextField label="Cemetery Number" value={editData.cemetery_number || ''} onChange={(e) => handleEditChange('cemetery_number', e.target.value)} fullWidth />
               <TextField label="Old Card Number" value={editData.old_card_number || ''} onChange={(e) => handleEditChange('old_card_number', e.target.value)} fullWidth />
 

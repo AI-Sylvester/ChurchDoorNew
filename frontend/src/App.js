@@ -1,5 +1,7 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { App as CapApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 
 import Login from './components/LoginForm';
 import Home from './components/Home';
@@ -15,10 +17,37 @@ import AnbiyamFamilyView from './components/AnbiyamFamilies'
 import FamilyMap from './components/FamilyMap';
 import FamilyCard from './components/FamilyCard';
 import BirthdayReminders from './components/BirthdayRemainder';
+import StatsPage from './components/StatsPage';
+import UserManagement from './components/UserManagement';
+import ContactBook from './components/ContactBook';
+
+const BackButtonHandler = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (Capacitor.getPlatform() === 'web') return;
+
+    const backListener = CapApp.addListener('backButton', () => {
+      if (location.pathname === '/home' || location.pathname === '/login') {
+        CapApp.exitApp();
+      } else {
+        navigate(-1);
+      }
+    });
+
+    return () => {
+      backListener.then(l => l.remove());
+    };
+  }, [navigate, location]);
+
+  return null;
+};
 
 function App() {
   return (
     <BrowserRouter>
+      <BackButtonHandler />
       <Routes>
         <Route path="/login" element={<Login />} />
 
@@ -132,6 +161,36 @@ function App() {
             <PrivateRoute>
               <Layout>
                 <BirthdayReminders />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/stats"
+          element={
+            <PrivateRoute>
+              <Layout>
+                <StatsPage />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/user-management"
+          element={
+            <PrivateRoute>
+              <Layout>
+                <UserManagement />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/contacts"
+          element={
+            <PrivateRoute>
+              <Layout>
+                <ContactBook />
               </Layout>
             </PrivateRoute>
           }

@@ -3,13 +3,24 @@ const router = express.Router();
 const db = require('../db'); // Adjust the path to your db
 const authMiddleware = require('../middleware/authMiddleware');
 
-// GET all anbiyams
+// GET all anbiyams (Private)
 router.get('/', authMiddleware, async (req, res) => {
   try {
     const result = await db.query('SELECT id, name, serial_no FROM anbiyam ORDER BY serial_no');
     res.json(result.rows);
   } catch (err) {
     console.error('Error fetching anbiyam list:', err);
+    res.status(500).json({ message: 'Failed to fetch anbiyam list' });
+  }
+});
+
+// GET anbiyam names (Public - for registration)
+router.get('/public-list', async (req, res) => {
+  try {
+    const result = await db.query('SELECT name FROM anbiyam ORDER BY serial_no');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching public anbiyam list:', err);
     res.status(500).json({ message: 'Failed to fetch anbiyam list' });
   }
 });
