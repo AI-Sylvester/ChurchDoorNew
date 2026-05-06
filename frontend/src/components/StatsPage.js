@@ -59,10 +59,17 @@ const StatsPage = () => {
   }
 
   // Categories
-  const kids = members.filter(m => parseInt(m.age) < 16);
+  const babies = members.filter(m => {
+    const age = parseInt(m.age);
+    return age >= 1 && age <= 5;
+  });
+  const kids = members.filter(m => {
+    const age = parseInt(m.age);
+    return age > 5 && age <= 16;
+  });
   const youth = members.filter(m => {
     const age = parseInt(m.age);
-    return age >= 16 && age <= 28 && (m.marital_status || '').toLowerCase() === 'single';
+    return age > 16 && age <= 28 && (m.marital_status || '').toLowerCase() === 'single';
   });
   const seniors = members.filter(m => parseInt(m.age) >= 55);
   
@@ -92,7 +99,14 @@ const StatsPage = () => {
 
   const stats = [
     { 
-      title: 'Kids (< 16)', 
+      title: 'Babies (1-5)', 
+      count: babies.length, 
+      icon: <ChildCareIcon />, 
+      color: '#10B981', 
+      list: babies 
+    },
+    { 
+      title: 'Kids (5-16)', 
       count: kids.length, 
       icon: <ChildCareIcon />, 
       color: '#0EA5E9', 
