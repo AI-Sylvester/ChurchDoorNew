@@ -12,6 +12,8 @@ import {
   Alert,
   Badge,
   Chip,
+  Grid,
+  Fade,
 } from '@mui/material';
 
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
@@ -26,11 +28,14 @@ import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import GroupRoundedIcon from '@mui/icons-material/GroupRounded';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
+import MaleIcon from '@mui/icons-material/Male';
+import FemaleIcon from '@mui/icons-material/Female';
 
 import API_BASE_URL from '../config';
 
 const Home = () => {
   const navigate = useNavigate();
+  
   const [counts, setCounts] = useState({
     families: 0,
     members: 0,
@@ -44,9 +49,13 @@ const Home = () => {
 
   const [todayReminders, setTodayReminders] = useState({ birthdays: 0, weddings: 0 });
   const [notificationOpen, setNotificationOpen] = useState(false);
-
   const [loading, setLoading] = useState(true);
+  
   const token = localStorage.getItem('token');
+  const isAdmin = localStorage.getItem('isAdmin') === 'true';
+  const role = localStorage.getItem('role') || 'family';
+  const userName = localStorage.getItem('username') || 'User';
+  const anbiyamName = localStorage.getItem('anbiyam');
 
   useEffect(() => {
     const fetchCounts = async () => {
@@ -100,158 +109,215 @@ const Home = () => {
     fetchCounts();
   }, [token]);
 
-  const stats = [
-    { title: 'Families', count: counts.families, icon: <HomeWorkIcon fontSize="small" />, color: '#F59E0B' },
-    { title: 'Members', count: counts.members, icon: <GroupIcon fontSize="small" />, color: '#3B82F6' },
-  ];
+  const statsList = [];
+  if (role === 'admin') {
+    statsList.push(
+      { label: 'Families', value: counts.families, icon: <HomeWorkIcon />, color: '#F59E0B' },
+      { label: 'Members', value: counts.members, icon: <GroupIcon />, color: '#3B82F6' },
+      { label: 'Male', value: counts.male, icon: <MaleIcon />, color: '#0EA5E9' },
+      { label: 'Female', value: counts.female, icon: <FemaleIcon />, color: '#EC4899' }
+    );
+  } else {
+    statsList.push(
+      { label: 'Families', value: counts.families, icon: <HomeWorkIcon />, color: '#F59E0B' },
+      { label: 'Members', value: counts.members, icon: <GroupIcon />, color: '#3B82F6' },
+      { label: 'Today B-Day', value: todayReminders.birthdays, icon: <CakeRoundedIcon />, color: '#E11D48' }
+    );
+  }
 
-  const isAdmin = localStorage.getItem('isAdmin') === 'true';
-
-  const actions = [
-    { title: 'Contact Book', subtitle: 'Mobile-style phone directory', path: '/contacts', icon: <ContactsIcon />, color: '#10B981' },
-    { title: 'Family Card', subtitle: 'View and print family cards', path: '/familycard', icon: <ContactsIcon />, color: '#1E3A8A' },
-    { title: 'Family Map', subtitle: 'Geographical distribution', path: '/familymap', icon: <MapRoundedIcon />, color: '#0284C7' },
-    { title: 'Reminders', subtitle: 'Birthdays & Anniversaries', path: '/birthdays', icon: <Badge badgeContent={todayReminders.birthdays + todayReminders.weddings} color="error"><CakeRoundedIcon /></Badge>, color: '#E11D48' },
-    { title: 'Family Info', subtitle: 'Detailed family data', path: '/familydet', icon: <InfoOutlinedIcon />, color: '#4F46E5' },
-    { title: 'Add Member', subtitle: 'Register a new individual', path: '/add-member', icon: <PersonAddAltRoundedIcon />, color: '#059669' },
-    { title: 'Anbiyam List', subtitle: 'View Anbiyam families', path: '/anbiyamfam', icon: <Diversity3RoundedIcon />, color: '#7C3AED' },
-    { title: 'Anbiyam Master', subtitle: 'Edit Anbiyam names/details', path: '/anbiyam', icon: <Diversity3RoundedIcon />, color: '#FB923C' },
-    { title: 'Statistics', subtitle: 'Detailed age & group counts', path: '/stats', icon: <BarChartIcon />, color: '#0EA5E9' },
-    { title: 'Inactive List', subtitle: 'View inactive church members', path: '/memlist', icon: <GroupRoundedIcon />, color: '#64748B' },
-  ];
-
-  if (isAdmin) {
-    actions.push({ title: 'User Management', subtitle: 'Approve & manage app users', path: '/user-management', icon: <ManageAccountsIcon />, color: '#BE123C' });
+  const actions = [];
+  if (role === 'admin') {
+    actions.push(
+      { title: 'User Approvals', subtitle: 'Pending registrations', path: '/approvals', icon: <ManageAccountsIcon />, color: '#BE123C' },
+      { title: 'Update Requests', subtitle: 'Family edit requests', path: '/updates', icon: <InfoOutlinedIcon />, color: '#4F46E5' },
+      { title: 'Event Reports', subtitle: 'View group activities', path: '/reports', icon: <BarChartIcon />, color: '#0EA5E9' },
+      { title: 'Family List', subtitle: 'Manage all families', path: '/familylist', icon: <Diversity3RoundedIcon />, color: '#1E3A8A' },
+      { title: 'Member List', subtitle: 'Manage all members', path: '/memlist', icon: <GroupRoundedIcon />, color: '#64748B' },
+      { title: 'Anbiyam Master', subtitle: 'Manage Anbiyams', path: '/anbiyam', icon: <ManageAccountsIcon />, color: '#FB923C' }
+    );
+  } else if (role === 'incharge') {
+    actions.push(
+      { title: 'My Anbiyam', subtitle: `Manage ${anbiyamName}`, path: '/anbiyamfam', icon: <MapRoundedIcon />, color: '#7C3AED' },
+      { title: 'Submit Report', subtitle: 'Group event report', path: '/submit-report', icon: <BarChartIcon />, color: '#0EA5E9' },
+      { title: 'Family Cards', subtitle: 'View group cards', path: '/familycard', icon: <Diversity3RoundedIcon />, color: '#1E3A8A' },
+      { title: 'Reminders', subtitle: 'Birthdays & More', path: '/birthdays', icon: <CakeRoundedIcon />, color: '#E11D48' }
+    );
+  } else {
+    // Family role
+    actions.push(
+      { title: 'My Family', subtitle: 'View your details', path: '/my-family', icon: <Diversity3RoundedIcon />, color: '#1E3A8A' },
+      { title: 'Anbiyam Group', subtitle: 'Short view of group', path: '/anbiyam-summary', icon: <MapRoundedIcon />, color: '#7C3AED' },
+      { title: 'Subscriptions', subtitle: 'Monthly payments', path: '/payments', icon: <BarChartIcon />, color: '#059669' },
+      { title: 'Donations', subtitle: 'Support the church', path: '/donations', icon: <CakeRoundedIcon />, color: '#E11D48' },
+      { title: 'Update Request', subtitle: 'Change family details', path: '/raise-update', icon: <InfoOutlinedIcon />, color: '#4F46E5' }
+    );
   }
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="50vh">
-        <CircularProgress color="primary" />
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh" bgcolor="#F8FAFC">
+        <CircularProgress thickness={5} size={60} sx={{ color: '#1E3A8A' }} />
       </Box>
     );
   }
 
-  // Get current date for the header
-  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
   return (
-    <Box sx={{ backgroundColor: '#f8fafc', minHeight: '100vh', pb: 10 }}>
-      {/* Hero Banner Area */}
+    <Box sx={{ backgroundColor: '#F8FAFC', minHeight: '100vh', pb: 12 }}>
+      {/* Dynamic Header */}
       <Box 
         sx={{ 
           background: 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)', 
-          pt: 4, 
-          pb: 8, 
+          pt: 5, 
+          pb: 10, 
           px: 3, 
-          borderBottomLeftRadius: 32, 
-          borderBottomRightRadius: 32,
-          boxShadow: '0 10px 30px rgba(30, 58, 138, 0.2)'
+          borderBottomLeftRadius: { xs: 40, md: 60 }, 
+          borderBottomRightRadius: { xs: 40, md: 60 },
+          boxShadow: '0 20px 40px rgba(30, 58, 138, 0.15)',
+          position: 'relative',
+          overflow: 'hidden'
         }}
       >
-        <Typography variant="body2" color="rgba(255,255,255,0.7)" fontWeight={600} mb={0.5}>
-          {today}
-        </Typography>
-        <Typography variant="h4" fontWeight={800} color="#fff">
-          Dashboard
-        </Typography>
-        <Stack direction="row" spacing={1} alignItems="center" mt={1}>
-          <Typography variant="subtitle1" color="rgba(255,255,255,0.9)">
-            Welcome to ChurchDoor
-          </Typography>
-          {localStorage.getItem('anbiyam') && !isAdmin && (
-            <Chip 
-              label={localStorage.getItem('anbiyam')} 
-              size="small" 
-              sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: '#fff', fontWeight: 700, border: '1px solid rgba(255,255,255,0.3)' }} 
-            />
-          )}
-        </Stack>
-      </Box>
+        {/* Subtle Background Pattern */}
+        <Box sx={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
+        <Box sx={{ position: 'absolute', bottom: -30, left: -20, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
 
-      {/* Floating Stats Area */}
-      <Box sx={{ px: 2, mt: -5 }}>
-        <Stack direction="row" spacing={2} justifyContent="space-between">
-          {stats.map((stat, index) => (
-            <Card 
-              key={index}
-              sx={{ 
-                flex: 1, 
-                p: 2, 
-                borderRadius: 4, 
-                boxShadow: '0 8px 20px rgba(0,0,0,0.06)',
-                backgroundColor: 'rgba(255,255,255,0.9)',
-                backdropFilter: 'blur(10px)',
-                textAlign: 'center'
-              }}
-            >
-              <Stack alignItems="center" spacing={1} mb={1}>
-                <Avatar sx={{ width: 40, height: 40, bgcolor: `${stat.color}15`, color: stat.color }}>
-                  {stat.icon}
-                </Avatar>
-                <Typography variant="body2" color="textSecondary" fontWeight={600}>
-                  {stat.title}
-                </Typography>
-              </Stack>
-              <Typography variant="h4" fontWeight={800} color="#1E3A8A">
-                {stat.count}
+        <Fade in timeout={800}>
+          <Box>
+            <Typography variant="body2" color="rgba(255,255,255,0.8)" fontWeight={700} sx={{ textTransform: 'uppercase', letterSpacing: '1px', mb: 1 }}>
+              {todayStr}
+            </Typography>
+            <Typography variant="h3" fontWeight={900} color="#fff" sx={{ letterSpacing: '-1.5px', mb: 1 }}>
+              Hello, {userName}!
+            </Typography>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Typography variant="h6" color="rgba(255,255,255,0.9)" fontWeight={500}>
+                Parish Dashboard
               </Typography>
-            </Card>
-          ))}
-        </Stack>
+              {localStorage.getItem('anbiyam') && !isAdmin && (
+                <Chip 
+                  label={localStorage.getItem('anbiyam')} 
+                  sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: '#fff', fontWeight: 800, backdropFilter: 'blur(5px)' }} 
+                />
+              )}
+            </Stack>
+          </Box>
+        </Fade>
       </Box>
 
-      {/* Vertical Action List */}
-      <Box sx={{ px: 2, mt: 2 }}>
-        <Typography variant="h6" fontWeight={700} color="#1E293B" mb={2} px={1}>
-          Quick Actions
-        </Typography>
-
-        <Stack spacing={2}>
-          {actions.map((action, index) => (
-            <Card 
-              key={index}
-              sx={{ 
-                borderRadius: 4, 
-                boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
-                transition: 'all 0.2s ease',
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 8px 20px rgba(0,0,0,0.08)',
-                }
-              }}
-            >
-              <CardActionArea 
-                onClick={() => navigate(action.path)}
-                sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      {/* Floating Modern Stats Grid */}
+      <Box sx={{ px: 2, mt: -6 }}>
+        <Grid container spacing={2}>
+          {statsList.map((stat, index) => (
+            <Grid item xs={6} sm={3} key={index}>
+              <Fade in timeout={1000 + (index * 200)}>
+                <Card 
+                  sx={{ 
+                    p: 2, 
+                    borderRadius: 5, 
+                    boxShadow: '0 12px 24px rgba(0,0,0,0.04)',
+                    backgroundColor: 'rgba(255,255,255,0.95)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255,255,255,0.3)',
+                    textAlign: 'center',
+                    transition: 'transform 0.2s ease',
+                    '&:hover': { transform: 'translateY(-4px)' }
+                  }}
+                >
                   <Avatar 
                     sx={{ 
-                      width: 50, 
-                      height: 50, 
-                      bgcolor: `${action.color}10`, 
-                      color: action.color,
-                      mr: 2,
-                      borderRadius: 3
+                      width: 44, 
+                      height: 44, 
+                      bgcolor: `${stat.color}15`, 
+                      color: stat.color, 
+                      mx: 'auto', 
+                      mb: 1.5,
+                      borderRadius: 2
                     }}
                   >
-                    {action.icon}
+                    {stat.icon}
                   </Avatar>
-                  <Box>
-                    <Typography variant="subtitle1" fontWeight={700} color="#1E293B">
-                      {action.title}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      {action.subtitle}
-                    </Typography>
-                  </Box>
-                </Box>
-                <ChevronRightRoundedIcon sx={{ color: '#94A3B8' }} />
-              </CardActionArea>
-            </Card>
+                  <Typography variant="h5" fontWeight={900} color="#1E293B">
+                    {stat.value}
+                  </Typography>
+                  <Typography variant="caption" color="textSecondary" fontWeight={700} sx={{ textTransform: 'uppercase' }}>
+                    {stat.label}
+                  </Typography>
+                </Card>
+              </Fade>
+            </Grid>
           ))}
-        </Stack>
+        </Grid>
+      </Box>
+
+      {/* Action Cards Grid */}
+      <Box sx={{ px: 2, mt: 5 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} px={1}>
+          <Typography variant="h5" fontWeight={900} color="#1E293B">
+            Quick Services
+          </Typography>
+          <Typography variant="caption" color="primary" fontWeight={800} sx={{ cursor: 'pointer' }}>
+            VIEW ALL
+          </Typography>
+        </Box>
+
+        <Grid container spacing={2.5}>
+          {actions.map((action, index) => (
+            <Grid item xs={12} sm={6} md={4} key={index}>
+              <Fade in timeout={1200 + (index * 100)}>
+                <Card 
+                  sx={{ 
+                    borderRadius: 5, 
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.02)',
+                    border: '1px solid rgba(0,0,0,0.04)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover': {
+                      transform: 'translateY(-5px)',
+                      boxShadow: '0 20px 40px rgba(30, 58, 138, 0.1)',
+                      borderColor: 'rgba(30, 58, 138, 0.1)',
+                    }
+                  }}
+                >
+                  <CardActionArea 
+                    onClick={() => navigate(action.path)}
+                    sx={{ p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Box 
+                        sx={{ 
+                          width: 56, 
+                          height: 56, 
+                          bgcolor: `${action.color}12`, 
+                          color: action.color,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          mr: 2.5,
+                          borderRadius: 4,
+                          boxShadow: `0 8px 16px ${action.color}15`
+                        }}
+                      >
+                        {action.icon}
+                      </Box>
+                      <Box>
+                        <Typography variant="subtitle1" fontWeight={800} color="#1E293B" sx={{ lineHeight: 1.2, mb: 0.5 }}>
+                          {action.title}
+                        </Typography>
+                        <Typography variant="body2" color="#64748B" fontWeight={500}>
+                          {action.subtitle}
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Avatar sx={{ width: 28, height: 28, bgcolor: '#F1F5F9', color: '#94A3B8' }}>
+                      <ChevronRightRoundedIcon sx={{ fontSize: 18 }} />
+                    </Avatar>
+                  </CardActionArea>
+                </Card>
+              </Fade>
+            </Grid>
+          ))}
+        </Grid>
       </Box>
 
       <Snackbar 
@@ -260,8 +326,19 @@ const Home = () => {
         onClose={() => setNotificationOpen(false)}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Alert onClose={() => setNotificationOpen(false)} severity="info" sx={{ width: '100%', boxShadow: 3, borderRadius: 2 }}>
-          {`You have ${todayReminders.birthdays} birthday(s) and ${todayReminders.weddings} anniversary(s) today!`}
+        <Alert 
+          onClose={() => setNotificationOpen(false)} 
+          severity="info" 
+          variant="filled"
+          sx={{ 
+            width: '100%', 
+            boxShadow: '0 10px 30px rgba(0,0,0,0.1)', 
+            borderRadius: 3,
+            fontWeight: 700,
+            bgcolor: '#1E3A8A'
+          }}
+        >
+          {`Today: ${todayReminders.birthdays} Birthdays & ${todayReminders.weddings} Anniversaries!`}
         </Alert>
       </Snackbar>
     </Box>

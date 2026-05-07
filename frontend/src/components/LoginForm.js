@@ -24,6 +24,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [mobile, setMobile] = useState('');
   const [anbiyam, setAnbiyam] = useState('');
+  const [role, setRole] = useState('family');
   const [anbiyamList, setAnbiyamList] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -64,8 +65,10 @@ const Login = () => {
           password,
         });
         localStorage.setItem('token', res.data.token);
-        localStorage.setItem('isAdmin', res.data.isAdmin ? 'true' : 'false');
+        localStorage.setItem('role', res.data.role);
+        localStorage.setItem('isAdmin', (res.data.isAdmin || res.data.role === 'admin') ? 'true' : 'false');
         localStorage.setItem('anbiyam', res.data.anbiyam || '');
+        localStorage.setItem('familyId', res.data.familyId || '');
         
         if (rememberMe) {
           localStorage.setItem('savedUsername', username);
@@ -90,6 +93,7 @@ const Login = () => {
           password,
           mobile,
           anbiyam,
+          role,
           email: `${username}@churchdoor.com` // Auto-generate internal email if DB requires it
         });
         setSuccess('Registration successful! Please wait for admin approval.');
@@ -240,6 +244,23 @@ const Login = () => {
                       }
                     }}
                   />
+                  <FormControl fullWidth sx={{ mb: 2, textAlign: 'left' }}>
+                    <InputLabel sx={{ color: '#64748B' }}>Register As</InputLabel>
+                    <Select
+                      value={role}
+                      label="Register As"
+                      onChange={(e) => setRole(e.target.value)}
+                      required
+                      sx={{ 
+                        borderRadius: 3,
+                        backgroundColor: '#F8FAFC',
+                        '& .MuiOutlinedInput-notchedOutline': { borderColor: '#E2E8F0' }
+                      }}
+                    >
+                      <MenuItem value="family">Family Member</MenuItem>
+                      <MenuItem value="incharge">Anbiyam Incharge</MenuItem>
+                    </Select>
+                  </FormControl>
                   <FormControl fullWidth sx={{ mb: 3, textAlign: 'left' }}>
                     <InputLabel sx={{ color: '#64748B' }}>Select Anbiyam</InputLabel>
                     <Select

@@ -58,7 +58,8 @@ class FamilyService {
       values.push(`%${search}%`);
     }
 
-    queryStr += ` ORDER BY family_id DESC LIMIT $${values.length + 1} OFFSET $${values.length + 2}`;
+    queryStr += ` ORDER BY LOWER(head_name) ASC LIMIT $${values.length + 1} OFFSET $${values.length + 2}`;
+    console.log('Executing query:', queryStr, values);
     values.push(limit, offset);
 
     const result = await db.query(queryStr, values);
@@ -99,7 +100,7 @@ class FamilyService {
       values.push(`%${search}%`);
     }
 
-    queryStr += ` ORDER BY family_id DESC LIMIT $${values.length + 1} OFFSET $${values.length + 2}`;
+    queryStr += ` ORDER BY LOWER(head_name) ASC LIMIT $${values.length + 1} OFFSET $${values.length + 2}`;
     values.push(limit, offset);
 
     const result = await db.query(queryStr, values);
@@ -206,7 +207,7 @@ class FamilyService {
 
   static async getFamiliesByAnbiyam(anbiyam) {
     const result = await db.query(
-      `SELECT * FROM families WHERE anbiyam = $1`,
+      `SELECT * FROM families WHERE anbiyam = $1 ORDER BY LOWER(head_name) ASC`,
       [anbiyam]
     );
     return result.rows;

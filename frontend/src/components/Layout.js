@@ -29,6 +29,8 @@ const Layout = ({ children }) => {
   const [openLogoutDialog, setOpenLogoutDialog] = useState(false);
   const navigate = useNavigate();
   const [selectedPath, setSelectedPath] = useState('/home');
+  const role = localStorage.getItem('role') || 'family';
+  const username = localStorage.getItem('username') || 'U';
 
   const handleLogout = () => setOpenLogoutDialog(true);
   const handleAvatarClick = (e) => setAnchorEl(e.currentTarget);
@@ -126,36 +128,54 @@ const Layout = ({ children }) => {
         '&.Mui-selected': { color: '#1E3A8A', fontWeight: 'bold', transform: 'scale(1.05)' },
       }}
     />
-    <BottomNavigationAction
-      label="Families"
-      value="/familylist"
-      icon={<GroupsRoundedIcon />}
-      sx={{
-        color: selectedPath === '/familylist' ? '#1E3A8A' : '#64748B',
-        transition: 'all 0.3s ease',
-        '&.Mui-selected': { color: '#1E3A8A', fontWeight: 'bold', transform: 'scale(1.05)' },
-      }}
-    />
-    <BottomNavigationAction
-      label="Members"
-      value="/memlist"
-      icon={<GroupRoundedIcon />}
-      sx={{
-        color: selectedPath === '/memlist' ? '#1E3A8A' : '#64748B',
-        transition: 'all 0.3s ease',
-        '&.Mui-selected': { color: '#1E3A8A', fontWeight: 'bold', transform: 'scale(1.05)' },
-      }}
-    />
-    <BottomNavigationAction
-      label="Register"
-      value="/add-family"
-      icon={<PersonAddAltRoundedIcon />}
-      sx={{
-        color: selectedPath === '/add-family' ? '#1E3A8A' : '#64748B',
-        transition: 'all 0.3s ease',
-        '&.Mui-selected': { color: '#1E3A8A', fontWeight: 'bold', transform: 'scale(1.05)' },
-      }}
-    />
+    {(role === 'admin' || role === 'incharge') && (
+      <BottomNavigationAction
+        label="Families"
+        value="/familylist"
+        icon={<GroupsRoundedIcon />}
+        sx={{
+          color: selectedPath === '/familylist' ? '#1E3A8A' : '#64748B',
+          transition: 'all 0.3s ease',
+          '&.Mui-selected': { color: '#1E3A8A', fontWeight: 'bold', transform: 'scale(1.05)' },
+        }}
+      />
+    )}
+    {role === 'admin' && (
+      <BottomNavigationAction
+        label="Members"
+        value="/memlist"
+        icon={<GroupRoundedIcon />}
+        sx={{
+          color: selectedPath === '/memlist' ? '#1E3A8A' : '#64748B',
+          transition: 'all 0.3s ease',
+          '&.Mui-selected': { color: '#1E3A8A', fontWeight: 'bold', transform: 'scale(1.05)' },
+        }}
+      />
+    )}
+    {role === 'family' && (
+      <BottomNavigationAction
+        label="My Family"
+        value="/my-family"
+        icon={<GroupsRoundedIcon />}
+        sx={{
+          color: selectedPath === '/my-family' ? '#1E3A8A' : '#64748B',
+          transition: 'all 0.3s ease',
+          '&.Mui-selected': { color: '#1E3A8A', fontWeight: 'bold', transform: 'scale(1.05)' },
+        }}
+      />
+    )}
+    {(role === 'admin' || role === 'incharge') && (
+      <BottomNavigationAction
+        label="Register"
+        value="/add-family"
+        icon={<PersonAddAltRoundedIcon />}
+        sx={{
+          color: selectedPath === '/add-family' ? '#1E3A8A' : '#64748B',
+          transition: 'all 0.3s ease',
+          '&.Mui-selected': { color: '#1E3A8A', fontWeight: 'bold', transform: 'scale(1.05)' },
+        }}
+      />
+    )}
   </BottomNavigation>
 </Paper>
 

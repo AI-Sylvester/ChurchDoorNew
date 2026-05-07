@@ -34,8 +34,10 @@ router.post('/login', async (req, res) => {
       { 
         userId: user.id, 
         username: user.username, 
+        role: user.role,
         isAdmin: user.is_admin,
-        anbiyam: user.anbiyam 
+        anbiyam: user.anbiyam,
+        familyId: user.family_id
       }, 
       JWT_SECRET, 
       { expiresIn: '24h' }
@@ -43,9 +45,11 @@ router.post('/login', async (req, res) => {
     console.log('Login successful for:', username);
     res.json({ 
       token, 
+      role: user.role,
       isAdmin: user.is_admin, 
       username: user.username,
-      anbiyam: user.anbiyam 
+      anbiyam: user.anbiyam,
+      familyId: user.family_id
     });
   } catch (error) {
     console.error(error);
@@ -54,9 +58,12 @@ router.post('/login', async (req, res) => {
 });
 // Register route
 router.post('/register', async (req, res) => {
-  const { username, password, email, mobile, anbiyam } = req.body;
+  const { username, password, email, mobile, anbiyam, role, family_id } = req.body;
 
   try {
+    // Basic validation for role to prevent arbitrary 'admin' registration
+    const targetRole = (role === 'incharge' || role === 'family') ? role : 'family';
+
     // Check if user already exists
     const userCheck = await query('SELECT * FROM users WHERE username = $1 OR email = $2', [username, email]);
     if (userCheck.rows.length > 0) {
@@ -69,8 +76,8 @@ router.post('/register', async (req, res) => {
 
     // Insert user into DB
     await query(
-      'INSERT INTO users (username, password, email, mobile, anbiyam, is_approved, is_admin) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-      [username, hashedPassword, email, mobile, anbiyam, false, false]
+      'INSERT INTO users (username, password, email, mobile, anbiyam, role, family_id, is_approved, is_admin) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+      [username, hashedPassword, email, mobile, anbiyam, targetRole, family_id, false, false]
     );
 
     res.status(201).json({ message: 'Registration successful! Please wait for admin approval.' });

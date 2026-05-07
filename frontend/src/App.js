@@ -20,6 +20,14 @@ import BirthdayReminders from './components/BirthdayRemainder';
 import StatsPage from './components/StatsPage';
 import UserManagement from './components/UserManagement';
 import ContactBook from './components/ContactBook';
+import AdminApprovals from './components/panels/AdminApprovals';
+import UpdateRequests from './components/panels/UpdateRequests';
+import EventReports from './components/panels/EventReports';
+import MyFamily from './components/panels/MyFamily';
+import AnbiyamSummary from './components/panels/AnbiyamSummary';
+import Payments from './components/panels/Payments';
+import RaiseUpdate from './components/panels/RaiseUpdate';
+import SubmitReport from './components/panels/SubmitReport';
 
 const BackButtonHandler = () => {
   const navigate = useNavigate();
@@ -195,6 +203,15 @@ function App() {
             </PrivateRoute>
           }
         />
+        <Route path="/approvals" element={<PrivateRoute><Layout><AdminApprovals /></Layout></PrivateRoute>} />
+        <Route path="/updates" element={<PrivateRoute><Layout><UpdateRequests /></Layout></PrivateRoute>} />
+        <Route path="/reports" element={<PrivateRoute><Layout><EventReports /></Layout></PrivateRoute>} />
+        <Route path="/my-family" element={<PrivateRoute><Layout><MyFamily /></Layout></PrivateRoute>} />
+        <Route path="/anbiyam-summary" element={<PrivateRoute><Layout><AnbiyamSummary /></Layout></PrivateRoute>} />
+        <Route path="/payments" element={<PrivateRoute><Layout><Payments type="subscription" /></Layout></PrivateRoute>} />
+        <Route path="/donations" element={<PrivateRoute><Layout><Payments type="donation" /></Layout></PrivateRoute>} />
+        <Route path="/raise-update" element={<PrivateRoute><Layout><RaiseUpdate /></Layout></PrivateRoute>} />
+        <Route path="/submit-report" element={<PrivateRoute><Layout><SubmitReport /></Layout></PrivateRoute>} />
       </Routes>
     </BrowserRouter>
   );

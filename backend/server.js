@@ -12,6 +12,9 @@ const memberRoutes = require('./routes/member');
 const anbiyamRoutes = require('./routes/anbiyam');
 const syncRoutes = require('./routes/sync');
 const userRoutes = require('./routes/user');
+const familyUserRoutes = require('./routes/familyUserRoutes');
+const inchargeRoutes = require('./routes/inchargeRoutes');
+const adminPanelRoutes = require('./routes/adminPanelRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -26,6 +29,9 @@ app.use('/api/member', memberRoutes);
 app.use('/api/anbiyam', anbiyamRoutes);
 app.use('/api/sync', syncRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/family-user', familyUserRoutes);
+app.use('/api/incharge', inchargeRoutes);
+app.use('/api/admin-panel', adminPanelRoutes);
 
 // Catch undefined routes
 const AppError = require('./utils/AppError');

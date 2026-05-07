@@ -24,7 +24,7 @@ import {
   Tabs,
   Tab,
   Stack,
-  Pagination,
+
   useMediaQuery,
   useTheme,
   Card,
@@ -71,8 +71,8 @@ const [showEditMap, setShowEditMap] = useState(false);
   const [anbiyamList, setAnbiyamList] = useState([]);
   const token = localStorage.getItem('token');
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const limit = 10;
+
+  const limit = 10000; // Large limit to show all families
 
   useEffect(() => {
     const fetchAnbiyams = async () => {
@@ -100,7 +100,6 @@ const [showEditMap, setShowEditMap] = useState(false);
         params: { page, limit, search: searchQuery }
       });
       setFamilies(res.data.families || []);
-      setTotalPages(res.data.totalPages || 1);
       setError('');
     } catch (err) {
       console.error(err);
@@ -119,9 +118,7 @@ const [showEditMap, setShowEditMap] = useState(false);
     fetchFamilies();
   };
 
-  const handlePageChange = (event, value) => {
-    setPage(value);
-  };
+
 
 const handleView = async (familyId) => {
   try {
@@ -211,7 +208,9 @@ const handleEdit = async (familyId) => {
   };
 
   const filteredFamilies = useMemo(() => {
-    return families; // Server handles filtering and sorting now
+    return [...families].sort((a, b) => 
+      (a.head_name || '').toLowerCase().localeCompare((b.head_name || '').toLowerCase())
+    );
   }, [families]);
 
 
@@ -480,15 +479,7 @@ const exportPDF = async (filteredFamiliesRaw) => {
             </Table>
           </TableContainer>
           )}
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, mb: 2 }}>
-            <Pagination 
-              count={totalPages} 
-              page={page} 
-              onChange={handlePageChange} 
-              color="primary" 
-              size="large"
-            />
-          </Box>
+
         </>
       )}
 

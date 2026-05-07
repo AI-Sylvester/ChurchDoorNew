@@ -147,7 +147,7 @@ const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     });
  
     return matchesSearch && matchesGender && matchesStatus && passesFilters;
-  });
+  }).sort((a, b) => (a.name || '').toLowerCase().localeCompare((b.name || '').toLowerCase()));
 
 const handleMemberPDFExport = async (filteredMembers, genderFilter = '', logoBase64 = '', filters = []) => {
   const doc = new jsPDF();
@@ -219,7 +219,7 @@ const handleMemberPDFExport = async (filteredMembers, genderFilter = '', logoBas
         path: fileName,
         data: base64,
         directory: Directory.Documents,
-        encoding: Encoding.Base64,
+        encoding: Encoding.BASE64,
       });
 
       alert(`✅ PDF saved to device: ${fileName}`);
@@ -622,7 +622,7 @@ const handleMemberPDFExport = async (filteredMembers, genderFilter = '', logoBas
                       <Typography variant="caption" color="text.secondary" fontWeight={500}>{label}</Typography>
                       <Box display="flex" alignItems="center" gap={1}>
                         <input
-                          type="checkbox"
+                           type="checkbox"
                           checked={!!value}
                           onChange={handleChange}
                         />

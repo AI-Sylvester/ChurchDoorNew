@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-  Paper, Typography, CircularProgress, Alert, Grid, FormControl,
-  InputLabel, Select, MenuItem, Box, Table, TableHead, TableRow,
+  Paper, Typography, CircularProgress, Alert, Grid,
+  Box, Table, TableHead, TableRow,
   TableCell, TableBody, Button, useTheme, useMediaQuery, Tabs, Tab,
+  Card, Stack, Avatar, Chip, Autocomplete, TextField
 } from '@mui/material';
 import axios from 'axios';
 import jsPDF from 'jspdf';
@@ -10,6 +11,8 @@ import autoTable from 'jspdf-autotable';
 import API_BASE_URL from '../config';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Capacitor } from '@capacitor/core';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import FilterListIcon from '@mui/icons-material/FilterList';
 
 const AnbiyamFamilyView = () => {
   const [anbiyams, setAnbiyams] = useState([]);
@@ -65,8 +68,13 @@ const AnbiyamFamilyView = () => {
     }
   }, [token]);
 
-  const handleAnbiyamChange = async (e) => {
-    const name = e.target.value;
+  const handleAnbiyamSelect = async (name) => {
+    if (!name) {
+      setSelectedAnbiyam('');
+      setFamilies([]);
+      setMembers([]);
+      return;
+    }
     setSelectedAnbiyam(name);
     setError('');
     setLoading(true);
@@ -178,132 +186,279 @@ const AnbiyamFamilyView = () => {
   };
 
   return (
-    <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
-      <Grid container spacing={2} justifyContent="space-between" alignItems="center" direction={isMobile ? 'column' : 'row'}>
-        <Grid item xs={12} sm="auto">
-          <Box display="flex" alignItems="center" gap={2} justifyContent={isMobile ? 'center' : 'flex-start'}>
-            <Typography variant="h6">
-              Anbiyam Report
-            </Typography>
-            {anbiyams.length > 0 && (
-              <Box sx={{ bgcolor: 'rgba(16, 185, 129, 0.1)', color: '#10B981', px: 1.5, py: 0.5, borderRadius: 5, fontWeight: 'bold', fontSize: '0.85rem' }}>
-                Total: {anbiyams.length}
+    <Box sx={{ p: { xs: 2, sm: 4 }, bgcolor: '#F8FAFC', minHeight: '100vh', mt: -2, mx: -2 }}>
+      <Box sx={{ mb: 4, px: 1 }}>
+        <Typography variant="h4" fontWeight={900} color="#1E3A8A" sx={{ letterSpacing: '-1px', mb: 1 }}>
+          Anbiyam Reports
+        </Typography>
+        <Typography variant="body2" color="textSecondary" fontWeight={500}>
+          Search and view parish data by Anbiyam
+        </Typography>
+      </Box>
+
+      <Paper 
+        elevation={0} 
+        sx={{ 
+          p: { xs: 2.5, sm: 4 }, 
+          borderRadius: 5, 
+          boxShadow: '0 8px 32px rgba(0,0,0,0.04)',
+          border: '1px solid rgba(255,255,255,0.8)',
+          backgroundColor: 'rgba(255,255,255,0.9)',
+          backdropFilter: 'blur(10px)',
+          mb: 4,
+          position: 'relative',
+          overflow: 'hidden'
+        }}
+      >
+        <Grid container spacing={3} alignItems="center">
+          <Grid item xs={12} md={7}>
+            <Box>
+              <Typography variant="caption" color="primary" fontWeight={800} sx={{ textTransform: 'uppercase', mb: 1, display: 'block', letterSpacing: '1px' }}>
+                Quick Selection
+              </Typography>
+              <Autocomplete
+                options={anbiyams.map((anb) => anb.name)}
+                value={selectedAnbiyam || null}
+                onChange={(event, newValue) => handleAnbiyamSelect(newValue)}
+                renderInput={(params) => (
+                  <TextField 
+                    {...params} 
+                    label="Search or Select Anbiyam" 
+                    variant="outlined"
+                    placeholder="Type to search..."
+                    InputProps={{
+                      ...params.InputProps,
+                      startAdornment: (
+                        <FilterListIcon sx={{ color: '#94A3B8', mr: 1, ml: 0.5 }} />
+                      ),
+                      sx: { 
+                        borderRadius: 4, 
+                        bgcolor: '#fff',
+                        height: 56,
+                        boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
+                        '& fieldset': { borderColor: 'rgba(0,0,0,0.08)' },
+                        '&:hover fieldset': { borderColor: '#1E3A8A' },
+                        fontSize: '1rem',
+                        fontWeight: 600
+                      }
+                    }}
+                  />
+                )}
+                sx={{ width: '100%' }}
+              />
+            </Box>
+          </Grid>
+          <Grid item xs={12} md={5}>
+            {selectedAnbiyam ? (
+              <Stack direction="row" spacing={1.5} justifyContent={{ xs: 'center', md: 'flex-start' }}>
+                <Box sx={{ 
+                  px: 2, py: 1, borderRadius: 3, 
+                  bgcolor: '#EFF6FF', color: '#1E3A8A', 
+                  textAlign: 'center', border: '1px solid #DBEAFE' 
+                }}>
+                  <Typography variant="h6" fontWeight={900}>{families.length}</Typography>
+                  <Typography variant="caption" fontWeight={700}>FAMILIES</Typography>
+                </Box>
+                <Box sx={{ 
+                  px: 2, py: 1, borderRadius: 3, 
+                  bgcolor: '#F5F3FF', color: '#7C3AED', 
+                  textAlign: 'center', border: '1px solid #EDE9FE' 
+                }}>
+                  <Typography variant="h6" fontWeight={900}>{members.length}</Typography>
+                  <Typography variant="caption" fontWeight={700}>MEMBERS</Typography>
+                </Box>
+              </Stack>
+            ) : (
+              <Box sx={{ textAlign: { xs: 'center', md: 'left' }, opacity: 0.6 }}>
+                <Typography variant="body2" color="textSecondary" fontWeight={500}>
+                  Select an Anbiyam from the list to load and export the reports.
+                </Typography>
               </Box>
             )}
-          </Box>
+          </Grid>
         </Grid>
-
-        <Grid item xs={12} sm="auto">
-          <FormControl fullWidth={isMobile} size="small" sx={{ minWidth: 200 }}>
-            <InputLabel>Anbiyam</InputLabel>
-            <Select value={selectedAnbiyam} onChange={handleAnbiyamChange} label="Anbiyam">
-              {anbiyams.map((anb) => (
-                <MenuItem key={anb.id} value={anb.name}>
-                  {anb.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
-      </Grid>
+      </Paper>
 
       {selectedAnbiyam && (
-        <Box mt={3}>
-          <Box display="flex" justifyContent="center" flexWrap="wrap" gap={1.5} mb={2}>
-  {[
-    { label: 'Export Families', type: 'families' },
-    { label: 'Export Members', type: 'members' },
-    { label: 'Export Both', type: 'both' },
-  ].map(({ label, type }) => (
-    <Button
-      key={type}
-      variant="outlined"
-      onClick={() => handlePDFExport(type)}
-      sx={{
-        fontSize: '0.8rem',
-        px: 2.5,
-        py: 1,
-        textTransform: 'none',
-        borderRadius: '12px',
-      }}
-    >
-      {label}
-    </Button>
-  ))}
-</Box>
+        <Box>
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              borderRadius: 5, 
+              overflow: 'hidden', 
+              boxShadow: '0 12px 40px rgba(0,0,0,0.05)',
+              border: '1px solid rgba(0,0,0,0.05)',
+              backgroundColor: '#fff'
+            }}
+          >
+            <Tabs 
+              value={tabIndex} 
+              onChange={handleTabChange} 
+              textColor="primary" 
+              indicatorColor="primary"
+              variant="fullWidth"
+              sx={{ 
+                bgcolor: '#F8FAFC', 
+                borderBottom: '1px solid rgba(0,0,0,0.05)',
+                '& .MuiTab-root': { py: 2.5, fontWeight: 800, fontSize: '0.95rem' }
+              }}
+            >
+              <Tab label="Family Directory" />
+              <Tab label="Member Records" />
+            </Tabs>
 
-          <Tabs value={tabIndex} onChange={handleTabChange} textColor="primary">
-            <Tab label="Families" />
-            <Tab label="Members" />
-          </Tabs>
+            <Box sx={{ p: { xs: 2.5, sm: 4 } }}>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+                <Typography variant="h6" fontWeight={900} color="#1E293B">
+                  {tabIndex === 0 ? 'Anbiyam Family List' : 'Anbiyam Member List'}
+                </Typography>
+                <Button
+                  variant="contained"
+                  startIcon={<PictureAsPdfIcon />}
+                  onClick={() => handlePDFExport(tabIndex === 0 ? 'families' : 'members')}
+                  sx={{ 
+                    borderRadius: 3.5, 
+                    px: 3,
+                    py: 1.2,
+                    textTransform: 'none', 
+                    fontWeight: 800,
+                    bgcolor: '#1E3A8A',
+                    boxShadow: '0 4px 15px rgba(30, 58, 138, 0.3)',
+                    '&:hover': { bgcolor: '#172554', boxShadow: '0 6px 20px rgba(30, 58, 138, 0.4)' }
+                  }}
+                >
+                  Export {isMobile ? 'PDF' : 'PDF Report'}
+                </Button>
+              </Box>
 
-          {error && <Alert severity="error" sx={{ my: 2 }}>{error}</Alert>}
+              {error && <Alert severity="error" sx={{ mb: 4, borderRadius: 3 }}>{error}</Alert>}
 
-          {loading ? (
-            <Box display="flex" justifyContent="center" my={4}><CircularProgress /></Box>
-          ) : (
-            <>
-              {tabIndex === 0 && (
-                <Box sx={{ overflowX: 'auto', mt: 2 }}>
-                  <Table sx={{ minWidth: 650 }}>
-                    <TableHead sx={{ backgroundColor: '#0B3D91' }}>
-                      <TableRow>
-                        <TableCell sx={{ color: 'white' }}>S.No</TableCell>
-                        <TableCell sx={{ color: 'white' }}>Family ID</TableCell>
-                        <TableCell sx={{ color: 'white' }}>Head Name</TableCell>
-                        <TableCell sx={{ color: 'white' }}>Mobile</TableCell>
-                        <TableCell sx={{ color: 'white' }}>Address</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {families.map((fam, index) => (
-                        <TableRow key={fam.family_id} hover>
-                          <TableCell>{index + 1}</TableCell>
-                          <TableCell>{fam.family_id}</TableCell>
-                          <TableCell>{fam.head_name}</TableCell>
-                          <TableCell>{fam.mobile_number}</TableCell>
-                          <TableCell>{[fam.address_line1, fam.address_line2, fam.city].filter(Boolean).join(', ')}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+              {loading ? (
+                <Box display="flex" justifyContent="center" my={10}>
+                  <CircularProgress thickness={5} size={50} color="primary" />
                 </Box>
+              ) : (
+                <>
+                  {tabIndex === 0 ? (
+                    isMobile ? (
+                      <Stack spacing={2.5}>
+                        {families.map((fam, idx) => (
+                          <Card key={fam.family_id} sx={{ p: 2.5, borderRadius: 4, boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.05)' }}>
+                            <Box display="flex" alignItems="center" mb={2}>
+                              <Avatar sx={{ width: 36, height: 36, fontSize: '0.9rem', bgcolor: '#1E3A8A', mr: 2, fontWeight: 900 }}>{idx + 1}</Avatar>
+                              <Typography variant="subtitle1" fontWeight={900} color="#1E293B">{fam.head_name}</Typography>
+                            </Box>
+                            <Grid container spacing={1}>
+                              <Grid item xs={6}>
+                                <Typography variant="caption" color="textSecondary" fontWeight={700}>FAMILY ID</Typography>
+                                <Typography variant="body2" fontWeight={600}>{fam.family_id}</Typography>
+                              </Grid>
+                              <Grid item xs={6}>
+                                <Typography variant="caption" color="textSecondary" fontWeight={700}>MOBILE</Typography>
+                                <Typography variant="body2" fontWeight={600}>{fam.mobile_number || '-'}</Typography>
+                              </Grid>
+                            </Grid>
+                            <Divider sx={{ my: 1.5, opacity: 0.5 }} />
+                            <Typography variant="caption" color="textSecondary" fontWeight={700}>ADDRESS</Typography>
+                            <Typography variant="body2" color="#475569" sx={{ mt: 0.5 }}>
+                              {[fam.address_line1, fam.address_line2, fam.city].filter(Boolean).join(', ')}
+                            </Typography>
+                          </Card>
+                        ))}
+                      </Stack>
+                    ) : (
+                      <TableContainer>
+                        <Table sx={{ minWidth: 650 }}>
+                          <TableHead sx={{ backgroundColor: '#F1F5F9' }}>
+                            <TableRow>
+                              <TableCell sx={{ fontWeight: 900, color: '#475569' }}>S.No</TableCell>
+                              <TableCell sx={{ fontWeight: 900, color: '#475569' }}>Family ID</TableCell>
+                              <TableCell sx={{ fontWeight: 900, color: '#475569' }}>Head Name</TableCell>
+                              <TableCell sx={{ fontWeight: 900, color: '#475569' }}>Mobile</TableCell>
+                              <TableCell sx={{ fontWeight: 900, color: '#475569' }}>Address</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {families.map((fam, index) => (
+                              <TableRow key={fam.family_id} hover sx={{ '& td': { py: 2 } }}>
+                                <TableCell fontWeight={700}>{index + 1}</TableCell>
+                                <TableCell fontWeight={800} color="#1E3A8A">{fam.family_id}</TableCell>
+                                <TableCell fontWeight={700}>{fam.head_name}</TableCell>
+                                <TableCell fontWeight={600}>{fam.mobile_number}</TableCell>
+                                <TableCell sx={{ color: '#64748B' }}>{[fam.address_line1, fam.address_line2, fam.city].filter(Boolean).join(', ')}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    )
+                  ) : (
+                    isMobile ? (
+                      <Stack spacing={2.5}>
+                        {members.map((mem, idx) => (
+                          <Card key={mem.member_id} sx={{ p: 2.5, borderRadius: 4, boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.05)' }}>
+                            <Box display="flex" alignItems="center" mb={2}>
+                              <Avatar sx={{ width: 36, height: 36, fontSize: '0.9rem', bgcolor: '#6366F1', mr: 2, fontWeight: 900 }}>{idx + 1}</Avatar>
+                              <Typography variant="subtitle1" fontWeight={900} color="#1E293B">{mem.name}</Typography>
+                            </Box>
+                            <Stack direction="row" spacing={1} mb={2}>
+                              <Chip label={mem.sex} size="small" sx={{ fontWeight: 800, bgcolor: mem.sex === 'Male' ? '#EFF6FF' : '#FFF1F2', color: mem.sex === 'Male' ? '#1E3A8A' : '#BE123C' }} />
+                              <Chip label={`Age: ${mem.age}`} size="small" variant="outlined" sx={{ fontWeight: 800 }} />
+                            </Stack>
+                            <Grid container spacing={1}>
+                              <Grid item xs={6}>
+                                <Typography variant="caption" color="textSecondary" fontWeight={700}>MEMBER ID</Typography>
+                                <Typography variant="body2" fontWeight={600}>{mem.member_id}</Typography>
+                              </Grid>
+                              <Grid item xs={6}>
+                                <Typography variant="caption" color="textSecondary" fontWeight={700}>MOBILE</Typography>
+                                <Typography variant="body2" fontWeight={600}>{mem.mobile || '-'}</Typography>
+                              </Grid>
+                            </Grid>
+                          </Card>
+                        ))}
+                      </Stack>
+                    ) : (
+                      <TableContainer>
+                        <Table sx={{ minWidth: 650 }}>
+                          <TableHead sx={{ backgroundColor: '#F1F5F9' }}>
+                            <TableRow>
+                              <TableCell sx={{ fontWeight: 900, color: '#475569' }}>S.No</TableCell>
+                              <TableCell sx={{ fontWeight: 900, color: '#475569' }}>Member ID</TableCell>
+                              <TableCell sx={{ fontWeight: 900, color: '#475569' }}>Name</TableCell>
+                              <TableCell sx={{ fontWeight: 900, color: '#475569' }}>Gender</TableCell>
+                              <TableCell sx={{ fontWeight: 900, color: '#475569' }}>Mobile</TableCell>
+                              <TableCell sx={{ fontWeight: 900, color: '#475569' }}>Age</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {members.map((mem, index) => (
+                              <TableRow key={mem.member_id} hover sx={{ '& td': { py: 2 } }}>
+                                <TableCell fontWeight={700}>{index + 1}</TableCell>
+                                <TableCell fontWeight={800} color="#1E3A8A">{mem.member_id}</TableCell>
+                                <TableCell fontWeight={700}>{mem.name}</TableCell>
+                                <TableCell>
+                                  <Chip label={mem.sex} size="small" sx={{ fontWeight: 800, bgcolor: mem.sex === 'Male' ? '#EFF6FF' : '#FFF1F2', color: mem.sex === 'Male' ? '#1E3A8A' : '#BE123C' }} />
+                                </TableCell>
+                                <TableCell fontWeight={600}>{mem.mobile}</TableCell>
+                                <TableCell fontWeight={800}>{mem.age}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    )
+                  )}
+                </>
               )}
-
-              {tabIndex === 1 && (
-                <Box sx={{ overflowX: 'auto', mt: 2 }}>
-                  <Table sx={{ minWidth: 650 }}>
-                    <TableHead sx={{ backgroundColor: '#0B3D91' }}>
-                      <TableRow>
-                        <TableCell sx={{ color: 'white' }}>S.No</TableCell>
-                        <TableCell sx={{ color: 'white' }}>Member ID</TableCell>
-                        <TableCell sx={{ color: 'white' }}>Name</TableCell>
-                        <TableCell sx={{ color: 'white' }}>Gender</TableCell>
-                        <TableCell sx={{ color: 'white' }}>Mobile</TableCell>
-                        <TableCell sx={{ color: 'white' }}>Age</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {members.map((mem, index) => (
-                        <TableRow key={mem.member_id}>
-                          <TableCell>{index + 1}</TableCell>
-                          <TableCell>{mem.member_id}</TableCell>
-                          <TableCell>{mem.name}</TableCell>
-                          <TableCell>{mem.sex}</TableCell>
-                          <TableCell>{mem.mobile}</TableCell>
-                          <TableCell>{mem.age}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </Box>
-              )}
-            </>
-          )}
+            </Box>
+          </Paper>
         </Box>
       )}
-    </Paper>
+    </Box>
   );
 };
 
 export default AnbiyamFamilyView;
+const TableContainer = ({ children }) => <Box sx={{ overflowX: 'auto', mt: 1 }}>{children}</Box>;
+const Divider = ({ sx }) => <Box sx={{ height: '1px', bgcolor: 'rgba(0,0,0,0.08)', ...sx }} />;
