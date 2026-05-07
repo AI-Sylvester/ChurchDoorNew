@@ -2,10 +2,10 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-const connectionString = process.env.CONNECTION_STRING;
+const connectionString = process.env.CONNECTION_STRING || process.env.DATABASE_URL;
 
 if (!connectionString) {
-  console.error('❌ CONNECTION_STRING is missing');
+  console.error('❌ CONNECTION_STRING or DATABASE_URL is missing');
   process.exit(1);
 }
 

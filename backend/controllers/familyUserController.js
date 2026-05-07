@@ -26,7 +26,8 @@ exports.getMyFamily = async (req, res, next) => {
       members: membersResult.rows
     });
   } catch (error) {
-    next(new AppError('Failed to fetch your family details', 500));
+    console.error('Error in getMyFamily:', error);
+    next(new AppError('Failed to fetch your family details: ' + error.message, 500));
   }
 };
 
