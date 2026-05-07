@@ -15,7 +15,7 @@ exports.getPendingUsers = async (req, res, next) => {
 exports.getUpdateRequests = async (req, res, next) => {
   try {
     const result = await db.query(
-      "SELECT ur.*, f.head_name FROM update_requests ur JOIN families f ON ur.family_id = f.family_id WHERE ur.status = 'pending' ORDER BY ur.created_at DESC"
+      "SELECT ur.*, f.head_name FROM update_requests ur JOIN families f ON ur.family_id = f.family_id WHERE ur.status = 'pending' AND ur.verified_by_incharge = true ORDER BY ur.created_at DESC"
     );
     res.status(200).json(result.rows);
   } catch (error) {

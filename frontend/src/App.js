@@ -22,6 +22,7 @@ import UserManagement from './components/UserManagement';
 import ContactBook from './components/ContactBook';
 import AdminApprovals from './components/panels/AdminApprovals';
 import UpdateRequests from './components/panels/UpdateRequests';
+import GroupUpdateRequests from './components/panels/GroupUpdateRequests';
 import EventReports from './components/panels/EventReports';
 import MyFamily from './components/panels/MyFamily';
 import AnbiyamSummary from './components/panels/AnbiyamSummary';
@@ -206,6 +207,7 @@ function App() {
         />
         <Route path="/approvals" element={<PrivateRoute><Layout><AdminApprovals /></Layout></PrivateRoute>} />
         <Route path="/updates" element={<PrivateRoute><Layout><UpdateRequests /></Layout></PrivateRoute>} />
+        <Route path="/group-updates" element={<PrivateRoute><Layout><GroupUpdateRequests /></Layout></PrivateRoute>} />
         <Route path="/reports" element={<PrivateRoute><Layout><EventReports /></Layout></PrivateRoute>} />
         <Route path="/my-family" element={<PrivateRoute><Layout><MyFamily /></Layout></PrivateRoute>} />
         <Route path="/anbiyam-summary" element={<PrivateRoute><Layout><AnbiyamSummary /></Layout></PrivateRoute>} />

@@ -26,6 +26,7 @@ import GroupRoundedIcon from '@mui/icons-material/GroupRounded';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
+import HistoryIcon from '@mui/icons-material/History';
 import MaleIcon from '@mui/icons-material/Male';
 import FemaleIcon from '@mui/icons-material/Female';
 
@@ -142,6 +143,7 @@ const Home = () => {
     actions.push(
       { title: 'My Anbiyam', subtitle: `Manage ${anbiyamName}`, path: '/anbiyamfam', icon: <MapRoundedIcon />, color: '#7C3AED' },
       { title: 'Verify Registrations', subtitle: 'Vet new families', path: '/verify-registrations', icon: <VerifiedUserIcon />, color: '#10B981' },
+      { title: 'Group Updates', subtitle: 'Verify change requests', path: '/group-updates', icon: <HistoryIcon />, color: '#F59E0B' },
       { title: 'Submit Report', subtitle: 'Group event report', path: '/submit-report', icon: <BarChartIcon />, color: '#0EA5E9' },
       { title: 'Family Cards', subtitle: 'View group cards', path: '/familycard', icon: <Diversity3RoundedIcon />, color: '#1E3A8A' },
       { title: 'Reminders', subtitle: 'Birthdays & More', path: '/birthdays', icon: <CakeRoundedIcon />, color: '#E11D48' },

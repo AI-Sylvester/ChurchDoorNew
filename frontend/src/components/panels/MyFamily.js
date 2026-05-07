@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Box, Typography, CircularProgress, Alert, Paper, Grid, Avatar, Divider, Chip } from '@mui/material';
+import { Box, Typography, CircularProgress, Alert, Paper, Grid, Avatar, Divider, Chip, Button } from '@mui/material';
 import API_BASE_URL from '../../config';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import PhoneIcon from '@mui/icons-material/Phone';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import EditIcon from '@mui/icons-material/Edit';
+import LockIcon from '@mui/icons-material/Lock';
+import HistoryIcon from '@mui/icons-material/History';
+import { useNavigate } from 'react-router-dom';
 
 const MyFamily = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchMyFamily = async () => {
@@ -47,12 +52,38 @@ const MyFamily = () => {
           <Box>
             <Typography variant="h4" fontWeight={900} color="#1E3A8A">{family.head_name}'s Family</Typography>
             <Typography variant="subtitle1" color="textSecondary" fontWeight={600}>{family.family_id} • {family.anbiyam}</Typography>
-            <Chip 
-              label={family.active ? 'Active' : 'Pending Approval'} 
-              color={family.active ? 'success' : 'warning'} 
-              size="small" 
-              sx={{ mt: 1, fontWeight: 700 }}
-            />
+            <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
+              <Chip 
+                label={family.active ? 'Verified & Approved' : (family.verification_status === 'recommended' ? 'Recommended' : 'Pending Verification')} 
+                color={family.active ? 'success' : (family.verification_status === 'recommended' ? 'info' : 'warning')} 
+                size="small" 
+                sx={{ fontWeight: 700 }}
+              />
+              {family.active && (
+                <Chip icon={<LockIcon sx={{ fontSize: '14px !important' }} />} label="Locked" size="small" variant="outlined" sx={{ fontWeight: 700 }} />
+              )}
+            </Box>
+          </Box>
+          <Box sx={{ ml: 'auto' }}>
+            {family.active ? (
+              <Button 
+                variant="outlined" 
+                startIcon={<HistoryIcon />}
+                onClick={() => navigate('/raise-update')}
+                sx={{ borderRadius: 3, fontWeight: 700, textTransform: 'none' }}
+              >
+                Request Update
+              </Button>
+            ) : (
+              <Button 
+                variant="contained" 
+                startIcon={<EditIcon />}
+                onClick={() => navigate(`/edit-family/${family.family_id}`)}
+                sx={{ borderRadius: 3, fontWeight: 700, textTransform: 'none', bgcolor: '#1E3A8A' }}
+              >
+                Edit Details
+              </Button>
+            )}
           </Box>
         </Box>
 

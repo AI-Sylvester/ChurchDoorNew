@@ -77,3 +77,38 @@ exports.getPendingVerifications = async (req, res, next) => {
     next(new AppError('Failed to fetch pending verifications', 500));
   }
 };
+
+exports.getGroupUpdateRequests = async (req, res, next) => {
+  try {
+    const { anbiyam } = req.user;
+    const result = await db.query(
+      "SELECT ur.*, f.head_name FROM update_requests ur JOIN families f ON ur.family_id = f.family_id WHERE f.anbiyam = $1 AND ur.status = 'pending' AND ur.verified_by_incharge = false ORDER BY ur.created_at DESC",
+      [anbiyam]
+    );
+    res.status(200).json(result.rows);
+  } catch (error) {
+    next(new AppError('Failed to fetch group update requests', 500));
+  }
+};
+
+exports.verifyUpdateRequest = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { anbiyam } = req.user;
+
+    // Check if the request belongs to a family in this incharge's group
+    const check = await db.query(
+      "SELECT f.anbiyam FROM update_requests ur JOIN families f ON ur.family_id = f.family_id WHERE ur.id = $1",
+      [id]
+    );
+
+    if (check.rows.length === 0 || check.rows[0].anbiyam !== anbiyam) {
+      return next(new AppError('Unauthorized: Request not in your group', 403));
+    }
+
+    await db.query("UPDATE update_requests SET verified_by_incharge = true WHERE id = $1", [id]);
+    res.status(200).json({ message: 'Update request verified and forwarded to Admin' });
+  } catch (error) {
+    next(new AppError('Failed to verify update request', 500));
+  }
+};
