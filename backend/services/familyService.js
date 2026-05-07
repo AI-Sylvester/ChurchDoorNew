@@ -102,10 +102,22 @@ class FamilyService {
 
   static async getInactiveFamilies(page = 1, limit = 50, search = '', user = {}) {
     const offset = (page - 1) * limit;
-    let queryStr = "SELECT * FROM families WHERE active = false AND (verification_status = 'approved' OR verification_status = 'recommended')";
+    const isAdminOrIncharge = user.isAdmin || user.role === 'admin' || user.role === 'incharge';
+    
+    // Inactive list should show:
+    // 1. Approved but inactive (active=false)
+    // 2. Recommended (vetted by incharge)
+    // 3. Pending Incharge (newly registered)
+    let queryStr = "SELECT * FROM families WHERE (active = false OR verification_status != 'approved')";
     const values = [];
 
-    if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
+    if (!isAdminOrIncharge && user.anbiyam) {
+      // Regular users shouldn't really see inactive list unless it's their own, 
+      // but if they do, restrict by anbiyam
+      queryStr += " AND anbiyam = $" + (values.length + 1);
+      values.push(user.anbiyam);
+    } else if (user.role === 'incharge' && user.anbiyam) {
+      // Incharge only see their own anbiyam's pending/vetted
       queryStr += " AND anbiyam = $" + (values.length + 1);
       values.push(user.anbiyam);
     }
@@ -120,9 +132,9 @@ class FamilyService {
 
     const result = await db.query(queryStr, values);
 
-    let countQuery = "SELECT COUNT(*) FROM families WHERE active = false";
+    let countQuery = "SELECT COUNT(*) FROM families WHERE (active = false OR verification_status != 'approved')";
     const countValues = [];
-    if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
+    if (user.role === 'incharge' && user.anbiyam) {
       countQuery += " AND anbiyam = $1";
       countValues.push(user.anbiyam);
     }

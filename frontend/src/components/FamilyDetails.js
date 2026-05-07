@@ -21,7 +21,8 @@ import {
   Stack,
   InputAdornment,
   Switch,
-  FormControlLabel
+  FormControlLabel,
+  Button
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import API_BASE_URL from '../config';
@@ -40,6 +41,21 @@ const FamilyDetailsView = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const token = localStorage.getItem('token');
+  const role = (localStorage.getItem('role') || 'family').toLowerCase();
+
+  const handleStatusUpdate = async (newStatus) => {
+    try {
+      await axios.put(`${API_BASE_URL}/family/${familyDetails.family_id}`, {
+        verification_status: newStatus,
+        active: newStatus === 'approved'
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      await fetchFamilyDetails(familyDetails.family_id);
+    } catch (err) {
+      setError('Failed to update verification status');
+    }
+  };
 
   useEffect(() => {
     const fetchFamilyIds = async () => {
@@ -392,12 +408,57 @@ const toBase64 = (url) =>
       <Box sx={{ px: 2.5, py: 0.8, borderRadius: 50, bgcolor: familyDetails.active ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: familyDetails.active ? '#10B981' : '#EF4444', fontWeight: 700, fontSize: '0.875rem' }}>
         {familyDetails.active ? 'Active' : 'Inactive'}
       </Box>
-      {familyDetails.anbiyam && (
-        <Box sx={{ px: 2.5, py: 0.8, borderRadius: 50, bgcolor: 'rgba(124, 58, 237, 0.1)', color: '#7C3AED', fontWeight: 700, fontSize: '0.875rem' }}>
-          Anbiyam: {familyDetails.anbiyam}
+      {familyDetails.verification_status && (
+        <Box sx={{ 
+          px: 2.5, py: 0.8, borderRadius: 50, 
+          bgcolor: familyDetails.verification_status === 'approved' ? 'rgba(16, 185, 129, 0.1)' : 
+                   familyDetails.verification_status === 'recommended' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(245, 158, 11, 0.1)', 
+          color: familyDetails.verification_status === 'approved' ? '#10B981' : 
+                 familyDetails.verification_status === 'recommended' ? '#3B82F6' : '#F59E0B', 
+          fontWeight: 700, fontSize: '0.875rem', textTransform: 'uppercase' 
+        }}>
+          Status: {familyDetails.verification_status.replace('_', ' ')}
         </Box>
       )}
     </Stack>
+
+    {/* Verification Actions */}
+    {(role === 'admin' || role === 'incharge') && familyDetails.verification_status !== 'approved' && (
+      <Paper sx={{ p: 3, mb: 4, borderRadius: 4, bgcolor: '#FFFBEB', border: '1px solid #FEF3C7', ml: { xs: 0, md: 5 } }} elevation={0}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center" justifyContent="space-between">
+          <Box>
+            <Typography variant="subtitle1" fontWeight={900} color="#92400E">Verification Action Required</Typography>
+            <Typography variant="body2" color="#B45309">
+              {familyDetails.verification_status === 'pending_incharge' 
+                ? 'As Anbiyam Incharge, please verify the family details and recommend for approval.'
+                : 'As Admin, please review the recommended family and grant final approval.'}
+            </Typography>
+          </Box>
+          <Stack direction="row" spacing={2}>
+            {role === 'incharge' && familyDetails.verification_status === 'pending_incharge' && (
+              <Button 
+                variant="contained" 
+                color="primary" 
+                onClick={() => handleStatusUpdate('recommended')}
+                sx={{ borderRadius: 3, fontWeight: 900, px: 4, py: 1.5 }}
+              >
+                Verify & Recommend
+              </Button>
+            )}
+            {role === 'admin' && (familyDetails.verification_status === 'recommended' || familyDetails.verification_status === 'pending_incharge') && (
+              <Button 
+                variant="contained" 
+                color="success" 
+                onClick={() => handleStatusUpdate('approved')}
+                sx={{ borderRadius: 3, fontWeight: 900, px: 4, py: 1.5, bgcolor: '#10B981' }}
+              >
+                Approve & Activate
+              </Button>
+            )}
+          </Stack>
+        </Stack>
+      </Paper>
+    )}
 
     {/* Info Cards */}
     <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} gap={3}>

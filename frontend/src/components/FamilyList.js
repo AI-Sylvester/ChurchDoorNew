@@ -28,11 +28,12 @@ import {
   Card,
   Collapse,
   Chip,
-  InputAdornment
+  InputAdornment,
+  Tabs,
+  Tab
 } from '@mui/material';
 import API_BASE_URL from '../config';
 import SearchIcon from '@mui/icons-material/Search';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import EditIcon from '@mui/icons-material/Edit';
 import { useNavigate } from 'react-router-dom';
 
@@ -46,7 +47,7 @@ const FamilyList = () => {
   const [families, setFamilies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters] = useState(false);
   const [activeOnly, setActiveOnly] = useState(true);
   
   const [imageOpen, setImageOpen] = useState(false);
@@ -55,11 +56,14 @@ const FamilyList = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const token = localStorage.getItem('token');
+  const role = (localStorage.getItem('role') || 'family').toLowerCase();
+  const [tab, setTab] = useState(0);
 
   const fetchFamilies = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/family/list`, {
+      const endpoint = tab === 0 ? 'list' : 'list-inactive';
+      const response = await axios.get(`${API_BASE_URL}/family/${endpoint}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setFamilies(response.data.families || []);
@@ -68,7 +72,7 @@ const FamilyList = () => {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, tab]);
 
   useEffect(() => {
     fetchFamilies();
@@ -78,10 +82,11 @@ const FamilyList = () => {
     return families.filter(fam => {
       const matchesSearch = (fam.head_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
                             fam.family_id?.toLowerCase().includes(searchQuery.toLowerCase()));
-      const matchesStatus = activeOnly ? fam.active : true;
+      // If we are in vetting tab, they are all technically inactive/pending
+      const matchesStatus = tab === 1 ? true : (activeOnly ? fam.active : true);
       return matchesSearch && matchesStatus;
     });
-  }, [families, searchQuery, activeOnly]);
+  }, [families, searchQuery, activeOnly, tab]);
 
   const handleView = (familyId) => {
     navigate(`/familydet/${familyId}`);
@@ -99,14 +104,18 @@ const FamilyList = () => {
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, pb: 12 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5" fontWeight={900} color="#1E293B">
-          Family Directory
-        </Typography>
-        <IconButton onClick={() => setShowFilters(!showFilters)} color={showFilters ? 'primary' : 'default'}>
-          <FilterListIcon />
-        </IconButton>
-      </Box>
+      {(role === 'admin' || role === 'incharge') && (
+        <Tabs 
+          value={tab} 
+          onChange={(e, v) => setTab(v)} 
+          sx={{ mb: 3, borderBottom: '1px solid #E2E8F0' }}
+          textColor="primary"
+          indicatorColor="primary"
+        >
+          <Tab label="Active Directory" sx={{ fontWeight: 800 }} />
+          <Tab label="Pending Vetting" sx={{ fontWeight: 800 }} />
+        </Tabs>
+      )}
 
       <TextField
         fullWidth

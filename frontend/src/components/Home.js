@@ -29,7 +29,6 @@ import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import HistoryIcon from '@mui/icons-material/History';
 import MaleIcon from '@mui/icons-material/Male';
 import FemaleIcon from '@mui/icons-material/Female';
-import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import VerifiedIcon from '@mui/icons-material/Verified';
@@ -252,12 +251,12 @@ const Home = () => {
               </Typography>
               <Grid container spacing={1} justifyContent="center" alignItems="center">
                 {[
-                  { label: 'Register', active: true, icon: <PendingActionsIcon />, color: '#F59E0B' },
+                  { label: 'Register', active: true, icon: <CheckCircleOutlineIcon />, color: '#10B981' },
                   { 
                     label: 'Vetting', 
-                    active: familyStatus === 'vetted' || familyStatus === 'approved', 
-                    icon: (familyStatus === 'vetted' || familyStatus === 'approved') ? <CheckCircleOutlineIcon /> : <HourglassEmptyIcon />, 
-                    color: (familyStatus === 'vetted' || familyStatus === 'approved') ? '#10B981' : '#F59E0B' 
+                    active: familyStatus === 'recommended' || familyStatus === 'approved', 
+                    icon: (familyStatus === 'recommended' || familyStatus === 'approved') ? <CheckCircleOutlineIcon /> : <HourglassEmptyIcon />, 
+                    color: (familyStatus === 'recommended' || familyStatus === 'approved') ? '#10B981' : '#F59E0B' 
                   },
                   { 
                     label: 'Approved', 
@@ -268,14 +267,16 @@ const Home = () => {
                 ].map((step, idx) => (
                   <Grid item xs={4} key={idx} sx={{ textAlign: 'center' }}>
                     <Box sx={{ 
-                      width: 40, height: 40, borderRadius: '50%', 
+                      width: 44, height: 44, borderRadius: '50%', 
                       bgcolor: `${step.color}15`, color: step.color, 
                       display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                      mx: 'auto', mb: 1, border: step.active ? `2px solid ${step.color}` : '2px dashed #E2E8F0'
+                      mx: 'auto', mb: 1, 
+                      border: step.active ? `2.5px solid ${step.color}` : '2px dashed #E2E8F0',
+                      boxShadow: step.active ? `0 0 15px ${step.color}30` : 'none'
                     }}>
                       {step.icon}
                     </Box>
-                    <Typography variant="caption" fontWeight={800} color={step.active ? '#1E293B' : 'textSecondary'} sx={{ display: 'block', textTransform: 'uppercase' }}>
+                    <Typography variant="caption" fontWeight={900} color={step.active ? '#1E293B' : '#94A3B8'} sx={{ display: 'block', textTransform: 'uppercase', fontSize: '0.6rem', letterSpacing: '0.5px' }}>
                       {step.label}
                     </Typography>
                   </Grid>
