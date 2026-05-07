@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -7,7 +6,6 @@ import {
   CircularProgress,
   Card,
   Avatar,
-  Stack,
   CardActionArea,
   Snackbar,
   Alert,
@@ -44,15 +42,11 @@ const Home = () => {
   const [counts, setCounts] = useState({
     families: 0,
     members: 0,
-    anbiyams: 0,
     male: 0,
     female: 0,
-    children: 0,
-    youth: 0,
-    seniors: 0,
   });
 
-  const [hasFamily, setHasFamily] = useState(true); // Default true to avoid flash
+  const [hasFamily, setHasFamily] = useState(true);
   const [familyStatus, setFamilyStatus] = useState(null);
 
   const [todayReminders, setTodayReminders] = useState({ birthdays: 0, weddings: 0 });
@@ -60,80 +54,60 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   
   const token = localStorage.getItem('token');
-  const isAdmin = localStorage.getItem('isAdmin') === 'true';
   const role = localStorage.getItem('role') || 'family';
   const userName = localStorage.getItem('username') || 'User';
   const anbiyamName = localStorage.getItem('anbiyam');
 
   useEffect(() => {
-    const fetchCounts = async () => {
+    const fetchData = async () => {
       try {
         const headers = { Authorization: `Bearer ${token}` };
-        const [familyRes, memberRes, anbiyamRes, genderRes, ageGroupRes, bdayRes, weddingRes] = await Promise.all([
+        const [familyRes, memberRes, genderRes, bdayRes, weddingRes, statusRes] = await Promise.all([
           fetch(`${API_BASE_URL}/family/stats/families`, { headers }),
           fetch(`${API_BASE_URL}/member/stats/members`, { headers }),
-          fetch(`${API_BASE_URL}/anbiyam/stats/count`, { headers }),
           fetch(`${API_BASE_URL}/member/stats/gender`, { headers }),
-          fetch(`${API_BASE_URL}/member/stats/age-groups`, { headers }),
           fetch(`${API_BASE_URL}/member/birthdays`, { headers }),
           fetch(`${API_BASE_URL}/member/weddings`, { headers }),
+          fetch(`${API_BASE_URL}/family-user/check-registration`, { headers })
         ]);
 
-        const [familyData, memberData, anbiyamData, genderData, ageData, bdayData, weddingData] = await Promise.all([
+        const [familyData, memberData, genderData, bdayData, weddingData, statusData] = await Promise.all([
           familyRes.json(),
           memberRes.json(),
-          anbiyamRes.json(),
           genderRes.json(),
-          ageGroupRes.json(),
           bdayRes ? bdayRes.json() : { today: [] },
           weddingRes ? weddingRes.json() : { today: [] },
+          statusRes.json()
         ]);
 
         setCounts({
           families: familyData.count || 0,
           members: memberData.count || 0,
-          anbiyams: anbiyamData.count || 0,
           male: genderData.male_count || 0,
           female: genderData.female_count || 0,
-          children: ageData.child_count || 0,
-          youth: ageData.youth_count || 0,
-          seniors: ageData.senior_citizen_count || 0,
         });
 
-        const bdaysToday = bdayData.today?.length || 0;
-        const weddingsToday = weddingData.today?.length || 0;
-        
-        setTodayReminders({ birthdays: bdaysToday, weddings: weddingsToday });
-        if (bdaysToday > 0 || weddingsToday > 0) {
+        setTodayReminders({
+          birthdays: bdayData.today?.length || 0,
+          weddings: weddingData.today?.length || 0,
+        });
+
+        if (bdayData.today?.length > 0 || weddingData.today?.length > 0) {
           setNotificationOpen(true);
         }
+
+        setHasFamily(statusData.hasFamily);
+        setFamilyStatus(statusData.family?.verification_status);
+
       } catch (err) {
-        console.error('Dashboard fetch error:', err);
+        console.error('Error fetching data:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    const checkFamily = async () => {
-      if (role === 'family') {
-        try {
-          const res = await axios.get(`${API_BASE_URL}/family-user/check-registration`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          setHasFamily(res.data.hasFamily);
-          if (res.data.hasFamily && res.data.family) {
-            setFamilyStatus(res.data.family.verification_status);
-          }
-        } catch (err) {
-          console.error('Check registration error:', err);
-          setHasFamily(false);
-        }
-      }
-    };
-
-    fetchCounts();
-    checkFamily();
-  }, [token, role]);
+    fetchData();
+  }, [token]);
 
   const statsList = [];
   if (role === 'admin') {
@@ -177,22 +151,13 @@ const Home = () => {
       { title: 'Contact Book', subtitle: 'Anbiyam Contacts', path: '/contacts', icon: <MapRoundedIcon />, color: '#10B981' }
     );
   } else {
-    // Family role
-    if (hasFamily) {
+    if (!hasFamily) {
       actions.push(
-        { title: 'My Family', subtitle: 'View your details', path: '/my-family', icon: <Diversity3RoundedIcon />, color: '#1E3A8A' },
-        { title: 'Anbiyam Group', subtitle: 'Short view of group', path: '/anbiyam-summary', icon: <MapRoundedIcon />, color: '#7C3AED' },
-        { title: 'Subscriptions', subtitle: 'Monthly payments', path: '/payments', icon: <BarChartIcon />, color: '#059669' },
-        { title: 'Donations', subtitle: 'Support the church', path: '/donations', icon: <CakeRoundedIcon />, color: '#E11D48' },
-        { title: 'Update Request', subtitle: 'Change family details', path: '/raise-update', icon: <InfoOutlinedIcon />, color: '#4F46E5' }
-      );
-    } else {
-      actions.push(
-        { title: 'Submit Registration', subtitle: 'ACTION REQUIRED', path: '/add-family', icon: <VerifiedUserIcon />, color: '#BE123C' },
-        { title: 'Anbiyam Contacts', subtitle: 'View group directory', path: '/contacts', icon: <MapRoundedIcon />, color: '#10B981' }
+        { title: 'Submit Registration', subtitle: 'ACTION REQUIRED', path: '/add-family', icon: <VerifiedUserIcon />, color: '#BE123C' }
       );
     }
     actions.push(
+      { title: 'My Family', subtitle: 'View your profile', path: '/my-family', icon: <Diversity3RoundedIcon />, color: '#4F46E5' },
       { title: 'Contact Book', subtitle: 'Anbiyam Contacts', path: '/contacts', icon: <MapRoundedIcon />, color: '#10B981' }
     );
   }
@@ -224,109 +189,75 @@ const Home = () => {
             overflow: 'hidden'
           }}
         >
-          {/* Subtle Background Pattern */}
           <Box sx={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
           <Box sx={{ position: 'absolute', bottom: -30, left: -20, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
 
-          <Fade in timeout={800}>
+          <Box display="flex" justifyContent="space-between" alignItems="flex-start" sx={{ position: 'relative', zIndex: 1 }}>
             <Box>
-              <Typography variant="body2" color="rgba(255,255,255,0.8)" fontWeight={700} sx={{ textTransform: 'uppercase', letterSpacing: '1px', mb: 1 }}>
-                {todayStr}
+              <Typography variant="h4" fontWeight={900} color="#fff" sx={{ letterSpacing: '-1.5px', mb: 0.5 }}>
+                Hello, {userName}
               </Typography>
-              <Typography variant="h3" fontWeight={900} color="#fff" sx={{ letterSpacing: '-1.5px', mb: 1 }}>
-                Hello, {userName}!
+              <Typography variant="subtitle2" color="rgba(255,255,255,0.8)" fontWeight={600}>
+                {todayStr} • {anbiyamName || 'Main Parish'}
               </Typography>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Typography variant="h6" color="rgba(255,255,255,0.9)" fontWeight={500}>
-                  Parish Dashboard
-                </Typography>
-                {localStorage.getItem('anbiyam') && !isAdmin && (
-                  <Chip 
-                    label={localStorage.getItem('anbiyam')} 
-                    sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: '#fff', fontWeight: 800, backdropFilter: 'blur(5px)' }} 
-                  />
-                )}
-              </Stack>
             </Box>
-          </Fade>
-        </Box>
+            <Chip 
+              label={role.toUpperCase()} 
+              sx={{ 
+                bgcolor: 'rgba(255,255,255,0.2)', 
+                color: '#fff', 
+                fontWeight: 900, 
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255,255,255,0.3)',
+                fontSize: '0.65rem'
+              }} 
+            />
+          </Box>
 
-        {/* Floating Modern Stats Grid */}
-        <Box sx={{ px: 2, mt: -6 }}>
-          <Grid container spacing={2}>
-            {statsList.map((stat, index) => (
-              <Grid item xs={6} sm={3} key={index}>
-                <Fade in timeout={1000 + (index * 200)}>
-                  <Card 
-                    sx={{ 
-                      p: 2, 
-                      borderRadius: 5, 
-                      boxShadow: '0 12px 24px rgba(0,0,0,0.04)',
-                      backgroundColor: 'rgba(255,255,255,0.95)',
-                      backdropFilter: 'blur(10px)',
-                      border: '1px solid rgba(255,255,255,0.3)',
-                      textAlign: 'center',
-                      transition: 'transform 0.2s ease',
-                      '&:hover': { transform: 'translateY(-4px)' }
-                    }}
-                  >
-                    <Avatar 
-                      sx={{ 
-                        width: 44, 
-                        height: 44, 
-                        bgcolor: `${stat.color}15`, 
-                        color: stat.color, 
-                        mx: 'auto', 
-                        mb: 1.5,
-                        borderRadius: 2
-                      }}
-                    >
-                      {stat.icon}
-                    </Avatar>
-                    <Typography variant="h5" fontWeight={900} color="#1E293B">
-                      {stat.value}
-                    </Typography>
-                    <Typography variant="caption" color="textSecondary" fontWeight={700} sx={{ textTransform: 'uppercase' }}>
-                      {stat.label}
-                    </Typography>
-                  </Card>
-                </Fade>
+          <Grid container spacing={2} sx={{ mt: 4, position: 'relative', zIndex: 1 }}>
+            {statsList.map((stat, idx) => (
+              <Grid item xs={idx === 0 || idx === 1 ? 6 : 3} key={idx}>
+                <Box 
+                  sx={{ 
+                    bgcolor: 'rgba(255,255,255,0.15)', 
+                    backdropFilter: 'blur(15px)',
+                    p: 2, 
+                    borderRadius: 4, 
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    textAlign: 'center'
+                  }}
+                >
+                  <Box sx={{ color: '#fff', mb: 0.5 }}>{stat.icon}</Box>
+                  <Typography variant="h6" fontWeight={900} color="#fff">{stat.value}</Typography>
+                  <Typography variant="caption" color="rgba(255,255,255,0.7)" fontWeight={700}>{stat.label}</Typography>
+                </Box>
               </Grid>
             ))}
           </Grid>
         </Box>
 
-        {/* Registration Status Tracker for Families */}
-        {role === 'family' && hasFamily && (
-          <Box sx={{ px: 2, mt: 5 }}>
+        {role === 'family' && familyStatus !== 'approved' && (
+          <Box sx={{ px: 2, mt: -4, position: 'relative', zIndex: 2 }}>
             <Paper 
               elevation={0} 
               sx={{ 
                 p: 3, 
                 borderRadius: 5, 
-                bgcolor: '#fff', 
-                border: '1px solid rgba(0,0,0,0.05)',
-                boxShadow: '0 10px 30px rgba(0,0,0,0.02)'
+                boxShadow: '0 20px 40px rgba(0,0,0,0.06)',
+                border: '1px solid rgba(0,0,0,0.02)'
               }}
             >
-              <Typography variant="subtitle1" fontWeight={900} color="#1E293B" mb={3} sx={{ display: 'flex', alignItems: 'center' }}>
-                <PendingActionsIcon sx={{ mr: 1, color: '#4F46E5' }} />
+              <Typography variant="subtitle1" fontWeight={900} color="#1E293B" mb={3} textAlign="center">
                 Registration Roadmap
               </Typography>
-              
-              <Grid container spacing={2} alignItems="center">
+              <Grid container spacing={1} justifyContent="center" alignItems="center">
                 {[
-                  { 
-                    label: 'Submitted', 
-                    active: true, 
-                    icon: <CheckCircleOutlineIcon />, 
-                    color: '#10B981' 
-                  },
+                  { label: 'Register', active: true, icon: <PendingActionsIcon />, color: '#F59E0B' },
                   { 
                     label: 'Vetting', 
-                    active: familyStatus === 'recommended' || familyStatus === 'approved', 
-                    icon: (familyStatus === 'recommended' || familyStatus === 'approved') ? <CheckCircleOutlineIcon /> : <HourglassEmptyIcon />, 
-                    color: (familyStatus === 'recommended' || familyStatus === 'approved') ? '#10B981' : '#F59E0B' 
+                    active: familyStatus === 'vetted' || familyStatus === 'approved', 
+                    icon: (familyStatus === 'vetted' || familyStatus === 'approved') ? <CheckCircleOutlineIcon /> : <HourglassEmptyIcon />, 
+                    color: (familyStatus === 'vetted' || familyStatus === 'approved') ? '#10B981' : '#F59E0B' 
                   },
                   { 
                     label: 'Approved', 
@@ -354,7 +285,6 @@ const Home = () => {
           </Box>
         )}
 
-        {/* Action Cards Grid */}
         <Box sx={{ px: 2, mt: 5 }}>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} px={1}>
             <Typography variant="h5" fontWeight={900} color="#1E293B">

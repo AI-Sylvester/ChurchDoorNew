@@ -94,92 +94,84 @@ const Layout = ({ children }) => {
       <Box sx={{ mt: 8, px: 2 }}>{children}</Box>
 
       {/* Bottom Fixed Footer with Scrollable Nav */}
-<Paper
-  sx={{
-    position: 'fixed',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
-    backdropFilter: 'blur(12px)',
-    zIndex: 1000,
-    borderTop: '1px solid rgba(0, 0, 0, 0.05)',
-    boxShadow: '0 -4px 30px rgba(0, 0, 0, 0.05)',
-  }}
-  elevation={0}
->
-  <BottomNavigation
-    value={selectedPath}
-    onChange={(event, newValue) => {
-      setSelectedPath(newValue);
-      navigate(newValue);
-    }}
-    showLabels
-    sx={{ 
-      backgroundColor: 'transparent',
-      height: 65, // slightly taller for better tap targets
-    }}
-  >
-    <BottomNavigationAction
-      label="Home"
-      value="/home"
-      icon={<SpaceDashboardRoundedIcon />}
-      sx={{
-        color: selectedPath === '/home' ? '#1E3A8A' : '#64748B',
-        transition: 'all 0.3s ease',
-        '&.Mui-selected': { color: '#1E3A8A', fontWeight: 'bold', transform: 'scale(1.05)' },
-      }}
-    />
-    {(role === 'admin' || role === 'incharge') && (
-      <BottomNavigationAction
-        label="Families"
-        value="/familylist"
-        icon={<GroupsRoundedIcon />}
+      <Paper
         sx={{
-          color: selectedPath === '/familylist' ? '#1E3A8A' : '#64748B',
-          transition: 'all 0.3s ease',
-          '&.Mui-selected': { color: '#1E3A8A', fontWeight: 'bold', transform: 'scale(1.05)' },
+          position: 'fixed',
+          bottom: 20,
+          left: 20,
+          right: 20,
+          backgroundColor: 'rgba(30, 41, 59, 0.95)',
+          backdropFilter: 'blur(10px)',
+          zIndex: 1000,
+          borderRadius: 6,
+          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.2)',
+          overflow: 'hidden'
         }}
-      />
-    )}
-    {role === 'admin' && (
-      <BottomNavigationAction
-        label="Members"
-        value="/memlist"
-        icon={<GroupRoundedIcon />}
-        sx={{
-          color: selectedPath === '/memlist' ? '#1E3A8A' : '#64748B',
-          transition: 'all 0.3s ease',
-          '&.Mui-selected': { color: '#1E3A8A', fontWeight: 'bold', transform: 'scale(1.05)' },
-        }}
-      />
-    )}
-    {role === 'family' && (
-      <BottomNavigationAction
-        label="My Family"
-        value="/my-family"
-        icon={<GroupsRoundedIcon />}
-        sx={{
-          color: selectedPath === '/my-family' ? '#1E3A8A' : '#64748B',
-          transition: 'all 0.3s ease',
-          '&.Mui-selected': { color: '#1E3A8A', fontWeight: 'bold', transform: 'scale(1.05)' },
-        }}
-      />
-    )}
-    {(role === 'admin' || role === 'incharge') && (
-      <BottomNavigationAction
-        label="Register"
-        value="/add-family"
-        icon={<PersonAddAltRoundedIcon />}
-        sx={{
-          color: selectedPath === '/add-family' ? '#1E3A8A' : '#64748B',
-          transition: 'all 0.3s ease',
-          '&.Mui-selected': { color: '#1E3A8A', fontWeight: 'bold', transform: 'scale(1.05)' },
-        }}
-      />
-    )}
-  </BottomNavigation>
-</Paper>
+        elevation={0}
+      >
+        <BottomNavigation
+          value={selectedPath}
+          onChange={(event, newValue) => {
+            setSelectedPath(newValue);
+            navigate(newValue);
+          }}
+          sx={{ 
+            backgroundColor: 'transparent',
+            height: 70,
+            '& .MuiBottomNavigationAction-root': {
+              color: 'rgba(255, 255, 255, 0.5)',
+              minWidth: 'auto',
+              padding: '6px 0',
+              '&.Mui-selected': {
+                color: '#fff',
+                '& .MuiSvgIcon-root': {
+                  transform: 'scale(1.2) translateY(-2px)',
+                  transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                },
+                '& .MuiBottomNavigationAction-label': {
+                  fontWeight: 900,
+                  fontSize: '0.65rem',
+                  opacity: 1
+                }
+              }
+            }
+          }}
+        >
+          <BottomNavigationAction
+            label="Home"
+            value="/home"
+            icon={<SpaceDashboardRoundedIcon />}
+          />
+          {(role === 'admin' || role === 'incharge') && (
+            <BottomNavigationAction
+              label="Families"
+              value="/familylist"
+              icon={<GroupsRoundedIcon />}
+            />
+          )}
+          {role === 'family' && (
+            <BottomNavigationAction
+              label="My Family"
+              value="/my-family"
+              icon={<GroupsRoundedIcon />}
+            />
+          )}
+          {(role === 'admin' || role === 'incharge') && (
+            <BottomNavigationAction
+              label="New"
+              value="/add-family"
+              icon={<PersonAddAltRoundedIcon />}
+            />
+          )}
+          {role === 'admin' && (
+            <BottomNavigationAction
+              label="Members"
+              value="/memlist"
+              icon={<GroupRoundedIcon />}
+            />
+          )}
+        </BottomNavigation>
+      </Paper>
 
       {/* Logout Confirmation Dialog */}
       <Dialog open={openLogoutDialog} onClose={() => setOpenLogoutDialog(false)}>

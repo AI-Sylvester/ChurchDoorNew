@@ -53,10 +53,14 @@ class FamilyService {
 
   static async getActiveFamilies(page = 1, limit = 50, search = '', user = {}) {
     const offset = (page - 1) * limit;
-    let queryStr = "SELECT * FROM families WHERE active = true AND verification_status = 'approved'";
+    const isAdminOrIncharge = user.isAdmin || user.role === 'admin' || user.role === 'incharge';
+    let queryStr = "SELECT * FROM families WHERE active = true";
+    if (!isAdminOrIncharge) {
+      queryStr += " AND verification_status = 'approved'";
+    }
     const values = [];
 
-    if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
+    if (!isAdminOrIncharge && user.anbiyam) {
       queryStr += " AND anbiyam = $" + (values.length + 1);
       values.push(user.anbiyam);
     }
@@ -73,8 +77,11 @@ class FamilyService {
     const result = await db.query(queryStr, values);
 
     let countQuery = "SELECT COUNT(*) FROM families WHERE active = true";
+    if (!isAdminOrIncharge) {
+      countQuery += " AND verification_status = 'approved'";
+    }
     const countValues = [];
-    if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
+    if (!isAdminOrIncharge && user.anbiyam) {
       countQuery += " AND anbiyam = $1";
       countValues.push(user.anbiyam);
     }
