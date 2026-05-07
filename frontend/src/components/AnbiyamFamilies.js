@@ -29,27 +29,6 @@ const AnbiyamFamilyView = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  useEffect(() => {
-    if (role === 'incharge' && userAnbiyam) {
-      handleAnbiyamSelect(userAnbiyam);
-    }
-  }, [role, userAnbiyam, handleAnbiyamSelect]);
-
-  useEffect(() => {
-    if (!token) return;
-    const fetchAnbiyams = async () => {
-      try {
-        const res = await axios.get(`${API_BASE_URL}/anbiyam`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setAnbiyams(res.data);
-      } catch (err) {
-        setError('Failed to load Anbiyam list.');
-      }
-    };
-    fetchAnbiyams();
-  }, [token]);
-
   const fetchFamilies = useCallback(async (anbiyamName) => {
     if (!token) return;
     try {
@@ -92,6 +71,27 @@ const AnbiyamFamilyView = () => {
       setLoading(false);
     }
   }, [fetchFamilies, fetchMembers]);
+
+  useEffect(() => {
+    if (role === 'incharge' && userAnbiyam) {
+      handleAnbiyamSelect(userAnbiyam);
+    }
+  }, [role, userAnbiyam, handleAnbiyamSelect]);
+
+  useEffect(() => {
+    if (!token) return;
+    const fetchAnbiyams = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/anbiyam`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setAnbiyams(res.data);
+      } catch (err) {
+        setError('Failed to load Anbiyam list.');
+      }
+    };
+    fetchAnbiyams();
+  }, [token]);
 
   const handleTabChange = (event, newValue) => {
     setTabIndex(newValue);
