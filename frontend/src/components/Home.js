@@ -236,7 +236,7 @@ const Home = () => {
           </Grid>
         </Box>
 
-        {role === 'family' && familyStatus !== 'approved' && (
+        {role?.toLowerCase() === 'family' && familyStatus && familyStatus !== 'approved' && (
           <Box sx={{ px: 2, mt: -4, position: 'relative', zIndex: 2 }}>
             <Paper 
               elevation={0} 

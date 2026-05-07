@@ -77,8 +77,8 @@ const FamilyList = () => {
 
   const filteredFamilies = useMemo(() => {
     return families.filter(fam => {
-      const matchesSearch = fam.head_name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            fam.family_id.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = (fam.head_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                            fam.family_id?.toLowerCase().includes(searchQuery.toLowerCase()));
       const matchesStatus = activeOnly ? fam.active : true;
       return matchesSearch && matchesStatus;
     });

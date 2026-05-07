@@ -72,8 +72,8 @@ const MemberList = () => {
 
   const filteredMembers = useMemo(() => {
     return members.filter(m => {
-      const matchesSearch = m.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            m.member_id.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = (m.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                            m.member_id?.toLowerCase().includes(searchQuery.toLowerCase()));
       const matchesGender = genderFilter === 'all' || m.sex === genderFilter;
       const matchesStatus = statusFilter === 'all' || (statusFilter === 'active' ? m.active : !m.active);
       return matchesSearch && matchesGender && matchesStatus;
