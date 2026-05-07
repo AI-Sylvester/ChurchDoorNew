@@ -3,20 +3,26 @@ const AppError = require('../utils/AppError');
 
 exports.getMyFamily = async (req, res, next) => {
   try {
-    const { familyId } = req.user;
-    if (!familyId) {
-      return next(new AppError('No family associated with this user', 404));
+    let familyId = req.user.familyId;
+    let userId = req.user.userId;
+
+    let familyResult;
+    if (familyId) {
+      familyResult = await db.query('SELECT * FROM families WHERE family_id = $1', [familyId]);
+    } else {
+      // If no familyId in token, check if they created one
+      familyResult = await db.query('SELECT * FROM families WHERE created_by = $1', [userId]);
     }
 
-    const familyResult = await db.query('SELECT * FROM families WHERE family_id = $1', [familyId]);
     if (familyResult.rows.length === 0) {
-      return next(new AppError('Family not found', 404));
+      return next(new AppError('No family record found for this user', 404));
     }
 
-    const membersResult = await db.query('SELECT * FROM members WHERE family_id = $1', [familyId]);
+    const family = familyResult.rows[0];
+    const membersResult = await db.query('SELECT * FROM members WHERE family_id = $1', [family.family_id]);
     
     res.status(200).json({
-      family: familyResult.rows[0],
+      family: family,
       members: membersResult.rows
     });
   } catch (error) {
