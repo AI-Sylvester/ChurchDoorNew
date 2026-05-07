@@ -24,8 +24,16 @@ const AnbiyamFamilyView = () => {
   const [tabIndex, setTabIndex] = useState(0);
 
   const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role') || 'family';
+  const userAnbiyam = localStorage.getItem('anbiyam');
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  useEffect(() => {
+    if (role === 'incharge' && userAnbiyam) {
+      handleAnbiyamSelect(userAnbiyam);
+    }
+  }, [role, userAnbiyam, handleAnbiyamSelect]);
 
   useEffect(() => {
     if (!token) return;
@@ -68,7 +76,7 @@ const AnbiyamFamilyView = () => {
     }
   }, [token]);
 
-  const handleAnbiyamSelect = async (name) => {
+  const handleAnbiyamSelect = useCallback(async (name) => {
     if (!name) {
       setSelectedAnbiyam('');
       setFamilies([]);
@@ -83,7 +91,7 @@ const AnbiyamFamilyView = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [fetchFamilies, fetchMembers]);
 
   const handleTabChange = (event, newValue) => {
     setTabIndex(newValue);
@@ -211,42 +219,49 @@ const AnbiyamFamilyView = () => {
         }}
       >
         <Grid container spacing={3} alignItems="center">
-          <Grid item xs={12} md={7}>
-            <Box>
-              <Typography variant="caption" color="primary" fontWeight={800} sx={{ textTransform: 'uppercase', mb: 1, display: 'block', letterSpacing: '1px' }}>
-                Quick Selection
-              </Typography>
-              <Autocomplete
-                options={anbiyams.map((anb) => anb.name)}
-                value={selectedAnbiyam || null}
-                onChange={(event, newValue) => handleAnbiyamSelect(newValue)}
-                renderInput={(params) => (
-                  <TextField 
-                    {...params} 
-                    label="Search or Select Anbiyam" 
-                    variant="outlined"
-                    placeholder="Type to search..."
-                    InputProps={{
-                      ...params.InputProps,
-                      startAdornment: (
-                        <FilterListIcon sx={{ color: '#94A3B8', mr: 1, ml: 0.5 }} />
-                      ),
-                      sx: { 
-                        borderRadius: 4, 
-                        bgcolor: '#fff',
-                        height: 56,
-                        boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
-                        '& fieldset': { borderColor: 'rgba(0,0,0,0.08)' },
-                        '&:hover fieldset': { borderColor: '#1E3A8A' },
-                        fontSize: '1rem',
-                        fontWeight: 600
-                      }
-                    }}
-                  />
-                )}
-                sx={{ width: '100%' }}
-              />
-            </Box>
+          <Grid item xs={12} md={role === 'admin' ? 7 : 12}>
+            {role === 'admin' ? (
+              <Box>
+                <Typography variant="caption" color="primary" fontWeight={800} sx={{ textTransform: 'uppercase', mb: 1, display: 'block', letterSpacing: '1px' }}>
+                  Quick Selection
+                </Typography>
+                <Autocomplete
+                  options={anbiyams.map((anb) => anb.name)}
+                  value={selectedAnbiyam || null}
+                  onChange={(event, newValue) => handleAnbiyamSelect(newValue)}
+                  renderInput={(params) => (
+                    <TextField 
+                      {...params} 
+                      label="Search or Select Anbiyam" 
+                      variant="outlined"
+                      placeholder="Type to search..."
+                      InputProps={{
+                        ...params.InputProps,
+                        startAdornment: (
+                          <FilterListIcon sx={{ color: '#94A3B8', mr: 1, ml: 0.5 }} />
+                        ),
+                        sx: { 
+                          borderRadius: 4, 
+                          bgcolor: '#fff',
+                          height: 56,
+                          boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
+                          '& fieldset': { borderColor: 'rgba(0,0,0,0.08)' },
+                          '&:hover fieldset': { borderColor: '#1E3A8A' },
+                          fontSize: '1rem',
+                          fontWeight: 600
+                        }
+                      }}
+                    />
+                  )}
+                  sx={{ width: '100%' }}
+                />
+              </Box>
+            ) : (
+              <Box>
+                <Typography variant="h5" fontWeight={900} color="#1E3A8A">{userAnbiyam} Group Overview</Typography>
+                <Typography variant="body2" color="textSecondary">Managing families and members in your assigned group.</Typography>
+              </Box>
+            )}
           </Grid>
           <Grid item xs={12} md={5}>
             {selectedAnbiyam ? (

@@ -28,7 +28,7 @@ exports.createFamily = async (req, res, next) => {
     }
 
     const familyData = {
-      newFamilyId, createdBy, head_name, address_line1, address_line2, city,
+      newFamilyId, createdBy, role: req.user.role, head_name, address_line1, address_line2, city,
       pincode, mobile_number, mobile_number2, cemetery, native,
       resident_from, house_type, subscription, active: active === 'true', location,
       anbiyam, family_pic_filename, cemetery_number, old_card_number

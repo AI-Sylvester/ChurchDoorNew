@@ -9,7 +9,7 @@ exports.getMyGroupFamilies = async (req, res, next) => {
     }
 
     const result = await db.query(
-      'SELECT * FROM families WHERE anbiyam = $1 ORDER BY head_name ASC',
+      'SELECT * FROM families WHERE anbiyam = $1 AND active = true ORDER BY head_name ASC',
       [anbiyam]
     );
 
@@ -53,16 +53,27 @@ exports.recommendApproval = async (req, res, next) => {
       return next(new AppError('Unauthorized: Family not in your group', 403));
     }
 
-    // Mark as "recommended" - maybe add a column for this or just update a status
-    // For now, let's assume there's a verification_status column or similar.
-    // Since I didn't add it in migration, I'll just return a success message 
-    // or we could add a note in the family record.
-    
-    // Let's add a simple recommendation log or update a flag.
-    await db.query('UPDATE families SET location = location || $1 WHERE family_id = $2', [JSON.stringify({ recommended_by: req.user.username }), familyId]);
+    // Mark as "recommended" for Admin approval
+    await db.query(
+      'UPDATE families SET verification_status = \'recommended\' WHERE family_id = $1',
+      [familyId]
+    );
 
-    res.status(200).json({ message: 'Family recommended for approval to Admin' });
+    res.status(200).json({ message: 'Family details verified and recommended to Admin for approval' });
   } catch (error) {
     next(new AppError('Failed to recommend approval', 500));
+  }
+};
+
+exports.getPendingVerifications = async (req, res, next) => {
+  try {
+    const { anbiyam } = req.user;
+    const result = await db.query(
+      'SELECT * FROM families WHERE anbiyam = $1 AND verification_status = \'pending_incharge\' AND active = false ORDER BY head_name ASC',
+      [anbiyam]
+    );
+    res.status(200).json(result.rows);
+  } catch (error) {
+    next(new AppError('Failed to fetch pending verifications', 500));
   }
 };

@@ -1,35 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Box, Typography, CircularProgress, Alert, Paper, Button, List, ListItem, ListItemText, ListItemAvatar, Avatar, Divider, Chip } from '@mui/material';
+import { Box, Typography, CircularProgress, Alert, Paper, Button, List, ListItem, ListItemText, ListItemAvatar, Avatar, Divider, Chip, Tabs, Tab } from '@mui/material';
 import API_BASE_URL from '../../config';
 import PersonIcon from '@mui/icons-material/Person';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
+import HomeWorkIcon from '@mui/icons-material/HomeWork';
+import VerifiedIcon from '@mui/icons-material/Verified';
 
 const AdminApprovals = () => {
   const [users, setUsers] = useState([]);
+  const [families, setFamilies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [tab, setTab] = useState(0);
 
-  const fetchPending = async () => {
+  const fetchData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`${API_BASE_URL}/admin-panel/pending-users`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUsers(res.data);
+      const [userRes, famRes] = await Promise.all([
+        axios.get(`${API_BASE_URL}/admin-panel/pending-users`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_BASE_URL}/admin-panel/pending-families`, { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+      setUsers(userRes.data);
+      setFamilies(famRes.data);
     } catch (err) {
-      setError('Failed to load pending users');
+      setError('Failed to load pending data');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchPending();
+    fetchData();
   }, []);
 
-  const handleApprove = async (id) => {
+  const handleApproveUser = async (id) => {
     try {
       const token = localStorage.getItem('token');
       await axios.put(`${API_BASE_URL}/user/approve/${id}`, {}, {
@@ -41,64 +45,86 @@ const AdminApprovals = () => {
     }
   };
 
+  const handleApproveFamily = async (familyId) => {
+    try {
+      const token = localStorage.getItem('token');
+      // Admin directly updates status to approved/active
+      await axios.put(`${API_BASE_URL}/family/${familyId}`, { active: true, verification_status: 'approved' }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setFamilies(families.filter(f => f.family_id !== familyId));
+    } catch (err) {
+      alert('Failed to approve family');
+    }
+  };
+
   if (loading) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress /></Box>;
   if (error) return <Alert severity="error">{error}</Alert>;
 
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4, pb: 10 }}>
+    <Box sx={{ maxWidth: 900, mx: 'auto', mt: 4, pb: 10 }}>
       <Typography variant="h4" fontWeight={900} color="#1E3A8A" gutterBottom>Pending Approvals</Typography>
-      <Typography variant="body1" color="textSecondary" mb={4}>Review and approve new user registrations.</Typography>
+      
+      <Tabs value={tab} onChange={(e, v) => setTab(v)} sx={{ mb: 3 }}>
+        <Tab label={`Users (${users.length})`} />
+        <Tab label={`Families (${families.length})`} />
+      </Tabs>
 
-      {users.length === 0 ? (
-        <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4 }}>
-          <CheckCircleIcon sx={{ fontSize: 60, color: '#10B981', mb: 2 }} />
-          <Typography variant="h6">All caught up!</Typography>
-          <Typography color="textSecondary">No pending registrations at the moment.</Typography>
-        </Paper>
+      {tab === 0 ? (
+        <Box>
+          {users.length === 0 ? (
+            <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4 }}>
+              <Typography variant="h6">No pending user registrations.</Typography>
+            </Paper>
+          ) : (
+            <List sx={{ bgcolor: 'background.paper', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+              {users.map((user, idx) => (
+                <React.Fragment key={user.id}>
+                  <ListItem alignItems="flex-start" sx={{ p: 3 }}>
+                    <ListItemAvatar><Avatar sx={{ bgcolor: '#4F46E5' }}><PersonIcon /></Avatar></ListItemAvatar>
+                    <ListItemText
+                      primary={<Typography variant="h6" fontWeight={700}>{user.username}</Typography>}
+                      secondary={<Typography variant="body2">{user.mobile} • {user.role} • {user.anbiyam}</Typography>}
+                    />
+                    <Button variant="contained" color="success" onClick={() => handleApproveUser(user.id)}>Approve</Button>
+                  </ListItem>
+                  {idx < users.length - 1 && <Divider />}
+                </React.Fragment>
+              ))}
+            </List>
+          )}
+        </Box>
       ) : (
-        <List sx={{ width: '100%', bgcolor: 'background.paper', borderRadius: 4, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-          {users.map((user, idx) => (
-            <React.Fragment key={user.id}>
-              <ListItem alignItems="flex-start" sx={{ p: 3 }}>
-                <ListItemAvatar>
-                  <Avatar sx={{ bgcolor: '#4F46E5' }}><PersonIcon /></Avatar>
-                </ListItemAvatar>
-                <ListItemText
-                  primary={<Typography variant="h6" fontWeight={700}>{user.username}</Typography>}
-                  secondary={
-                    <Box>
-                      <Typography variant="body2" color="textPrimary">{user.mobile} • {user.email}</Typography>
-                      <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
-                        <Chip label={user.role} size="small" variant="outlined" sx={{ fontWeight: 700, textTransform: 'capitalize' }} />
-                        <Chip label={user.anbiyam} size="small" sx={{ fontWeight: 600 }} />
-                      </Box>
-                    </Box>
-                  }
-                />
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  <Button 
-                    variant="contained" 
-                    color="success" 
-                    startIcon={<CheckCircleIcon />}
-                    onClick={() => handleApprove(user.id)}
-                    sx={{ borderRadius: 2, fontWeight: 700, textTransform: 'none' }}
-                  >
-                    Approve
-                  </Button>
-                  <Button 
-                    variant="outlined" 
-                    color="error" 
-                    startIcon={<CancelIcon />}
-                    sx={{ borderRadius: 2, fontWeight: 700, textTransform: 'none' }}
-                  >
-                    Reject
-                  </Button>
-                </Box>
-              </ListItem>
-              {idx < users.length - 1 && <Divider component="li" />}
-            </React.Fragment>
-          ))}
-        </List>
+        <Box>
+          {families.length === 0 ? (
+            <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4 }}>
+              <Typography variant="h6">No pending family registrations.</Typography>
+            </Paper>
+          ) : (
+            <List sx={{ bgcolor: 'background.paper', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+              {families.map((fam, idx) => (
+                <React.Fragment key={fam.family_id}>
+                  <ListItem alignItems="flex-start" sx={{ p: 3 }}>
+                    <ListItemAvatar><Avatar sx={{ bgcolor: '#059669' }}><HomeWorkIcon /></Avatar></ListItemAvatar>
+                    <ListItemText
+                      primary={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography variant="h6" fontWeight={700}>{fam.head_name}</Typography>
+                          {fam.verification_status === 'recommended' && (
+                            <Chip icon={<VerifiedIcon />} label="Recommended" size="small" color="success" />
+                          )}
+                        </Box>
+                      }
+                      secondary={<Typography variant="body2">{fam.family_id} • {fam.anbiyam} • {fam.mobile_number}</Typography>}
+                    />
+                    <Button variant="contained" color="success" onClick={() => handleApproveFamily(fam.family_id)}>Approve</Button>
+                  </ListItem>
+                  {idx < families.length - 1 && <Divider />}
+                </React.Fragment>
+              ))}
+            </List>
+          )}
+        </Box>
       )}
     </Box>
   );

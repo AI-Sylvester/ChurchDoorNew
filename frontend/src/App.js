@@ -28,6 +28,7 @@ import AnbiyamSummary from './components/panels/AnbiyamSummary';
 import Payments from './components/panels/Payments';
 import RaiseUpdate from './components/panels/RaiseUpdate';
 import SubmitReport from './components/panels/SubmitReport';
+import VerifyRegistrations from './components/panels/VerifyRegistrations';
 
 const BackButtonHandler = () => {
   const navigate = useNavigate();
@@ -212,6 +213,7 @@ function App() {
         <Route path="/donations" element={<PrivateRoute><Layout><Payments type="donation" /></Layout></PrivateRoute>} />
         <Route path="/raise-update" element={<PrivateRoute><Layout><RaiseUpdate /></Layout></PrivateRoute>} />
         <Route path="/submit-report" element={<PrivateRoute><Layout><SubmitReport /></Layout></PrivateRoute>} />
+        <Route path="/verify-registrations" element={<PrivateRoute><Layout><VerifyRegistrations /></Layout></PrivateRoute>} />
       </Routes>
     </BrowserRouter>
   );

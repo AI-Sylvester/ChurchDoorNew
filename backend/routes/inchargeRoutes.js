@@ -8,6 +8,7 @@ router.use(authMiddleware);
 router.use(roleMiddleware(['incharge', 'admin']));
 
 router.get('/my-group', inchargeController.getMyGroupFamilies);
+router.get('/pending-verifications', inchargeController.getPendingVerifications);
 router.post('/report', inchargeController.submitReport);
 router.post('/recommend-approval/:familyId', inchargeController.recommendApproval);
 

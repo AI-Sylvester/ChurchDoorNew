@@ -20,24 +20,26 @@ class FamilyService {
       anbiyam, family_pic_filename, cemetery_number, old_card_number
     } = familyData;
 
+    const verification_status = familyData.role === 'admin' ? 'approved' : 'pending_incharge';
+
     const result = await db.query(`
       INSERT INTO families (
         family_id, created_by, head_name, address_line1, address_line2, city,
         pincode, mobile_number, mobile_number2, cemetery, native,
         resident_from, house_type, subscription, active, location,
-        anbiyam, family_pic, cemetery_number, old_card_number
+        anbiyam, family_pic, cemetery_number, old_card_number, verification_status
       )
       VALUES (
         $1, $2, $3, $4, $5, $6,
         $7, $8, $9, $10, $11,
         $12, $13, $14, $15, $16,
-        $17, $18, $19, $20
+        $17, $18, $19, $20, $21
       ) RETURNING *`,
       [
         newFamilyId, createdBy, head_name, address_line1, address_line2, city,
         pincode, mobile_number, mobile_number2, cemetery, native,
         resident_from, house_type, subscription, active, location,
-        anbiyam, family_pic_filename, cemetery_number, old_card_number
+        anbiyam, family_pic_filename, cemetery_number, old_card_number, verification_status
       ]
     );
     return result.rows[0];
@@ -45,7 +47,7 @@ class FamilyService {
 
   static async getActiveFamilies(page = 1, limit = 50, search = '', user = {}) {
     const offset = (page - 1) * limit;
-    let queryStr = "SELECT * FROM families WHERE active = true";
+    let queryStr = "SELECT * FROM families WHERE active = true AND verification_status = 'approved'";
     const values = [];
 
     if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
@@ -87,7 +89,7 @@ class FamilyService {
 
   static async getInactiveFamilies(page = 1, limit = 50, search = '', user = {}) {
     const offset = (page - 1) * limit;
-    let queryStr = "SELECT * FROM families WHERE active = false";
+    let queryStr = "SELECT * FROM families WHERE active = false AND (verification_status = 'approved' OR verification_status = 'recommended')";
     const values = [];
 
     if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
