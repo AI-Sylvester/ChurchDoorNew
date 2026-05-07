@@ -66,7 +66,7 @@ exports.getEventReports = async (req, res, next) => {
 exports.getPendingFamilies = async (req, res, next) => {
   try {
     const result = await db.query(
-      "SELECT * FROM families WHERE active = false AND (verification_status = 'recommended' OR verification_status = 'pending_incharge') ORDER BY verification_status ASC, head_name ASC"
+      "SELECT * FROM families WHERE active = false AND (verification_status = 'recommended' OR verification_status = 'pending_incharge') ORDER BY verification_status DESC, head_name ASC"
     );
     res.status(200).json(result.rows);
   } catch (error) {
