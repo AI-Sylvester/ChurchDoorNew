@@ -154,21 +154,31 @@ class FamilyService {
   }
 
   static async getFamilyById(familyId, activeOnly = true, user = {}) {
-    // If it's the user's own family, we allow seeing it even if inactive/pending
-    const isOwnFamily = user.family_id === familyId;
-    const activeCondition = (activeOnly && !isOwnFamily) ? "AND active = true" : "";
+    // We allow seeing the family if:
+    // 1. It matches the familyId in the user's token
+    // 2. The user is the one who created this family record (handles stale tokens)
+    const isOwnFamily = user.familyId === familyId;
     
-    let queryStr = `SELECT * FROM families WHERE family_id = $1 ${activeCondition}`;
+    let queryStr = `SELECT * FROM families WHERE family_id = $1`;
     const values = [familyId];
+    const result = await db.query(queryStr, values);
+    
+    if (result.rows.length === 0) return null;
+    const family = result.rows[0];
 
-    // Restrict by anbiyam for non-admins, unless it's their own family
-    if (!user.isAdmin && user.role !== 'admin' && user.anbiyam && !isOwnFamily) {
-      queryStr += " AND anbiyam = $2";
-      values.push(user.anbiyam);
+    const isCreator = user.userId === family.created_by;
+    const canSeeInactive = isOwnFamily || isCreator || user.isAdmin || user.role === 'incharge' || user.role === 'admin';
+
+    if (activeOnly && !family.active && !canSeeInactive) {
+      return null;
     }
 
-    const result = await db.query(queryStr, values);
-    return result.rows[0];
+    // Restrict by anbiyam for non-admins, unless it's their own/created family
+    if (!user.isAdmin && user.role !== 'admin' && user.anbiyam && !isOwnFamily && !isCreator) {
+      if (family.anbiyam !== user.anbiyam) return null;
+    }
+
+    return family;
   }
 
   static async updateFamily(familyId, updateData, hasNewPic) {
