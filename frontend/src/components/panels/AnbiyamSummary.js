@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Box, Typography, CircularProgress, Alert, Paper, Grid, Card, CardContent, Avatar } from '@mui/material';
+import { Box, Typography, CircularProgress, Alert, Grid, Card, CardContent, Avatar } from '@mui/material';
 import API_BASE_URL from '../../config';
 import GroupsIcon from '@mui/icons-material/Groups';
 

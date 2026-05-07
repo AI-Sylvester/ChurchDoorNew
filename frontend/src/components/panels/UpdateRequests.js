@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Box, Typography, CircularProgress, Alert, Paper, Button, List, ListItem, ListItemText, Divider, Chip } from '@mui/material';
+import { Box, Typography, CircularProgress, Alert, Paper, Button, List, ListItem, ListItemText, Divider } from '@mui/material';
 import API_BASE_URL from '../../config';
-import EditIcon from '@mui/icons-material/Edit';
 
 const UpdateRequests = () => {
   const [requests, setRequests] = useState([]);

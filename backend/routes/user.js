@@ -7,7 +7,7 @@ const adminMiddleware = require('../middleware/adminMiddleware');
 // Get all users
 router.get('/', authMiddleware, adminMiddleware, async (req, res) => {
   try {
-    const result = await query('SELECT id, username, email, mobile, anbiyam, is_approved, is_admin FROM users ORDER BY id DESC');
+    const result = await query('SELECT id, username, email, mobile, anbiyam, role, is_approved, is_admin FROM users ORDER BY id DESC');
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching users' });
@@ -45,6 +45,18 @@ router.put('/toggle-admin/:id', authMiddleware, adminMiddleware, async (req, res
     res.json({ message: `Admin status ${isAdmin ? 'granted' : 'revoked'}` });
   } catch (err) {
     res.status(500).json({ message: 'Error updating admin status' });
+  }
+});
+
+// Update Role
+router.put('/update-role/:id', authMiddleware, adminMiddleware, async (req, res) => {
+  const { id } = req.params;
+  const { role } = req.body;
+  try {
+    await query('UPDATE users SET role = $1 WHERE id = $2', [role, id]);
+    res.json({ message: `User role updated to ${role}` });
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating user role' });
   }
 });
 

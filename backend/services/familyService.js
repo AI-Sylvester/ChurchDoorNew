@@ -48,7 +48,7 @@ class FamilyService {
     let queryStr = "SELECT * FROM families WHERE active = true";
     const values = [];
 
-    if (!user.isAdmin && user.anbiyam) {
+    if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
       queryStr += " AND anbiyam = $" + (values.length + 1);
       values.push(user.anbiyam);
     }
@@ -66,7 +66,7 @@ class FamilyService {
 
     let countQuery = "SELECT COUNT(*) FROM families WHERE active = true";
     const countValues = [];
-    if (!user.isAdmin && user.anbiyam) {
+    if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
       countQuery += " AND anbiyam = $1";
       countValues.push(user.anbiyam);
     }
@@ -90,7 +90,7 @@ class FamilyService {
     let queryStr = "SELECT * FROM families WHERE active = false";
     const values = [];
 
-    if (!user.isAdmin && user.anbiyam) {
+    if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
       queryStr += " AND anbiyam = $" + (values.length + 1);
       values.push(user.anbiyam);
     }
@@ -107,7 +107,7 @@ class FamilyService {
 
     let countQuery = "SELECT COUNT(*) FROM families WHERE active = false";
     const countValues = [];
-    if (!user.isAdmin && user.anbiyam) {
+    if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
       countQuery += " AND anbiyam = $1";
       countValues.push(user.anbiyam);
     }
@@ -131,7 +131,7 @@ class FamilyService {
     let queryStr = `SELECT * FROM families WHERE family_id = $1 ${activeCondition}`;
     const values = [familyId];
 
-    if (!user.isAdmin && user.anbiyam) {
+    if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
       queryStr += " AND anbiyam = $2";
       values.push(user.anbiyam);
     }
@@ -217,7 +217,7 @@ class FamilyService {
     let queryStr = 'SELECT COUNT(*) FROM families WHERE active = true';
     const values = [];
 
-    if (!user.isAdmin && user.anbiyam) {
+    if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
       queryStr += " AND anbiyam = $1";
       values.push(user.anbiyam);
     }

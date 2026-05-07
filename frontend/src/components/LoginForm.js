@@ -65,6 +65,7 @@ const Login = () => {
           password,
         });
         localStorage.setItem('token', res.data.token);
+        localStorage.setItem('username', res.data.username);
         localStorage.setItem('role', res.data.role);
         localStorage.setItem('isAdmin', (res.data.isAdmin || res.data.role === 'admin') ? 'true' : 'false');
         localStorage.setItem('anbiyam', res.data.anbiyam || '');

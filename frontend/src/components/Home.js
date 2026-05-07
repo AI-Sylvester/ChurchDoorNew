@@ -10,7 +10,6 @@ import {
   CardActionArea,
   Snackbar,
   Alert,
-  Badge,
   Chip,
   Grid,
   Fade,
@@ -18,11 +17,9 @@ import {
 
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import GroupIcon from '@mui/icons-material/Group';
-import ContactsIcon from '@mui/icons-material/Contacts';
 import MapRoundedIcon from '@mui/icons-material/MapRounded';
 import CakeRoundedIcon from '@mui/icons-material/CakeRounded';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import PersonAddAltRoundedIcon from '@mui/icons-material/PersonAddAltRounded';
 import Diversity3RoundedIcon from '@mui/icons-material/Diversity3Rounded';
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import GroupRoundedIcon from '@mui/icons-material/GroupRounded';
@@ -128,19 +125,25 @@ const Home = () => {
   const actions = [];
   if (role === 'admin') {
     actions.push(
-      { title: 'User Approvals', subtitle: 'Pending registrations', path: '/approvals', icon: <ManageAccountsIcon />, color: '#BE123C' },
-      { title: 'Update Requests', subtitle: 'Family edit requests', path: '/updates', icon: <InfoOutlinedIcon />, color: '#4F46E5' },
+      { title: 'User Approvals', subtitle: 'Manage registrations', path: '/approvals', icon: <ManageAccountsIcon />, color: '#BE123C' },
+      { title: 'Update Requests', subtitle: 'Review family edits', path: '/updates', icon: <InfoOutlinedIcon />, color: '#4F46E5' },
       { title: 'Event Reports', subtitle: 'View group activities', path: '/reports', icon: <BarChartIcon />, color: '#0EA5E9' },
       { title: 'Family List', subtitle: 'Manage all families', path: '/familylist', icon: <Diversity3RoundedIcon />, color: '#1E3A8A' },
       { title: 'Member List', subtitle: 'Manage all members', path: '/memlist', icon: <GroupRoundedIcon />, color: '#64748B' },
-      { title: 'Anbiyam Master', subtitle: 'Manage Anbiyams', path: '/anbiyam', icon: <ManageAccountsIcon />, color: '#FB923C' }
+      { title: 'User Management', subtitle: 'Incharge & Users', path: '/user-management', icon: <ManageAccountsIcon />, color: '#BE123C' },
+      { title: 'Anbiyam Master', subtitle: 'Manage Anbiyams', path: '/anbiyam', icon: <ManageAccountsIcon />, color: '#FB923C' },
+      { title: 'Statistics', subtitle: 'Detailed counts', path: '/stats', icon: <BarChartIcon />, color: '#0EA5E9' },
+      { title: 'Family Info', subtitle: 'Detailed data', path: '/familydet', icon: <InfoOutlinedIcon />, color: '#4F46E5' },
+      { title: 'Family Map', subtitle: 'Geo distribution', path: '/familymap', icon: <MapRoundedIcon />, color: '#0284C7' },
+      { title: 'Contact Book', subtitle: 'Phone directory', path: '/contacts', icon: <MapRoundedIcon />, color: '#10B981' }
     );
   } else if (role === 'incharge') {
     actions.push(
       { title: 'My Anbiyam', subtitle: `Manage ${anbiyamName}`, path: '/anbiyamfam', icon: <MapRoundedIcon />, color: '#7C3AED' },
       { title: 'Submit Report', subtitle: 'Group event report', path: '/submit-report', icon: <BarChartIcon />, color: '#0EA5E9' },
       { title: 'Family Cards', subtitle: 'View group cards', path: '/familycard', icon: <Diversity3RoundedIcon />, color: '#1E3A8A' },
-      { title: 'Reminders', subtitle: 'Birthdays & More', path: '/birthdays', icon: <CakeRoundedIcon />, color: '#E11D48' }
+      { title: 'Reminders', subtitle: 'Birthdays & More', path: '/birthdays', icon: <CakeRoundedIcon />, color: '#E11D48' },
+      { title: 'Contact Book', subtitle: 'Anbiyam Contacts', path: '/contacts', icon: <MapRoundedIcon />, color: '#10B981' }
     );
   } else {
     // Family role
@@ -149,7 +152,8 @@ const Home = () => {
       { title: 'Anbiyam Group', subtitle: 'Short view of group', path: '/anbiyam-summary', icon: <MapRoundedIcon />, color: '#7C3AED' },
       { title: 'Subscriptions', subtitle: 'Monthly payments', path: '/payments', icon: <BarChartIcon />, color: '#059669' },
       { title: 'Donations', subtitle: 'Support the church', path: '/donations', icon: <CakeRoundedIcon />, color: '#E11D48' },
-      { title: 'Update Request', subtitle: 'Change family details', path: '/raise-update', icon: <InfoOutlinedIcon />, color: '#4F46E5' }
+      { title: 'Update Request', subtitle: 'Change family details', path: '/raise-update', icon: <InfoOutlinedIcon />, color: '#4F46E5' },
+      { title: 'Contact Book', subtitle: 'Anbiyam Contacts', path: '/contacts', icon: <MapRoundedIcon />, color: '#10B981' }
     );
   }
 

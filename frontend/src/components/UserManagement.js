@@ -111,16 +111,18 @@ const UserManagement = () => {
                   </Typography>
                 </Box>
                 <Stack direction="column" spacing={0.5} alignItems="flex-end">
-                  {user.is_admin ? (
-                    <Chip label="Admin" size="small" sx={{ bgcolor: '#FEF2F2', color: '#E11D48', fontWeight: 700, border: '1px solid #FEE2E2' }} />
-                  ) : (
-                    <Chip label="User" size="small" variant="outlined" sx={{ fontWeight: 600 }} />
-                  )}
-                  {user.is_approved ? (
-                    <Chip label="Active" size="small" sx={{ bgcolor: '#F0FDF4', color: '#16A34A', fontWeight: 700, border: '1px solid #DCFCE7' }} />
-                  ) : (
-                    <Chip label="Pending" size="small" sx={{ bgcolor: '#FFFBEB', color: '#D97706', fontWeight: 700, border: '1px solid #FEF3C7' }} />
-                  )}
+                    {user.role === 'admin' ? (
+                      <Chip label="Admin" size="small" sx={{ bgcolor: '#FEF2F2', color: '#E11D48', fontWeight: 700, border: '1px solid #FEE2E2' }} />
+                    ) : user.role === 'incharge' ? (
+                      <Chip label="Incharge" size="small" sx={{ bgcolor: '#EEF2FF', color: '#4F46E5', fontWeight: 700, border: '1px solid #E0E7FF' }} />
+                    ) : (
+                      <Chip label="Family" size="small" sx={{ bgcolor: '#F0FDF4', color: '#16A34A', fontWeight: 700, border: '1px solid #DCFCE7' }} />
+                    )}
+                    {user.is_approved ? (
+                      <Chip label="Active Account" size="small" variant="outlined" color="success" sx={{ fontWeight: 700 }} />
+                    ) : (
+                      <Chip label="Pending Approval" size="small" variant="outlined" color="warning" sx={{ fontWeight: 700 }} />
+                    )}
                 </Stack>
               </Stack>
 
@@ -176,8 +178,19 @@ const UserManagement = () => {
                   </Button>
                 )}
 
+                {user.role !== 'admin' && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => handleAction(user.id, `update-role/${user.id}`, 'put', { role: user.role === 'family' ? 'incharge' : 'family' })}
+                    sx={{ borderRadius: 2, fontWeight: 700, textTransform: 'none' }}
+                  >
+                    Switch to {user.role === 'family' ? 'Incharge' : 'Family'}
+                  </Button>
+                )}
+
                 <IconButton 
-                  sx={{ bgcolor: '#f1f5f9', borderRadius: 2, color: '#64748B' }}
+                  sx={{ bgcolor: user.is_admin ? '#FEF2F2' : '#f1f5f9', borderRadius: 2, color: user.is_admin ? '#E11D48' : '#64748B' }}
                   disabled={actionLoading === user.id}
                   onClick={() => handleAction(user.id, `toggle-admin/${user.id}`, 'put', { isAdmin: !user.is_admin })}
                 >

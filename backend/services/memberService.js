@@ -87,7 +87,7 @@ class MemberService {
        JOIN families f ON m.family_id = f.id
        WHERE f.active = true`;
 
-    if (!user.isAdmin && user.anbiyam) {
+    if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
       queryStr += " AND f.anbiyam = $" + (values.length + 1);
       values.push(user.anbiyam);
     }
@@ -108,7 +108,7 @@ class MemberService {
        JOIN families f ON m.family_id = f.id
        WHERE f.active = true`;
     const countValues = [];
-    if (!user.isAdmin && user.anbiyam) {
+    if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
       countQuery += " AND f.anbiyam = $1";
       countValues.push(user.anbiyam);
     }
@@ -135,7 +135,7 @@ class MemberService {
        WHERE f.family_id = $1 AND f.active = true`;
     const values = [familyId];
 
-    if (!user.isAdmin && user.anbiyam) {
+    if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
       queryStr += " AND f.anbiyam = $2";
       values.push(user.anbiyam);
     }
@@ -182,7 +182,7 @@ class MemberService {
       WHERE family_id IN (SELECT id FROM families WHERE active = true`;
     const values = [];
 
-    if (!user.isAdmin && user.anbiyam) {
+    if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
       queryStr += " AND anbiyam = $1";
       values.push(user.anbiyam);
     }
@@ -213,7 +213,7 @@ class MemberService {
       WHERE family_id IN (SELECT id FROM families WHERE active = true`;
     const values = [];
 
-    if (!user.isAdmin && user.anbiyam) {
+    if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
       queryStr += " AND anbiyam = $1";
       values.push(user.anbiyam);
     }
@@ -233,7 +233,7 @@ class MemberService {
       WHERE family_id IN (SELECT id FROM families WHERE active = true`;
     const values = [];
 
-    if (!user.isAdmin && user.anbiyam) {
+    if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
       queryStr += " AND anbiyam = $1";
       values.push(user.anbiyam);
     }
@@ -254,7 +254,7 @@ class MemberService {
         AND m.dob IS NOT NULL`;
     const values = [];
 
-    if (!user.isAdmin && user.anbiyam) {
+    if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
       queryStr += " AND f.anbiyam = $1";
       values.push(user.anbiyam);
     }
@@ -313,7 +313,7 @@ class MemberService {
         AND m.marriage_date IS NOT NULL`;
     const values = [];
 
-    if (!user.isAdmin && user.anbiyam) {
+    if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
       queryStr += " AND f.anbiyam = $1";
       values.push(user.anbiyam);
     }

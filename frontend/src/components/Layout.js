@@ -79,7 +79,9 @@ const Layout = ({ children }) => {
     </Box>
     <Box>
       <IconButton onClick={handleAvatarClick}>
-       <Avatar sx={{ bgcolor: '#F59E0B', color: '#fff', width: 32, height: 32, fontSize: 14, fontWeight: 'bold' }}>A</Avatar>
+        <Avatar sx={{ bgcolor: role === 'admin' ? '#BE123C' : role === 'incharge' ? '#7C3AED' : '#F59E0B', color: '#fff', width: 32, height: 32, fontSize: 14, fontWeight: 'bold' }}>
+          {username[0].toUpperCase()}
+        </Avatar>
       </IconButton>
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleCloseMenu}>
         <MenuItem onClick={handleLogout}>Logout</MenuItem>
