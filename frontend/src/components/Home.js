@@ -177,7 +177,7 @@ const Home = () => {
       );
     } else {
       actions.push(
-        { title: 'Submit Registration', subtitle: 'ACTION REQUIRED', path: '/addfamily', icon: <VerifiedUserIcon />, color: '#BE123C' },
+        { title: 'Submit Registration', subtitle: 'ACTION REQUIRED', path: '/add-family', icon: <VerifiedUserIcon />, color: '#BE123C' },
         { title: 'Anbiyam Contacts', subtitle: 'View group directory', path: '/contacts', icon: <MapRoundedIcon />, color: '#10B981' }
       );
     }
