@@ -142,11 +142,15 @@ class FamilyService {
   }
 
   static async getFamilyById(familyId, activeOnly = true, user = {}) {
-    const activeCondition = activeOnly ? "AND active = true" : "";
+    // If it's the user's own family, we allow seeing it even if inactive/pending
+    const isOwnFamily = user.family_id === familyId;
+    const activeCondition = (activeOnly && !isOwnFamily) ? "AND active = true" : "";
+    
     let queryStr = `SELECT * FROM families WHERE family_id = $1 ${activeCondition}`;
     const values = [familyId];
 
-    if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
+    // Restrict by anbiyam for non-admins, unless it's their own family
+    if (!user.isAdmin && user.role !== 'admin' && user.anbiyam && !isOwnFamily) {
       queryStr += " AND anbiyam = $2";
       values.push(user.anbiyam);
     }

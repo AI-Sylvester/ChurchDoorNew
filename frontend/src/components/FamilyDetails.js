@@ -24,8 +24,6 @@ import {
   FormControlLabel
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import { Filesystem, Directory } from '@capacitor/filesystem';
-import { Capacitor } from '@capacitor/core';
 import API_BASE_URL from '../config';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -251,37 +249,8 @@ const exportPDF = async () => {
     .slice(0, 16)
     .replace(/[:T]/g, '-')}.pdf`;
 
-  if (Capacitor.getPlatform() === 'web') {
-    doc.save(filename);
-  } else {
-    const pdfBlob = doc.output('blob');
-    const base64 = await blobToBase64(pdfBlob);
-
-    try {
-      await Filesystem.writeFile({
-        path: filename,
-        data: base64,
-        directory: Directory.Documents,
-      });
-      alert(`PDF saved successfully: ${filename}`);
-    } catch (error) {
-      console.error('Failed to save PDF file:', error);
-      alert('Error saving file');
-    }
-  }
+  doc.save(filename);
 };
-
-// 📦 Helper: Blob to Base64
-const blobToBase64 = (blob) =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = reject;
-    reader.onload = () => {
-      const base64String = reader.result.split(',')[1];
-      resolve(base64String);
-    };
-    reader.readAsDataURL(blob);
-  });
 
 // 📷 Helper: Convert image URL to base64
 const toBase64 = (url) =>

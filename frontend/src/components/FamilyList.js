@@ -50,7 +50,6 @@ const FamilyList = () => {
   const [activeOnly, setActiveOnly] = useState(true);
   
   const [imageOpen, setImageOpen] = useState(false);
-  const [selectedImage] = useState(null);
   
   const navigate = useNavigate();
   const theme = useTheme();
@@ -239,11 +238,7 @@ const FamilyList = () => {
 
       <Dialog open={imageOpen} onClose={() => setImageOpen(false)} maxWidth="md">
         <DialogContent>
-          {selectedImage ? (
-            <img src={selectedImage} alt="Family" style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain' }} />
-          ) : (
-            <Typography>No Image Available</Typography>
-          )}
+          <Typography>No Image Available</Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setImageOpen(false)}>Close</Button>

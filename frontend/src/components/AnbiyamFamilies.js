@@ -9,8 +9,6 @@ import axios from 'axios';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import API_BASE_URL from '../config';
-import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
-import { Capacitor } from '@capacitor/core';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import FilterListIcon from '@mui/icons-material/FilterList';
 
@@ -172,24 +170,10 @@ const AnbiyamFamilyView = () => {
     }
 
     try {
-      const arrayBuffer = doc.output('arraybuffer');
-      const uint8Array = new Uint8Array(arrayBuffer);
-      const base64 = btoa(String.fromCharCode(...uint8Array));
-
-      if (Capacitor.getPlatform() === 'web') {
-        doc.save(fileName);
-      } else {
-        await Filesystem.writeFile({
-          path: fileName,
-          data: base64,
-          directory: Directory.Documents,
-          encoding: Encoding.Base64,
-        });
-        alert(`✅ PDF saved to device: ${fileName}`);
-      }
+      doc.save(fileName);
     } catch (err) {
       console.error('❌ Error saving PDF:', err);
-      alert('❌ Failed to generate/save PDF.');
+      alert('❌ Failed to generate PDF.');
     }
   };
 
