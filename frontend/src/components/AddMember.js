@@ -3,20 +3,27 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import {
   Box, TextField, Checkbox, FormControlLabel, FormControl,
-  InputLabel, Select, MenuItem, Typography, Button, Stepper, Step, StepLabel, Paper
+  InputLabel, Select, MenuItem, Typography, Button, Stepper, Step, 
+  StepLabel, Paper, Fade, Avatar, Stack, Divider
 } from '@mui/material';
 import API_BASE_URL from '../config';
+import PersonAddRoundedIcon from '@mui/icons-material/PersonAddRounded';
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 
 const steps = ['Basic Details', 'Contact & Status', 'Sacraments'];
 
 const AddMember = () => {
   const params = new URLSearchParams(window.location.search);
-  const [activeStep, setActiveStep] = useState(0);
+  const navigate = useNavigate();
+  const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role') || 'family';
 
-  // Form States
+  const [activeStep, setActiveStep] = useState(0);
   const [familyId, setFamilyId] = useState(params.get('family_id') || '');
   const [familyHead, setFamilyHead] = useState('');
-  const [familyMobile, setFamilyMobile] = useState('');
+  
   const [name, setName] = useState('');
   const [dob, setDob] = useState('');
   const [age, setAge] = useState('');
@@ -41,9 +48,7 @@ const AddMember = () => {
   
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const token = localStorage.getItem('token');
-  const role = localStorage.getItem('role') || 'family';
-  const navigate = useNavigate();
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!dob) { setAge(''); return; }
@@ -57,8 +62,7 @@ const AddMember = () => {
 
   useEffect(() => {
     if (!familyId) {
-      setFamilyHead(''); setFamilyMobile('');
-      if (headAsMember) { setName(''); setHeadAsMember(false); }
+      setFamilyHead('');
       return;
     }
     const fetchFamilyDetails = async () => {
@@ -67,20 +71,14 @@ const AddMember = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         setFamilyHead(res.data.head_name || '');
-        setFamilyMobile(res.data.mobile_number || '');
-        if (headAsMember) {
-          setName(res.data.head_name || '');
-          setRelationship('Head');
-        }
         setError('');
       } catch {
-        setFamilyHead(''); setFamilyMobile('');
-        setError('Family not found');
-        setName('');
+        setFamilyHead('');
+        setError('Family ID not found. Please verify.');
       }
     };
     fetchFamilyDetails();
-  }, [familyId, headAsMember, token]);
+  }, [familyId, token]);
 
   const handleToggleHeadAsMember = (checked) => {
     setHeadAsMember(checked);
@@ -97,14 +95,11 @@ const AddMember = () => {
   const handleBack = () => setActiveStep((prev) => prev - 1);
 
   const handleAddMember = async () => {
-    setMessage('');
-    setError('');
-
     if (!familyId || !name || !dob) {
-      setError('Please fill required fields: Family ID, Name, Date of Birth');
+      setError('Please fill required fields (Family ID, Name, DOB)');
       return;
     }
-
+    setSubmitting(true);
     try {
       const res = await axios.post(`${API_BASE_URL}/member/add`, {
         family_id: familyId, name, age: age ? parseInt(age) : null, dob,
@@ -120,161 +115,243 @@ const AddMember = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      setMessage(`Member ${res.data.name} added successfully. Member ID: ${res.data.member_id}`);
-      
-      // Reset form
-      setName(''); setDob(''); setAge(''); setMaritalStatus(''); setRelationship('');
-      setQualification(''); setProfession(''); setResidingHere(true); setChurchGroup('');
-      setActive(true); setBaptismDate(''); setBaptismPlace(''); setHolyCommunionDate('');
-      setHolyCommunionPlace(''); setConfirmationDate(''); setConfirmationPlace('');
-      setMarriageDate(''); setMarriagePlace(''); setMobile(''); setSex('');
-      setHeadAsMember(false);
-      setActiveStep(0);
+      setMessage(`Member ${res.data.name} added successfully!`);
+      setError('');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to add member. Check Family ID.');
+      setError(err.response?.data?.message || 'Failed to add member.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const renderStepContent = (stepIndex) => {
-    switch (stepIndex) {
-      case 0:
-        return (
-          <Box>
-            <Typography variant="h6" mb={2} color="primary">Family & Basic Details</Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-              <TextField sx={{ flex: 1, minWidth: '200px' }} label="Family ID*" value={familyId} onChange={(e) => setFamilyId(e.target.value.toUpperCase())} />
-              <TextField sx={{ flex: 1, minWidth: '200px' }} label="Family Head" value={familyHead} InputProps={{ readOnly: true }} />
-              <TextField sx={{ flex: 1, minWidth: '200px' }} label="Head Mobile" value={familyMobile} InputProps={{ readOnly: true }} />
-            </Box>
-            {error === 'Family not found' && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}
-            <FormControlLabel sx={{ mb: 2 }} control={<Checkbox checked={headAsMember} onChange={(e) => handleToggleHeadAsMember(e.target.checked)} disabled={!familyHead} />} label="Head as Member" />
-            
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-              <TextField sx={{ flex: 1, minWidth: '200px' }} label="Name*" value={name} onChange={(e) => setName(e.target.value)} disabled={headAsMember} />
-              <TextField sx={{ flex: 1, minWidth: '200px' }} label="Date of Birth*" type="date" value={dob} onChange={(e) => setDob(e.target.value)} InputLabelProps={{ shrink: true }} />
-              <TextField sx={{ flex: 1, minWidth: '100px' }} label="Age" value={age} InputProps={{ readOnly: true }} />
-            </Box>
-            
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-              <FormControl sx={{ flex: 1, minWidth: '200px' }}>
-                <InputLabel>Sex</InputLabel>
-                <Select value={sex} onChange={(e) => setSex(e.target.value)} label="Sex">
-                  <MenuItem value="">--Select--</MenuItem>
-                  <MenuItem value="Male">Male</MenuItem>
-                  <MenuItem value="Female">Female</MenuItem>
-                  <MenuItem value="Transgender">Transgender</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl sx={{ flex: 1, minWidth: '200px' }}>
-                <InputLabel>Relationship</InputLabel>
-                <Select value={relationship} onChange={(e) => setRelationship(e.target.value)} label="Relationship" disabled={headAsMember}>
-                  <MenuItem value="">--Select--</MenuItem>
-                  {["Head", "Spouse", "Child", "Father", "Mother", "Father in Law", "Mother in Law", "Other"].map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
-                </Select>
-              </FormControl>
-            </Box>
-          </Box>
-        );
-      case 1:
-        return (
-          <Box>
-            <Typography variant="h6" mb={2} color="primary">Contact & Status</Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-              <FormControl sx={{ flex: 1, minWidth: '200px' }}>
-                <InputLabel>Marital Status</InputLabel>
-                <Select value={maritalStatus} onChange={(e) => setMaritalStatus(e.target.value)} label="Marital Status">
-                  <MenuItem value="">--Select--</MenuItem>
-                  {["Single", "Married", "Divorced", "Widowed"].map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
-                </Select>
-              </FormControl>
-              <TextField sx={{ flex: 1, minWidth: '200px' }} label="Mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} />
-            </Box>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-              <TextField sx={{ flex: 1, minWidth: '200px' }} label="Qualification" value={qualification} onChange={(e) => setQualification(e.target.value)} />
-              <TextField sx={{ flex: 1, minWidth: '200px' }} label="Profession" value={profession} onChange={(e) => setProfession(e.target.value)} />
-            </Box>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-              <TextField sx={{ flex: 1, minWidth: '200px' }} label="Church Group" value={churchGroup} onChange={(e) => setChurchGroup(e.target.value)} />
-            </Box>
-            <Box sx={{ display: 'flex', gap: 4, mt: 2 }}>
-              {role === 'admin' && (
-                <>
-                  <FormControlLabel control={<Checkbox checked={residingHere} onChange={(e) => setResidingHere(e.target.checked)} />} label="Residing Here" />
-                  <FormControlLabel control={<Checkbox checked={active} onChange={(e) => setActive(e.target.checked)} />} label="Active" />
-                </>
-              )}
-            </Box>
-          </Box>
-        );
-      case 2:
-        return (
-          <Box>
-            <Typography variant="h6" mb={2} color="primary">Sacraments</Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-              <TextField sx={{ flex: 1, minWidth: '200px' }} label="Baptism Date" type="date" value={baptismDate} onChange={(e) => setBaptismDate(e.target.value)} InputLabelProps={{ shrink: true }} />
-              <TextField sx={{ flex: 1, minWidth: '200px' }} label="Baptism Place" value={baptismPlace} onChange={(e) => setBaptismPlace(e.target.value)} />
-            </Box>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-              <TextField sx={{ flex: 1, minWidth: '200px' }} label="Holy Communion Date" type="date" value={holyCommunionDate} onChange={(e) => setHolyCommunionDate(e.target.value)} InputLabelProps={{ shrink: true }} />
-              <TextField sx={{ flex: 1, minWidth: '200px' }} label="Holy Communion Place" value={holyCommunionPlace} onChange={(e) => setHolyCommunionPlace(e.target.value)} />
-            </Box>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-              <TextField sx={{ flex: 1, minWidth: '200px' }} label="Confirmation Date" type="date" value={confirmationDate} onChange={(e) => setConfirmationDate(e.target.value)} InputLabelProps={{ shrink: true }} />
-              <TextField sx={{ flex: 1, minWidth: '200px' }} label="Confirmation Place" value={confirmationPlace} onChange={(e) => setConfirmationPlace(e.target.value)} />
-            </Box>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-              <TextField sx={{ flex: 1, minWidth: '200px' }} label="Marriage Date" type="date" value={marriageDate} onChange={(e) => setMarriageDate(e.target.value)} InputLabelProps={{ shrink: true }} />
-              <TextField sx={{ flex: 1, minWidth: '200px' }} label="Marriage Place" value={marriagePlace} onChange={(e) => setMarriagePlace(e.target.value)} />
-            </Box>
-          </Box>
-        );
-      default:
-        return 'Unknown step';
-    }
+  const resetForNext = () => {
+    setName(''); setDob(''); setAge(''); setMaritalStatus(''); setRelationship('');
+    setQualification(''); setProfession(''); setResidingHere(true); setChurchGroup('');
+    setActive(true); setBaptismDate(''); setBaptismPlace(''); setHolyCommunionDate('');
+    setHolyCommunionPlace(''); setConfirmationDate(''); setConfirmationPlace('');
+    setMarriageDate(''); setMarriagePlace(''); setMobile(''); setSex('');
+    setHeadAsMember(false);
+    setMessage('');
+    setActiveStep(0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  if (message) {
+    return (
+      <Fade in timeout={800}>
+        <Box sx={{ maxWidth: 600, mx: 'auto', mt: 4, px: 2, textAlign: 'center' }}>
+          <Paper elevation={0} sx={{ p: 5, borderRadius: 8, border: '1px solid #E2E8F0', boxShadow: '0 20px 40px rgba(0,0,0,0.05)' }}>
+            <Avatar sx={{ width: 80, height: 80, bgcolor: '#10B98115', color: '#10B981', mx: 'auto', mb: 3 }}>
+              <CheckCircleRoundedIcon sx={{ fontSize: 50 }} />
+            </Avatar>
+            <Typography variant="h4" fontWeight={900} color="#1E293B" gutterBottom>Perfect!</Typography>
+            <Typography variant="body1" color="textSecondary" mb={4}>{message}</Typography>
+            
+            <Stack spacing={2}>
+              <Button 
+                variant="contained" 
+                size="large"
+                startIcon={<PersonAddRoundedIcon />}
+                onClick={resetForNext}
+                sx={{ py: 2, borderRadius: 4, fontWeight: 900, bgcolor: '#1E3A8A', boxShadow: '0 8px 16px rgba(30, 58, 138, 0.2)' }}
+              >
+                Add Another Family Member
+              </Button>
+              <Button 
+                variant="outlined" 
+                size="large"
+                onClick={() => navigate('/home')}
+                sx={{ py: 2, borderRadius: 4, fontWeight: 800, color: '#64748B', borderColor: '#E2E8F0' }}
+              >
+                Finish & Go to Home
+              </Button>
+            </Stack>
+          </Paper>
+        </Box>
+      </Fade>
+    );
+  }
 
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto', mt: 3, px: 2, pb: 4 }}>
-      <Box sx={{ backgroundColor: '#03a8f5ff', color: '#000', p: 2, borderRadius: 2, mb: 4, textAlign: 'center', boxShadow: 1 }}>
-        <Typography variant="h5" fontWeight="bold">Add Member</Typography>
-      </Box>
-
-      <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 4 }}>
-        {steps.map((label) => (
-          <Step key={label}>
-            <StepLabel>{label}</StepLabel>
-          </Step>
-        ))}
-      </Stepper>
-
-      <Paper sx={{ p: 4, borderRadius: 2, boxShadow: 3 }}>
-        {renderStepContent(activeStep)}
-
-        {message && (
-          <Box textAlign="center" mt={2}>
-            <Typography color="success.main" mb={1}>{message}</Typography>
-            <Button variant="outlined" onClick={() => navigate('/')} size="small">Go to Dashboard</Button>
-          </Box>
-        )}
-        {error && <Typography color="error" mt={2} textAlign="center">{error}</Typography>}
-
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-          <Button disabled={activeStep === 0} onClick={handleBack} variant="outlined" sx={{ fontWeight: 'bold' }}>
-            Back
-          </Button>
-          {activeStep === steps.length - 1 ? (
-            <Button onClick={handleAddMember} variant="contained" sx={{ backgroundColor: '#03a8f5ff', color: '#000', fontWeight: 'bold', '&:hover': { backgroundColor: '#0288d1' } }}>
-              Add Member
-            </Button>
-          ) : (
-            <Button onClick={handleNext} variant="contained" sx={{ backgroundColor: '#03a8f5ff', color: '#000', fontWeight: 'bold', '&:hover': { backgroundColor: '#0288d1' } }}>
-              Next
-            </Button>
-          )}
+    <Box sx={{ p: { xs: 2, sm: 4 }, bgcolor: '#F8FAFC', minHeight: '100vh', mt: -2, mx: -2 }}>
+      <Box sx={{ maxWidth: 800, mx: 'auto' }}>
+        <Box sx={{ mb: 4, textAlign: 'center' }}>
+          <Avatar sx={{ width: 64, height: 64, bgcolor: '#1E3A8A', color: '#fff', mx: 'auto', mb: 2, boxShadow: '0 8px 16px rgba(30, 58, 138, 0.2)' }}>
+            <PersonAddRoundedIcon />
+          </Avatar>
+          <Typography variant="h4" fontWeight={900} color="#1E293B" sx={{ letterSpacing: '-1.5px' }}>
+            Add Family Member
+          </Typography>
+          <Typography variant="body2" color="textSecondary" fontWeight={500}>
+            Step {activeStep + 1}: {steps[activeStep]}
+          </Typography>
         </Box>
-      </Paper>
+
+        <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 5, '& .MuiStepLabel-label': { fontWeight: 800, fontSize: '0.75rem', color: '#94A3B8' } }}>
+          {steps.map((label) => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
+        </Stepper>
+
+        {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 3 }}>{error}</Alert>}
+
+        <Paper elevation={0} sx={{ p: { xs: 3, sm: 5 }, borderRadius: 6, boxShadow: '0 12px 32px rgba(0,0,0,0.03)', border: '1px solid #F1F5F9' }}>
+          {activeStep === 0 && (
+            <Fade in>
+              <Box>
+                <Typography variant="subtitle2" color="primary" fontWeight={800} sx={{ mb: 3, textTransform: 'uppercase', letterSpacing: '1px' }}>Basic Details</Typography>
+                <Grid container spacing={2.5}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField label="Family ID*" value={familyId} onChange={(e) => setFamilyId(e.target.value.toUpperCase())} fullWidth />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField label="Family Head" value={familyHead} InputProps={{ readOnly: true }} fullWidth variant="filled" />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <FormControlLabel 
+                      control={<Checkbox checked={headAsMember} onChange={(e) => handleToggleHeadAsMember(e.target.checked)} disabled={!familyHead} color="primary" />} 
+                      label={<Typography fontWeight={700}>Member is the Family Head</Typography>} 
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={8}>
+                    <TextField label="Full Name*" value={name} onChange={(e) => setName(e.target.value)} disabled={headAsMember} fullWidth />
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <FormControl fullWidth>
+                      <InputLabel>Sex</InputLabel>
+                      <Select value={sex} onChange={(e) => setSex(e.target.value)} label="Sex">
+                        <MenuItem value="Male">Male</MenuItem>
+                        <MenuItem value="Female">Female</MenuItem>
+                        <MenuItem value="Transgender">Transgender</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField label="Date of Birth*" type="date" value={dob} onChange={(e) => setDob(e.target.value)} InputLabelProps={{ shrink: true }} fullWidth />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth>
+                      <InputLabel>Relationship to Head</InputLabel>
+                      <Select value={relationship} onChange={(e) => setRelationship(e.target.value)} label="Relationship" disabled={headAsMember}>
+                        {["Head", "Spouse", "Child", "Father", "Mother", "Father in Law", "Mother in Law", "Other"].map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                </Grid>
+              </Box>
+            </Fade>
+          )}
+
+          {activeStep === 1 && (
+            <Fade in>
+              <Box>
+                <Typography variant="subtitle2" color="primary" fontWeight={800} sx={{ mb: 3, textTransform: 'uppercase', letterSpacing: '1px' }}>Contact & Status</Typography>
+                <Grid container spacing={2.5}>
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth>
+                      <InputLabel>Marital Status</InputLabel>
+                      <Select value={maritalStatus} onChange={(e) => setMaritalStatus(e.target.value)} label="Marital Status">
+                        {["Single", "Married", "Divorced", "Widowed"].map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField label="Mobile Number" value={mobile} onChange={(e) => setMobile(e.target.value)} fullWidth />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField label="Qualification" value={qualification} onChange={(e) => setQualification(e.target.value)} fullWidth />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField label="Profession" value={profession} onChange={(e) => setProfession(e.target.value)} fullWidth />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField label="Church Group / Ministry" value={churchGroup} onChange={(e) => setChurchGroup(e.target.value)} fullWidth placeholder="e.g. Choir, Youth, Vincent De Paul" />
+                  </Grid>
+                  {role === 'admin' && (
+                    <Grid item xs={12}>
+                      <Stack direction="row" spacing={3}>
+                        <FormControlLabel control={<Checkbox checked={residingHere} onChange={(e) => setResidingHere(e.target.checked)} />} label="Residing in Parish" />
+                        <FormControlLabel control={<Checkbox checked={active} onChange={(e) => setActive(e.target.checked)} />} label="Active Record" />
+                      </Stack>
+                    </Grid>
+                  )}
+                </Grid>
+              </Box>
+            </Fade>
+          )}
+
+          {activeStep === 2 && (
+            <Fade in>
+              <Box>
+                <Typography variant="subtitle2" color="primary" fontWeight={800} sx={{ mb: 3, textTransform: 'uppercase', letterSpacing: '1px' }}>Sacraments</Typography>
+                <Grid container spacing={2.5}>
+                  <Grid item xs={12} sm={6}><TextField label="Baptism Date" type="date" value={baptismDate} onChange={(e) => setBaptismDate(e.target.value)} InputLabelProps={{ shrink: true }} fullWidth /></Grid>
+                  <Grid item xs={12} sm={6}><TextField label="Baptism Place" value={baptismPlace} onChange={(e) => setBaptismPlace(e.target.value)} fullWidth /></Grid>
+                  <Grid item xs={12}><Divider sx={{ my: 1 }} /></Grid>
+                  <Grid item xs={12} sm={6}><TextField label="Holy Communion Date" type="date" value={holyCommunionDate} onChange={(e) => setHolyCommunionDate(e.target.value)} InputLabelProps={{ shrink: true }} fullWidth /></Grid>
+                  <Grid item xs={12} sm={6}><TextField label="Holy Communion Place" value={holyCommunionPlace} onChange={(e) => setHolyCommunionPlace(e.target.value)} fullWidth /></Grid>
+                  <Grid item xs={12}><Divider sx={{ my: 1 }} /></Grid>
+                  <Grid item xs={12} sm={6}><TextField label="Confirmation Date" type="date" value={confirmationDate} onChange={(e) => setConfirmationDate(e.target.value)} InputLabelProps={{ shrink: true }} fullWidth /></Grid>
+                  <Grid item xs={12} sm={6}><TextField label="Confirmation Place" value={confirmationPlace} onChange={(e) => setConfirmationPlace(e.target.value)} fullWidth /></Grid>
+                  <Grid item xs={12}><Divider sx={{ my: 1 }} /></Grid>
+                  <Grid item xs={12} sm={6}><TextField label="Marriage Date" type="date" value={marriageDate} onChange={(e) => setMarriageDate(e.target.value)} InputLabelProps={{ shrink: true }} fullWidth /></Grid>
+                  <Grid item xs={12} sm={6}><TextField label="Marriage Place" value={marriagePlace} onChange={(e) => setMarriagePlace(e.target.value)} fullWidth /></Grid>
+                </Grid>
+              </Box>
+            </Fade>
+          )}
+
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 6 }}>
+            <Button 
+              startIcon={<ArrowBackRoundedIcon />} 
+              disabled={activeStep === 0} 
+              onClick={handleBack} 
+              sx={{ fontWeight: 800, color: '#64748B' }}
+            >
+              Back
+            </Button>
+            {activeStep === steps.length - 1 ? (
+              <Button 
+                variant="contained" 
+                onClick={handleAddMember} 
+                disabled={submitting}
+                sx={{ px: 4, py: 1.5, borderRadius: 3, fontWeight: 900, bgcolor: '#1E3A8A' }}
+              >
+                {submitting ? 'Adding...' : 'Add Member'}
+              </Button>
+            ) : (
+              <Button 
+                variant="contained" 
+                endIcon={<ArrowForwardRoundedIcon />} 
+                onClick={handleNext}
+                sx={{ px: 4, py: 1.5, borderRadius: 3, fontWeight: 900, bgcolor: '#1E3A8A' }}
+              >
+                Continue
+              </Button>
+            )}
+          </Box>
+        </Paper>
+      </Box>
     </Box>
   );
 };
 
 export default AddMember;
+
+const Grid = ({ children, container, item, spacing, xs, sm, md, sx }) => (
+  <Box sx={{ 
+    ...(container && { display: 'flex', flexWrap: 'wrap', m: spacing ? -(spacing * 4) / 2 : 0 }),
+    ...(item && { 
+      p: spacing ? (spacing * 4) / 2 : 0, 
+      width: xs ? `${(xs / 12) * 100}%` : 'auto',
+      ...(sm && { '@media (min-width: 600px)': { width: `${(sm / 12) * 100}%` } })
+    }),
+    ...sx 
+  }}>
+    {children}
+  </Box>
+);
+
+const Alert = ({ children, severity, sx }) => (
+  <Box sx={{ p: 2, borderRadius: 2, bgcolor: severity === 'error' ? '#FEF2F2' : '#F0FDF4', color: severity === 'error' ? '#991B1B' : '#166534', border: `1px solid ${severity === 'error' ? '#FEE2E2' : '#DCFCE7'}`, ...sx }}>
+    <Typography variant="body2" fontWeight={700}>{children}</Typography>
+  </Box>
+);
