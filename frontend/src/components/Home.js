@@ -110,10 +110,11 @@ const Home = () => {
     const checkFamily = async () => {
       if (role === 'family') {
         try {
-          const res = await fetch(`${API_BASE_URL}/family-user/my-family`, {
+          const res = await fetch(`${API_BASE_URL}/family-user/check-registration`, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          setHasFamily(res.status === 200);
+          const result = await res.json();
+          setHasFamily(result.hasFamily);
         } catch (err) {
           setHasFamily(false);
         }
