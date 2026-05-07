@@ -19,7 +19,7 @@ exports.getMyFamily = async (req, res, next) => {
     }
 
     const family = familyResult.rows[0];
-    const membersResult = await db.query('SELECT * FROM members WHERE family_id = $1', [family.family_id]);
+    const membersResult = await db.query('SELECT * FROM members WHERE family_id = $1', [family.id]);
     
     res.status(200).json({
       family: family,
@@ -99,7 +99,15 @@ exports.makePayment = async (req, res, next) => {
 exports.checkRegistration = async (req, res, next) => {
   try {
     const userId = req.user.userId;
-    const result = await db.query('SELECT family_id, verification_status, active FROM families WHERE created_by = $1', [userId]);
+    const userFamilyId = req.user.familyId;
+    
+    let result;
+    if (userFamilyId) {
+      result = await db.query('SELECT family_id, verification_status, active FROM families WHERE family_id = $1', [userFamilyId]);
+    } else {
+      result = await db.query('SELECT family_id, verification_status, active FROM families WHERE created_by = $1 ORDER BY id DESC LIMIT 1', [userId]);
+    }
+
     res.status(200).json({ 
       hasFamily: result.rows.length > 0,
       family: result.rows[0]

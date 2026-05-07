@@ -297,7 +297,7 @@ const Home = () => {
         </Box>
 
         {/* Registration Status Tracker for Families */}
-        {role === 'family' && hasFamily && familyStatus !== 'approved' && (
+        {role === 'family' && hasFamily && (
           <Box sx={{ px: 2, mt: 5 }}>
             <Paper 
               elevation={0} 

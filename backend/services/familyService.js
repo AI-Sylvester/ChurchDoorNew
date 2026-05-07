@@ -42,6 +42,12 @@ class FamilyService {
         anbiyam, family_pic_filename, cemetery_number, old_card_number, verification_status
       ]
     );
+
+    // If the creator is a 'family' user, link them to this family automatically
+    if (familyData.role === 'family') {
+      await db.query('UPDATE users SET family_id = $1 WHERE id = $2', [newFamilyId, createdBy]);
+    }
+
     return result.rows[0];
   }
 
