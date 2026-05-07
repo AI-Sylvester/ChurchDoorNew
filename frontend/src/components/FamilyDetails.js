@@ -22,7 +22,8 @@ import {
   InputAdornment,
   Switch,
   FormControlLabel,
-  Button
+  Button,
+  Chip
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import API_BASE_URL from '../config';
@@ -554,13 +555,25 @@ const toBase64 = (url) =>
                   sx={{ fontWeight: 800, textTransform: 'uppercase', fontSize: '0.65rem' }}
                 />
                 {(role === 'incharge' && member.verification_status === 'pending_incharge') && (
-                  <Button size="small" variant="outlined" color="primary" onClick={() => handleMemberStatusUpdate(member.member_id, 'recommended')}>
-                    Verify
+                  <Button 
+                    size="small" 
+                    variant="outlined" 
+                    color="primary" 
+                    onClick={() => handleMemberStatusUpdate(member.member_id, 'recommended')}
+                    disabled={updatingMember === member.member_id}
+                  >
+                    {updatingMember === member.member_id ? '...' : 'Verify'}
                   </Button>
                 )}
                 {(role === 'admin' && member.verification_status === 'recommended') && (
-                  <Button size="small" variant="outlined" color="success" onClick={() => handleMemberStatusUpdate(member.member_id, 'approved')}>
-                    Approve
+                  <Button 
+                    size="small" 
+                    variant="outlined" 
+                    color="success" 
+                    onClick={() => handleMemberStatusUpdate(member.member_id, 'approved')}
+                    disabled={updatingMember === member.member_id}
+                  >
+                    {updatingMember === member.member_id ? '...' : 'Approve'}
                   </Button>
                 )}
               </Box>
@@ -625,13 +638,29 @@ const toBase64 = (url) =>
                         sx={{ fontWeight: 700, fontSize: '0.7rem' }}
                       />
                       {(role === 'incharge' && member.verification_status === 'pending_incharge') && (
-                        <Button size="small" variant="contained" color="primary" sx={{ fontSize: '0.65rem', py: 0 }} onClick={() => handleMemberStatusUpdate(member.member_id, 'recommended')}>
-                          Verify
+                        <Button 
+                          size="small" 
+                          variant="contained" 
+                          color="primary" 
+                          sx={{ fontSize: '0.65rem', py: 0 }} 
+                          onClick={() => handleMemberStatusUpdate(member.member_id, 'recommended')}
+                          disabled={updatingMember === member.member_id}
+                          startIcon={updatingMember === member.member_id ? <CircularProgress size={12} color="inherit" /> : null}
+                        >
+                          {updatingMember === member.member_id ? 'Verifying...' : 'Verify'}
                         </Button>
                       )}
                       {(role === 'admin' && member.verification_status === 'recommended') && (
-                        <Button size="small" variant="contained" color="success" sx={{ fontSize: '0.65rem', py: 0 }} onClick={() => handleMemberStatusUpdate(member.member_id, 'approved')}>
-                          Approve
+                        <Button 
+                          size="small" 
+                          variant="contained" 
+                          color="success" 
+                          sx={{ fontSize: '0.65rem', py: 0 }} 
+                          onClick={() => handleMemberStatusUpdate(member.member_id, 'approved')}
+                          disabled={updatingMember === member.member_id}
+                          startIcon={updatingMember === member.member_id ? <CircularProgress size={12} color="inherit" /> : null}
+                        >
+                          {updatingMember === member.member_id ? 'Approving...' : 'Approve'}
                         </Button>
                       )}
                     </Box>
