@@ -37,6 +37,7 @@ const FamilyDetailsView = () => {
   const [loadingFamily, setLoadingFamily] = useState(false);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [detailedView, setDetailedView] = useState(false);
+  const [updatingMember, setUpdatingMember] = useState(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -54,6 +55,24 @@ const FamilyDetailsView = () => {
       await fetchFamilyDetails(familyDetails.family_id);
     } catch (err) {
       setError('Failed to update verification status');
+    }
+  };
+
+  const handleMemberStatusUpdate = async (memberId, newStatus) => {
+    try {
+      setUpdatingMember(memberId);
+      await axios.put(`${API_BASE_URL}/member/${memberId}`, 
+        { verification_status: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      // Refresh family and members to reflect changes
+      if (familyDetails) await fetchFamilyDetails(familyDetails.family_id);
+      if (familyDetails) await fetchFamilyMembers(familyDetails.family_id);
+    } catch (err) {
+      console.error('Error updating member status:', err);
+      setError('Failed to update member status');
+    } finally {
+      setUpdatingMember(null);
     }
   };
 
@@ -522,9 +541,30 @@ const toBase64 = (url) =>
             <Typography variant="h6" color="#0B3D91" fontWeight={700} mb={0.5}>
               {member.name}
             </Typography>
-            <Typography variant="body2" color="text.secondary" mb={2}>
+            <Typography variant="body2" color="text.secondary" mb={1}>
               ID: {member.member_id}
             </Typography>
+            
+            {member.verification_status && member.verification_status !== 'approved' && (
+              <Box mb={2} display="flex" justifyContent="space-between" alignItems="center">
+                <Chip 
+                  label={member.verification_status.replace('_', ' ')} 
+                  size="small" 
+                  color={member.verification_status === 'pending_incharge' ? 'warning' : 'info'}
+                  sx={{ fontWeight: 800, textTransform: 'uppercase', fontSize: '0.65rem' }}
+                />
+                {(role === 'incharge' && member.verification_status === 'pending_incharge') && (
+                  <Button size="small" variant="outlined" color="primary" onClick={() => handleMemberStatusUpdate(member.member_id, 'recommended')}>
+                    Verify
+                  </Button>
+                )}
+                {(role === 'admin' && member.verification_status === 'recommended') && (
+                  <Button size="small" variant="outlined" color="success" onClick={() => handleMemberStatusUpdate(member.member_id, 'approved')}>
+                    Approve
+                  </Button>
+                )}
+              </Box>
+            )}
             <Box display="flex" flexWrap="wrap" gap={1.5}>
               {memberAttributes.slice(2).map((attr) => {
                 if (!detailedView && !['age', 'relationship'].includes(attr.key)) return null;
@@ -559,6 +599,7 @@ const toBase64 = (url) =>
             <TableHead sx={{ backgroundColor: '#0B3D91' }}>
               <TableRow>
                 <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Member ID</TableCell>
+                <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Verification</TableCell>
                 {memberAttributes.slice(1).map((attr) => {
                   if (!detailedView && !['name', 'age', 'relationship'].includes(attr.key)) return null;
                   return (
@@ -573,6 +614,28 @@ const toBase64 = (url) =>
               {members.map((member) => (
                 <TableRow key={member.member_id} hover>
                   <TableCell sx={{ fontWeight: 500 }}>{member.member_id}</TableCell>
+                  <TableCell>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Chip 
+                        label={member.verification_status || 'approved'} 
+                        size="small" 
+                        variant={member.verification_status === 'approved' ? 'filled' : 'outlined'}
+                        color={member.verification_status === 'approved' ? 'success' : 
+                               member.verification_status === 'recommended' ? 'info' : 'warning'}
+                        sx={{ fontWeight: 700, fontSize: '0.7rem' }}
+                      />
+                      {(role === 'incharge' && member.verification_status === 'pending_incharge') && (
+                        <Button size="small" variant="contained" color="primary" sx={{ fontSize: '0.65rem', py: 0 }} onClick={() => handleMemberStatusUpdate(member.member_id, 'recommended')}>
+                          Verify
+                        </Button>
+                      )}
+                      {(role === 'admin' && member.verification_status === 'recommended') && (
+                        <Button size="small" variant="contained" color="success" sx={{ fontSize: '0.65rem', py: 0 }} onClick={() => handleMemberStatusUpdate(member.member_id, 'approved')}>
+                          Approve
+                        </Button>
+                      )}
+                    </Box>
+                  </TableCell>
                   {memberAttributes.slice(1).map((attr) => {
                     if (!detailedView && !['name', 'age', 'relationship'].includes(attr.key)) return null;
                     return (

@@ -29,7 +29,7 @@ const sanitizeDate = (val) => {
 };
 
 class MemberService {
-  static async addMember(memberData) {
+  static async addMember(memberData, user = {}) {
     const familyRes = await db.query(
       'SELECT id, head_name, mobile_number FROM families WHERE family_id = $1',
       [memberData.family_id]
@@ -46,6 +46,7 @@ class MemberService {
     const memberId = `${memberData.family_id}-${memberSuffix}`;
 
     const age = calculateAge(memberData.dob);
+    const verification_status = (user.role === 'admin' || user.isAdmin) ? 'approved' : 'pending_incharge';
 
     const result = await db.query(
       `INSERT INTO members (
@@ -53,13 +54,13 @@ class MemberService {
         qualification, profession, residing_here, church_group, active,
         baptism_date, baptism_place, holy_communion_date, holy_communion_place,
         confirmation_date, confirmation_place, marriage_date, marriage_place,
-        sex, mobile
+        sex, mobile, verification_status
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7,
         $8, $9, $10, $11, $12,
         $13, $14, $15, $16,
         $17, $18, $19, $20,
-        $21, $22
+        $21, $22, $23
       ) RETURNING *`,
       [
         familyDbId, memberId, memberData.name, age, memberData.dob || null,
@@ -71,7 +72,8 @@ class MemberService {
         memberData.holy_communion_date || null, memberData.holy_communion_place || null,
         memberData.confirmation_date || null, memberData.confirmation_place || null,
         memberData.marriage_date || null, memberData.marriage_place || null,
-        memberData.sex || null, memberData.mobile || null
+        memberData.sex || null, memberData.mobile || null,
+        verification_status
       ]
     );
 
@@ -80,12 +82,13 @@ class MemberService {
 
   static async getAllMembers(page = 1, limit = 50, search = '', user = {}) {
     const offset = (page - 1) * limit;
-    const values = [user.isAdmin || false, user.role || ''];
+    const values = [user.isAdmin || false, user.role || '', user.userId || null];
     let queryStr = `
        SELECT m.*, f.head_name as family_head_name, f.address_line2
        FROM members m
        JOIN families f ON m.family_id = f.id
-       WHERE (f.active = true OR $1 = true OR $2 = 'incharge')`;
+       WHERE (f.active = true OR $1 = true OR $2 = 'incharge')
+         AND (m.verification_status = 'approved' OR $1 = true OR $2 = 'incharge' OR f.created_by = $3)`;
 
     if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
       queryStr += " AND f.anbiyam = $" + (values.length + 1);
@@ -132,8 +135,10 @@ class MemberService {
        SELECT m.*
        FROM members m
        JOIN families f ON m.family_id = f.id
-       WHERE f.family_id = $1 AND (f.active = true OR $2 = true OR $3 = 'incharge')`;
-    const values = [familyId, user.isAdmin || false, user.role || ''];
+       WHERE f.family_id = $1 
+         AND (f.active = true OR $2 = true OR $3 = 'incharge' OR f.created_by = $5)
+         AND (m.verification_status = 'approved' OR $2 = true OR $3 = 'incharge' OR f.created_by = $5)`;
+    const values = [familyId, user.isAdmin || false, user.role || '', user.anbiyam, user.userId || null];
 
     if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
       queryStr += " AND f.anbiyam = $4";

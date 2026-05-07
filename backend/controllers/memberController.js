@@ -3,7 +3,7 @@ const AppError = require('../utils/AppError');
 
 exports.addMember = async (req, res, next) => {
   try {
-    const newMember = await MemberService.addMember(req.body);
+    const newMember = await MemberService.addMember(req.body, req.user);
     res.status(201).json(newMember);
   } catch (error) {
     if (error.message === 'Family not found') {
