@@ -63,7 +63,8 @@ exports.getListInactive = async (req, res, next) => {
 
 exports.getFamilyById = async (req, res, next) => {
   try {
-    const family = await FamilyService.getFamilyById(req.params.familyId, true, req.user);
+    const activeOnly = !req.user.isAdmin && req.user.role !== 'incharge';
+    const family = await FamilyService.getFamilyById(req.params.familyId, activeOnly, req.user);
     if (!family) {
       return next(new AppError('Family not found', 404));
     }
@@ -78,7 +79,9 @@ exports.updateFamily = async (req, res, next) => {
     const { familyId } = req.params;
     
     // Safety check: ensure user can only update visible families
-    const existing = await FamilyService.getFamilyById(familyId, true, req.user);
+    // For ADMINS, allow updating inactive families (for approval flow)
+    const activeOnly = !req.user.isAdmin;
+    const existing = await FamilyService.getFamilyById(familyId, activeOnly, req.user);
     if (!existing) {
       return next(new AppError('Unauthorized or Family not found', 403));
     }

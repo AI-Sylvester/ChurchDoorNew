@@ -163,7 +163,8 @@ class FamilyService {
       location = $14,
       anbiyam = $15,
       cemetery_number = $16,
-      old_card_number = $17
+      old_card_number = $17,
+      verification_status = $18
     `;
 
     const values = [
@@ -184,17 +185,18 @@ class FamilyService {
       updateData.anbiyam,
       updateData.cemetery_number,
       updateData.old_card_number,
+      updateData.verification_status || 'approved'
     ];
 
     if (hasNewPic) {
-      setClause += ', family_pic = $18';
+      setClause += ', family_pic = $19';
       values.push(updateData.family_pic);
-      values.push(familyId); // $19
+      values.push(familyId); // $20
     } else {
-      values.push(familyId); // $18
+      values.push(familyId); // $19
     }
 
-    const familyIdPlaceholder = hasNewPic ? '$19' : '$18';
+    const familyIdPlaceholder = hasNewPic ? '$20' : '$19';
 
     const query = `
       UPDATE families SET

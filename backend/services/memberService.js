@@ -80,12 +80,12 @@ class MemberService {
 
   static async getAllMembers(page = 1, limit = 50, search = '', user = {}) {
     const offset = (page - 1) * limit;
-    const values = [];
+    const values = [user.isAdmin || false, user.role || ''];
     let queryStr = `
        SELECT m.*, f.head_name as family_head_name, f.address_line2
        FROM members m
        JOIN families f ON m.family_id = f.id
-       WHERE f.active = true`;
+       WHERE (f.active = true OR $1 = true OR $2 = 'incharge')`;
 
     if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
       queryStr += " AND f.anbiyam = $" + (values.length + 1);
@@ -106,10 +106,10 @@ class MemberService {
        SELECT COUNT(*) 
        FROM members m
        JOIN families f ON m.family_id = f.id
-       WHERE f.active = true`;
-    const countValues = [];
+       WHERE (f.active = true OR $1 = true OR $2 = 'incharge')`;
+    const countValues = [user.isAdmin || false, user.role || ''];
     if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
-      countQuery += " AND f.anbiyam = $1";
+      countQuery += " AND f.anbiyam = $3";
       countValues.push(user.anbiyam);
     }
     if (search) {
@@ -132,11 +132,11 @@ class MemberService {
        SELECT m.*
        FROM members m
        JOIN families f ON m.family_id = f.id
-       WHERE f.family_id = $1 AND f.active = true`;
-    const values = [familyId];
+       WHERE f.family_id = $1 AND (f.active = true OR $2 = true OR $3 = 'incharge')`;
+    const values = [familyId, user.isAdmin || false, user.role || ''];
 
     if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
-      queryStr += " AND f.anbiyam = $2";
+      queryStr += " AND f.anbiyam = $4";
       values.push(user.anbiyam);
     }
 
