@@ -91,7 +91,7 @@ exports.makePayment = async (req, res, next) => {
 
 exports.checkRegistration = async (req, res, next) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const result = await db.query('SELECT family_id, verification_status, active FROM families WHERE created_by = $1', [userId]);
     res.status(200).json({ 
       hasFamily: result.rows.length > 0,

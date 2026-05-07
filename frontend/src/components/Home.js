@@ -116,15 +116,15 @@ const Home = () => {
     const checkFamily = async () => {
       if (role === 'family') {
         try {
-          const res = await fetch(`${API_BASE_URL}/family-user/check-registration`, {
+          const res = await axios.get(`${API_BASE_URL}/family-user/check-registration`, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          const data = await res.json();
-          setHasFamily(data.hasFamily);
-          if (data.hasFamily && data.family) {
-            setFamilyStatus(data.family.verification_status);
+          setHasFamily(res.data.hasFamily);
+          if (res.data.hasFamily && res.data.family) {
+            setFamilyStatus(res.data.family.verification_status);
           }
         } catch (err) {
+          console.error('Check registration error:', err);
           setHasFamily(false);
         }
       }
@@ -315,9 +315,24 @@ const Home = () => {
               
               <Grid container spacing={2} alignItems="center">
                 {[
-                  { label: 'Submitted', active: true, icon: <CheckCircleOutlineIcon />, color: '#10B981' },
-                  { label: 'Incharge Vetting', active: familyStatus === 'recommended', icon: familyStatus === 'recommended' ? <CheckCircleOutlineIcon /> : <HourglassEmptyIcon />, color: familyStatus === 'recommended' ? '#10B981' : '#F59E0B' },
-                  { label: 'Admin Approval', active: false, icon: <VerifiedIcon />, color: '#94A3B8' }
+                  { 
+                    label: 'Submitted', 
+                    active: true, 
+                    icon: <CheckCircleOutlineIcon />, 
+                    color: '#10B981' 
+                  },
+                  { 
+                    label: 'Vetting', 
+                    active: familyStatus === 'recommended' || familyStatus === 'approved', 
+                    icon: (familyStatus === 'recommended' || familyStatus === 'approved') ? <CheckCircleOutlineIcon /> : <HourglassEmptyIcon />, 
+                    color: (familyStatus === 'recommended' || familyStatus === 'approved') ? '#10B981' : '#F59E0B' 
+                  },
+                  { 
+                    label: 'Approved', 
+                    active: familyStatus === 'approved', 
+                    icon: familyStatus === 'approved' ? <VerifiedIcon /> : <VerifiedIcon sx={{ opacity: 0.3 }} />, 
+                    color: familyStatus === 'approved' ? '#10B981' : '#94A3B8' 
+                  }
                 ].map((step, idx) => (
                   <Grid item xs={4} key={idx} sx={{ textAlign: 'center' }}>
                     <Box sx={{ 
