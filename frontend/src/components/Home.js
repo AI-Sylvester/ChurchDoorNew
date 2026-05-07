@@ -10,7 +10,6 @@ import {
   Snackbar,
   Alert,
   Chip,
-  Grid,
   Fade,
   Paper,
 } from '@mui/material';
@@ -213,26 +212,38 @@ const Home = () => {
             />
           </Box>
 
-          <Grid container spacing={2} sx={{ mt: 4, position: 'relative', zIndex: 1 }}>
+          <Box 
+            sx={{ 
+              mt: 4, 
+              position: 'relative', 
+              zIndex: 1,
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(4, 1fr)' },
+              gap: 2
+            }}
+          >
             {statsList.map((stat, idx) => (
-              <Grid item xs={idx === 0 || idx === 1 ? 6 : 3} key={idx}>
-                <Box 
-                  sx={{ 
-                    bgcolor: 'rgba(255,255,255,0.15)', 
-                    backdropFilter: 'blur(15px)',
-                    p: 2, 
-                    borderRadius: 4, 
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    textAlign: 'center'
-                  }}
-                >
-                  <Box sx={{ color: '#fff', mb: 0.5 }}>{stat.icon}</Box>
-                  <Typography variant="h6" fontWeight={900} color="#fff">{stat.value}</Typography>
-                  <Typography variant="caption" color="rgba(255,255,255,0.7)" fontWeight={700}>{stat.label}</Typography>
-                </Box>
-              </Grid>
+              <Box 
+                key={idx}
+                sx={{ 
+                  bgcolor: 'rgba(255,255,255,0.15)', 
+                  backdropFilter: 'blur(15px)',
+                  p: 2, 
+                  borderRadius: 4, 
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  textAlign: 'center',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Box sx={{ color: '#fff', mb: 0.5 }}>{stat.icon}</Box>
+                <Typography variant="h6" fontWeight={900} color="#fff">{stat.value}</Typography>
+                <Typography variant="caption" color="rgba(255,255,255,0.7)" fontWeight={700}>{stat.label}</Typography>
+              </Box>
             ))}
-          </Grid>
+          </Box>
         </Box>
 
         {role?.toLowerCase() === 'family' && familyStatus && familyStatus !== 'approved' && (
@@ -249,7 +260,14 @@ const Home = () => {
               <Typography variant="subtitle1" fontWeight={900} color="#1E293B" mb={3} textAlign="center">
                 Registration Roadmap
               </Typography>
-              <Grid container spacing={1} justifyContent="center" alignItems="center">
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  gap: 1
+                }}
+              >
                 {[
                   { label: 'Register', active: true, icon: <CheckCircleOutlineIcon />, color: '#10B981' },
                   { 
@@ -265,7 +283,7 @@ const Home = () => {
                     color: familyStatus === 'approved' ? '#10B981' : '#94A3B8' 
                   }
                 ].map((step, idx) => (
-                  <Grid item xs={4} key={idx} sx={{ textAlign: 'center' }}>
+                  <Box key={idx} sx={{ textAlign: 'center', flex: 1 }}>
                     <Box sx={{ 
                       width: 44, height: 44, borderRadius: '50%', 
                       bgcolor: `${step.color}15`, color: step.color, 
@@ -279,9 +297,9 @@ const Home = () => {
                     <Typography variant="caption" fontWeight={900} color={step.active ? '#1E293B' : '#94A3B8'} sx={{ display: 'block', textTransform: 'uppercase', fontSize: '0.6rem', letterSpacing: '0.5px' }}>
                       {step.label}
                     </Typography>
-                  </Grid>
+                  </Box>
                 ))}
-              </Grid>
+              </Box>
             </Paper>
           </Box>
         )}
@@ -296,62 +314,66 @@ const Home = () => {
             </Typography>
           </Box>
 
-          <Grid container spacing={2.5}>
+          <Box 
+            sx={{ 
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)' },
+              gap: 2.5
+            }}
+          >
             {actions.map((action, index) => (
-              <Grid item xs={12} sm={6} md={4} key={index}>
-                <Fade in timeout={1200 + (index * 100)}>
-                  <Card 
-                    sx={{ 
-                      borderRadius: 5, 
-                      boxShadow: '0 4px 15px rgba(0,0,0,0.02)',
-                      border: '1px solid rgba(0,0,0,0.04)',
-                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                      '&:hover': {
-                        transform: 'translateY(-5px)',
-                        boxShadow: '0 20px 40px rgba(30, 58, 138, 0.1)',
-                        borderColor: 'rgba(30, 58, 138, 0.1)',
-                      }
-                    }}
+              <Fade key={index} in timeout={1200 + (index * 100)}>
+                <Card 
+                  sx={{ 
+                    borderRadius: 5, 
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.02)',
+                    border: '1px solid rgba(0,0,0,0.04)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover': {
+                      transform: 'translateY(-5px)',
+                      boxShadow: '0 20px 40px rgba(30, 58, 138, 0.1)',
+                      borderColor: 'rgba(30, 58, 138, 0.1)',
+                    }
+                  }}
+                >
+                  <CardActionArea 
+                    onClick={() => navigate(action.path)}
+                    sx={{ p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
                   >
-                    <CardActionArea 
-                      onClick={() => navigate(action.path)}
-                      sx={{ p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Box 
-                          sx={{ 
-                            width: 56, 
-                            height: 56, 
-                            bgcolor: `${action.color}12`, 
-                            color: action.color,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            mr: 2.5,
-                            borderRadius: 4,
-                            boxShadow: `0 8px 16px ${action.color}15`
-                          }}
-                        >
-                          {action.icon}
-                        </Box>
-                        <Box>
-                          <Typography variant="subtitle1" fontWeight={800} color="#1E293B" sx={{ lineHeight: 1.2, mb: 0.5 }}>
-                            {action.title}
-                          </Typography>
-                          <Typography variant="body2" color="#64748B" fontWeight={500}>
-                            {action.subtitle}
-                          </Typography>
-                        </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Box 
+                        sx={{ 
+                          width: 56, 
+                          height: 56, 
+                          bgcolor: `${action.color}12`, 
+                          color: action.color,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          mr: 2.5,
+                          borderRadius: 4,
+                          boxShadow: `0 8px 16px ${action.color}15`
+                        }}
+                      >
+                        {action.icon}
                       </Box>
-                      <Avatar sx={{ width: 28, height: 28, bgcolor: '#F1F5F9', color: '#94A3B8' }}>
-                        <ChevronRightRoundedIcon sx={{ fontSize: 18 }} />
-                      </Avatar>
-                    </CardActionArea>
-                  </Card>
-                </Fade>
-              </Grid>
+                      <Box>
+                        <Typography variant="subtitle1" fontWeight={800} color="#1E293B" sx={{ lineHeight: 1.2, mb: 0.5 }}>
+                          {action.title}
+                        </Typography>
+                        <Typography variant="body2" color="#64748B" fontWeight={500}>
+                          {action.subtitle}
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Avatar sx={{ width: 28, height: 28, bgcolor: '#F1F5F9', color: '#94A3B8' }}>
+                      <ChevronRightRoundedIcon sx={{ fontSize: 18 }} />
+                    </Avatar>
+                  </CardActionArea>
+                </Card>
+              </Fade>
             ))}
-          </Grid>
+          </Box>
         </Box>
 
         <Snackbar 

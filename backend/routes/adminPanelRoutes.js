@@ -9,6 +9,7 @@ router.use(adminMiddleware);
 
 router.get('/pending-users', adminPanelController.getPendingUsers);
 router.get('/pending-families', adminPanelController.getPendingFamilies);
+router.get('/pending-members', adminPanelController.getPendingMembers);
 router.get('/update-requests', adminPanelController.getUpdateRequests);
 router.put('/update-requests/:id', adminPanelController.handleUpdateRequest);
 router.get('/event-reports', adminPanelController.getEventReports);

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
   Box, Typography, CircularProgress, Alert, Paper, Button, List, ListItem, 
-  ListItemText, ListItemAvatar, Avatar, Divider, Chip, Tabs, Tab, 
+  ListItemText, Avatar, Divider, Chip, Tabs, Tab, 
   Grid, Card, CardContent, Dialog, DialogTitle, DialogContent, 
   DialogActions, IconButton, Stack
 } from '@mui/material';
@@ -16,6 +16,7 @@ import CloseIcon from '@mui/icons-material/Close';
 const AdminApprovals = () => {
   const [users, setUsers] = useState([]);
   const [families, setFamilies] = useState([]);
+  const [pendingMembers, setPendingMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [tab, setTab] = useState(0);
@@ -27,12 +28,14 @@ const AdminApprovals = () => {
   const fetchData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const [userRes, famRes] = await Promise.all([
+      const [userRes, famRes, memRes] = await Promise.all([
         axios.get(`${API_BASE_URL}/admin-panel/pending-users`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${API_BASE_URL}/admin-panel/pending-families`, { headers: { Authorization: `Bearer ${token}` } })
+        axios.get(`${API_BASE_URL}/admin-panel/pending-families`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_BASE_URL}/admin-panel/pending-members`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
       setUsers(userRes.data);
       setFamilies(famRes.data);
+      setPendingMembers(memRes.data);
     } catch (err) {
       setError('Failed to load pending data');
     } finally {
@@ -61,10 +64,10 @@ const AdminApprovals = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`${API_BASE_URL}/family/${family.family_id}`, {
+      const res = await axios.get(`${API_BASE_URL}/member/byFamily/${family.family_id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setMembers(res.data.members || []);
+      setMembers(res.data || []);
       setOpenReview(true);
     } catch (err) {
       alert('Failed to load family members');
@@ -86,124 +89,253 @@ const AdminApprovals = () => {
     }
   };
 
+  const handleApproveMember = async (memberId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API_BASE_URL}/member/${memberId}`, { verification_status: 'approved' }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPendingMembers(pendingMembers.filter(m => m.member_id !== memberId));
+    } catch (err) {
+      alert('Failed to approve member');
+    }
+  };
+
   if (loading && !openReview) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress /></Box>;
   if (error) return <Alert severity="error">{error}</Alert>;
 
   return (
-    <Box sx={{ maxWidth: 900, mx: 'auto', mt: 4, pb: 10 }}>
-      <Typography variant="h4" fontWeight={900} color="#1E3A8A" gutterBottom sx={{ letterSpacing: '-1px' }}>Approvals Center</Typography>
+    <Box sx={{ maxWidth: 1000, mx: 'auto', mt: 4, pb: 10, px: { xs: 2, sm: 3 } }}>
+      <Typography variant="h4" fontWeight={900} color="#1E3A8A" gutterBottom sx={{ letterSpacing: '-1px', mb: 3 }}>
+        Approvals Center
+      </Typography>
       
       <Tabs 
         value={tab} 
         onChange={(e, v) => setTab(v)} 
+        variant="scrollable"
+        scrollButtons="auto"
         sx={{ 
-          mb: 3, 
+          mb: 4, 
           bgcolor: '#fff', 
-          borderRadius: 3, 
+          borderRadius: 4, 
           p: 0.5,
-          '& .MuiTabs-indicator': { borderRadius: '10px' }
+          boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
+          '& .MuiTabs-indicator': { height: '100%', borderRadius: 3, bgcolor: '#4F46E510', zIndex: 0 },
+          '& .MuiTab-root': { zIndex: 1, fontWeight: 800, minHeight: 48, textTransform: 'none', fontSize: '0.9rem' }
         }}
       >
-        <Tab label={`New Users (${users.length})`} sx={{ fontWeight: 800 }} />
-        <Tab label={`Family Registrations (${families.length})`} sx={{ fontWeight: 800 }} />
+        <Tab label={`Users (${users.length})`} />
+        <Tab label={`Families (${families.length})`} />
+        <Tab label={`Members (${pendingMembers.length})`} />
       </Tabs>
 
-      {tab === 0 ? (
-        <Box>
+      {tab === 0 && (
+        <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' } }}>
           {users.length === 0 ? (
-            <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4, bgcolor: 'transparent', border: '2px dashed #E2E8F0' }} elevation={0}>
-              <Typography variant="h6" fontWeight={800}>No pending users</Typography>
+            <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4, bgcolor: 'transparent', border: '2px dashed #E2E8F0', gridColumn: '1/-1' }} elevation={0}>
+              <Typography variant="h6" fontWeight={800} color="textSecondary">No pending users</Typography>
             </Paper>
           ) : (
-            <List sx={{ bgcolor: 'background.paper', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-              {users.map((user, idx) => (
-                <React.Fragment key={user.id}>
-                  <ListItem sx={{ p: 3 }}>
-                    <ListItemAvatar><Avatar sx={{ bgcolor: '#4F46E515', color: '#4F46E5' }}><PersonIcon /></Avatar></ListItemAvatar>
-                    <ListItemText
-                      primary={<Typography variant="h6" fontWeight={800}>{user.username}</Typography>}
-                      secondary={<Typography variant="body2" color="textSecondary">{user.mobile} • {user.role} • {user.anbiyam}</Typography>}
-                    />
-                    <Button variant="contained" color="success" onClick={() => handleApproveUser(user.id)} sx={{ borderRadius: 2, fontWeight: 700, textTransform: 'none' }}>Approve User</Button>
-                  </ListItem>
-                  {idx < users.length - 1 && <Divider />}
-                </React.Fragment>
-              ))}
-            </List>
+            users.map((user) => (
+              <Card key={user.id} sx={{ borderRadius: 4, boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid #F1F5F9' }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box display="flex" alignItems="center" mb={2}>
+                    <Avatar sx={{ bgcolor: '#4F46E515', color: '#4F46E5', mr: 2 }}><PersonIcon /></Avatar>
+                    <Box>
+                      <Typography variant="h6" fontWeight={900}>{user.username}</Typography>
+                      <Typography variant="caption" color="textSecondary" fontWeight={700}>{user.role.toUpperCase()} • {user.anbiyam}</Typography>
+                    </Box>
+                  </Box>
+                  <Divider sx={{ mb: 2, borderStyle: 'dashed' }} />
+                  <Typography variant="body2" color="textSecondary" mb={2}>
+                    Mobile: <strong>{user.mobile}</strong><br/>
+                    Email: <strong>{user.email || '-'}</strong>
+                  </Typography>
+                  <Button 
+                    fullWidth 
+                    variant="contained" 
+                    color="success" 
+                    onClick={() => handleApproveUser(user.id)} 
+                    sx={{ borderRadius: 3, fontWeight: 800, py: 1.2 }}
+                  >
+                    Approve User
+                  </Button>
+                </CardContent>
+              </Card>
+            ))
           )}
         </Box>
-      ) : (
-        <Box>
+      )}
+
+      {tab === 1 && (
+        <Box sx={{ display: 'grid', gap: 2 }}>
           {families.length === 0 ? (
             <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4, bgcolor: 'transparent', border: '2px dashed #E2E8F0' }} elevation={0}>
-              <Typography variant="h6" fontWeight={800}>No pending families</Typography>
+              <Typography variant="h6" fontWeight={800} color="textSecondary">No pending families</Typography>
             </Paper>
           ) : (
-            <Grid container spacing={3}>
-              {families.map((fam) => (
-                <Grid item xs={12} key={fam.family_id}>
-                  <Card sx={{ borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.03)', border: fam.verification_status === 'recommended' ? '2px solid #10B981' : '1px solid #F1F5F9' }}>
-                    <CardContent sx={{ p: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Avatar sx={{ bgcolor: '#05966915', color: '#059669', mr: 2, width: 50, height: 50 }}>
-                          <HomeWorkIcon />
-                        </Avatar>
-                        <Box>
-                          <Stack direction="row" spacing={1} alignItems="center">
-                            <Typography variant="h6" fontWeight={800}>{fam.head_name}</Typography>
-                            {fam.verification_status === 'recommended' && (
-                              <Chip icon={<VerifiedIcon />} label="Vetted by Incharge" size="small" color="success" sx={{ fontWeight: 800 }} />
-                            )}
-                          </Stack>
-                          <Typography variant="body2" color="textSecondary">
-                            {fam.family_id} • {fam.anbiyam} • {fam.mobile_number}
-                          </Typography>
-                        </Box>
+            families.map((fam) => (
+              <Card key={fam.family_id} sx={{ 
+                borderRadius: 4, 
+                boxShadow: '0 4px 20px rgba(0,0,0,0.03)', 
+                border: fam.verification_status === 'recommended' ? '2px solid #10B981' : '1px solid #F1F5F9',
+                overflow: 'visible',
+                position: 'relative'
+              }}>
+                <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                  <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', gap: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Avatar sx={{ bgcolor: '#05966915', color: '#059669', mr: 2, width: 50, height: 50 }}>
+                        <HomeWorkIcon />
+                      </Avatar>
+                      <Box>
+                        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                          <Typography variant="h6" fontWeight={900}>{fam.head_name}</Typography>
+                          {fam.verification_status === 'recommended' && (
+                            <Chip icon={<VerifiedIcon />} label="Vetted" size="small" color="success" sx={{ fontWeight: 800, height: 20, fontSize: '0.65rem' }} />
+                          )}
+                        </Stack>
+                        <Typography variant="body2" color="textSecondary" fontWeight={600}>
+                          {fam.family_id} • {fam.anbiyam}
+                        </Typography>
                       </Box>
-                      <Stack direction="row" spacing={1}>
-                        <Button variant="outlined" startIcon={<VisibilityIcon />} onClick={() => handleReview(fam)} sx={{ borderRadius: 2, fontWeight: 700, textTransform: 'none' }}>Review</Button>
-                        <Button variant="contained" color="success" onClick={() => handleApproveFamily(fam.family_id)} sx={{ borderRadius: 2, fontWeight: 700, textTransform: 'none' }}>Approve & Active</Button>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
+                    </Box>
+                    <Stack direction="row" spacing={1.5} width={{ xs: '100%', sm: 'auto' }}>
+                      <Button 
+                        fullWidth={false}
+                        variant="outlined" 
+                        startIcon={<VisibilityIcon />} 
+                        onClick={() => handleReview(fam)} 
+                        sx={{ flex: 1, borderRadius: 3, fontWeight: 800, textTransform: 'none', px: 3 }}
+                      >
+                        Review
+                      </Button>
+                      <Button 
+                        fullWidth={false}
+                        variant="contained" 
+                        color="success" 
+                        onClick={() => handleApproveFamily(fam.family_id)} 
+                        sx={{ flex: 1, borderRadius: 3, fontWeight: 800, textTransform: 'none', px: 3 }}
+                      >
+                        Approve
+                      </Button>
+                    </Stack>
+                  </Box>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </Box>
+      )}
+
+      {tab === 2 && (
+        <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' } }}>
+          {pendingMembers.length === 0 ? (
+            <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4, bgcolor: 'transparent', border: '2px dashed #E2E8F0', gridColumn: '1/-1' }} elevation={0}>
+              <Typography variant="h6" fontWeight={800} color="textSecondary">No pending member additions</Typography>
+            </Paper>
+          ) : (
+            pendingMembers.map((m) => (
+              <Card key={m.member_id} sx={{ 
+                borderRadius: 4, 
+                boxShadow: '0 4px 12px rgba(0,0,0,0.03)', 
+                border: m.verification_status === 'recommended' ? '2px solid #3B82F6' : '1px solid #F1F5F9' 
+              }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                    <Box>
+                      <Typography variant="h6" fontWeight={900} color="#1E293B">{m.name}</Typography>
+                      <Typography variant="caption" color="primary" fontWeight={800} sx={{ textTransform: 'uppercase' }}>
+                        {m.relationship}
+                      </Typography>
+                    </Box>
+                    <Chip 
+                      label={m.verification_status.replace('_', ' ')} 
+                      size="small" 
+                      variant="outlined"
+                      color={m.verification_status === 'recommended' ? 'info' : 'warning'}
+                      sx={{ fontWeight: 800, fontSize: '0.65rem' }} 
+                    />
+                  </Box>
+                  <Box sx={{ bgcolor: '#F8FAFC', p: 1.5, borderRadius: 3, mb: 2 }}>
+                    <Typography variant="body2" color="textSecondary">
+                      Family: <strong>{m.family_head}</strong> ({m.family_id})<br/>
+                      Anbiyam: <strong>{m.anbiyam}</strong>
+                    </Typography>
+                  </Box>
+                  <Button 
+                    fullWidth 
+                    variant="contained" 
+                    color="success" 
+                    onClick={() => handleApproveMember(m.member_id)} 
+                    sx={{ borderRadius: 3, fontWeight: 800, py: 1.2 }}
+                  >
+                    Approve Member
+                  </Button>
+                </CardContent>
+              </Card>
+            ))
           )}
         </Box>
       )}
 
       {/* Family Review Dialog */}
-      <Dialog open={openReview} onClose={() => setOpenReview(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 4 } }}>
+      <Dialog 
+        open={openReview} 
+        onClose={() => setOpenReview(false)} 
+        maxWidth="sm" 
+        fullWidth 
+        PaperProps={{ sx: { borderRadius: 5, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' } }}
+      >
         <DialogTitle sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h6" fontWeight={800}>Final Registration Review</Typography>
-          <IconButton onClick={() => setOpenReview(false)}><CloseIcon /></IconButton>
+          <Typography variant="h6" fontWeight={900}>Final Registration Review</Typography>
+          <IconButton onClick={() => setOpenReview(false)} sx={{ bgcolor: '#F1F5F9' }}><CloseIcon sx={{ fontSize: 20 }} /></IconButton>
         </DialogTitle>
-        <DialogContent dividers sx={{ p: 3 }}>
+        <DialogContent dividers sx={{ p: 3, borderTop: '1px solid #F1F5F9', borderBottom: '1px solid #F1F5F9' }}>
           {selectedFamily && (
             <Box>
-              <Typography variant="subtitle2" color="primary" fontWeight={800} gutterBottom>FAMILY DETAILS</Typography>
-              <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid item xs={12}><Typography variant="body2" color="textSecondary">Head Name</Typography><Typography variant="body1" fontWeight={700}>{selectedFamily.head_name}</Typography></Grid>
-                <Grid item xs={12}><Typography variant="body2" color="textSecondary">Address</Typography><Typography variant="body1">{selectedFamily.address_line1}, {selectedFamily.city}</Typography></Grid>
-                <Grid item xs={6}><Typography variant="body2" color="textSecondary">Mobile</Typography><Typography variant="body1" fontWeight={700}>{selectedFamily.mobile_number}</Typography></Grid>
-                <Grid item xs={6}><Typography variant="body2" color="textSecondary">Anbiyam</Typography><Typography variant="body1" fontWeight={700}>{selectedFamily.anbiyam}</Typography></Grid>
+              <Typography variant="caption" color="primary" fontWeight={900} sx={{ letterSpacing: 1 }}>FAMILY DATA</Typography>
+              <Grid container spacing={2} sx={{ mt: 1, mb: 4 }}>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="caption" color="textSecondary" display="block">Head Name</Typography>
+                  <Typography variant="body1" fontWeight={800}>{selectedFamily.head_name}</Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="caption" color="textSecondary" display="block">Family ID</Typography>
+                  <Typography variant="body1" fontWeight={800}>{selectedFamily.family_id}</Typography>
+                </Grid>
+                <Grid item xs={12}>
+                  <Typography variant="caption" color="textSecondary" display="block">Address</Typography>
+                  <Typography variant="body1" fontWeight={700}>{selectedFamily.address_line1}, {selectedFamily.city}</Typography>
+                </Grid>
               </Grid>
-              <Divider sx={{ mb: 3 }} />
-              <Typography variant="subtitle2" color="primary" fontWeight={800} gutterBottom>MEMBERS ({members.length})</Typography>
-              <List sx={{ bgcolor: '#F8FAFC', borderRadius: 3 }}>
+              
+              <Typography variant="caption" color="primary" fontWeight={900} sx={{ letterSpacing: 1 }}>MEMBERS ({members.length})</Typography>
+              <List sx={{ mt: 1, bgcolor: '#F8FAFC', borderRadius: 4, overflow: 'hidden' }}>
                 {members.map((m, idx) => (
-                  <ListItem key={idx} divider={idx < members.length - 1}>
-                    <ListItemText primary={<Typography variant="body1" fontWeight={700}>{m.name}</Typography>} secondary={m.relationship} />
+                  <ListItem key={idx} divider={idx < members.length - 1} sx={{ py: 1.5 }}>
+                    <ListItemText 
+                      primary={<Typography variant="body2" fontWeight={800}>{m.name}</Typography>} 
+                      secondary={<Typography variant="caption" fontWeight={600} color="textSecondary">{m.relationship} • {m.age} years</Typography>} 
+                    />
                   </ListItem>
                 ))}
               </List>
             </Box>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setOpenReview(false)} sx={{ fontWeight: 700 }}>Cancel</Button>
-          <Button variant="contained" color="success" fullWidth onClick={() => handleApproveFamily(selectedFamily.family_id)} sx={{ borderRadius: 2, py: 1.5, fontWeight: 700 }}>Approve & Activate Family</Button>
+        <DialogActions sx={{ p: 3, gap: 1.5 }}>
+          <Button onClick={() => setOpenReview(false)} sx={{ fontWeight: 800, color: '#64748B' }}>Cancel</Button>
+          <Button 
+            variant="contained" 
+            color="success" 
+            fullWidth 
+            onClick={() => handleApproveFamily(selectedFamily.family_id)} 
+            sx={{ borderRadius: 3, py: 1.5, fontWeight: 900, fontSize: '0.95rem', boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.2)' }}
+          >
+            Approve & Activate
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

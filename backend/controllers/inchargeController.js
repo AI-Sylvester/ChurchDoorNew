@@ -78,6 +78,45 @@ exports.getPendingVerifications = async (req, res, next) => {
   }
 };
 
+exports.recommendMemberApproval = async (req, res, next) => {
+  try {
+    const { memberId } = req.params;
+    const { anbiyam } = req.user;
+
+    // Verify the member belongs to a family in the incharge's anbiyam
+    const check = await db.query(
+      'SELECT f.anbiyam FROM members m JOIN families f ON m.family_id = f.id WHERE m.member_id = $1',
+      [memberId]
+    );
+    if (check.rows.length === 0 || check.rows[0].anbiyam !== anbiyam) {
+      return next(new AppError('Unauthorized: Member not in your group', 403));
+    }
+
+    // Mark as "recommended" for Admin approval
+    await db.query(
+      "UPDATE members SET verification_status = 'recommended' WHERE member_id = $1",
+      [memberId]
+    );
+
+    res.status(200).json({ message: 'Member verified and recommended to Admin for approval' });
+  } catch (error) {
+    next(new AppError('Failed to recommend member approval', 500));
+  }
+};
+
+exports.getPendingMemberVerifications = async (req, res, next) => {
+  try {
+    const { anbiyam } = req.user;
+    const result = await db.query(
+      "SELECT m.*, f.head_name as family_head FROM members m JOIN families f ON m.family_id = f.id WHERE f.anbiyam = $1 AND m.verification_status = 'pending_incharge' ORDER BY m.name ASC",
+      [anbiyam]
+    );
+    res.status(200).json(result.rows);
+  } catch (error) {
+    next(new AppError('Failed to fetch pending member verifications', 500));
+  }
+};
+
 exports.getGroupUpdateRequests = async (req, res, next) => {
   try {
     const { anbiyam } = req.user;

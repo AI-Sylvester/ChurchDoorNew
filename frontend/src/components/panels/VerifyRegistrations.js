@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Box, Typography, CircularProgress, Alert, Paper, Button, List, ListItem, ListItemText, Divider } from '@mui/material';
+import { Box, Typography, CircularProgress, Alert, Paper, Button, List, ListItem, ListItemText } from '@mui/material';
 import API_BASE_URL from '../../config';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
@@ -9,25 +9,30 @@ import CloseIcon from '@mui/icons-material/Close';
 import { 
   Grid, Card, CardContent, Dialog, DialogTitle, 
   DialogContent, DialogActions, IconButton, Stack, 
-  Avatar
+  Avatar, Tabs, Tab
 } from '@mui/material';
 
 const VerifyRegistrations = () => {
   const [families, setFamilies] = useState([]);
+  const [pendingMembers, setPendingMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [tab, setTab] = useState(0);
+  
   const [selectedFamily, setSelectedFamily] = useState(null);
   const [openReview, setOpenReview] = useState(false);
   const [members, setMembers] = useState([]);
   const anbiyam = localStorage.getItem('anbiyam');
 
-  const fetchPending = async () => {
+  const fetchData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`${API_BASE_URL}/incharge/pending-verifications`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setFamilies(res.data);
+      const [famRes, memRes] = await Promise.all([
+        axios.get(`${API_BASE_URL}/incharge/pending-verifications`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_BASE_URL}/incharge/pending-member-verifications`, { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+      setFamilies(famRes.data);
+      setPendingMembers(memRes.data);
     } catch (err) {
       setError('Failed to load pending verifications');
     } finally {
@@ -36,7 +41,7 @@ const VerifyRegistrations = () => {
   };
 
   useEffect(() => {
-    fetchPending();
+    fetchData();
   }, []);
 
   const handleRecommend = async (familyId) => {
@@ -52,15 +57,27 @@ const VerifyRegistrations = () => {
     }
   };
 
+  const handleRecommendMember = async (memberId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API_BASE_URL}/incharge/recommend-member-approval/${memberId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPendingMembers(pendingMembers.filter(m => m.member_id !== memberId));
+    } catch (err) {
+      alert('Failed to recommend member');
+    }
+  };
+
   const handleReview = async (family) => {
     setSelectedFamily(family);
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`${API_BASE_URL}/family/${family.family_id}`, {
+      const res = await axios.get(`${API_BASE_URL}/member/byFamily/${family.family_id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setMembers(res.data.members || []);
+      setMembers(res.data || []);
       setOpenReview(true);
     } catch (err) {
       alert('Failed to load family members');
@@ -69,107 +86,152 @@ const VerifyRegistrations = () => {
     }
   };
 
-  if (loading) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress /></Box>;
+  if (loading && !openReview) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress /></Box>;
   if (error) return <Alert severity="error">{error}</Alert>;
 
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4, pb: 10 }}>
-      <Typography variant="h4" fontWeight={900} color="#1E3A8A" gutterBottom>Verify Registrations</Typography>
-      <Typography variant="subtitle1" color="textSecondary" mb={4}>
-        New family registrations in <strong>{anbiyam}</strong> group.
+    <Box sx={{ maxWidth: 1000, mx: 'auto', mt: 4, pb: 10, px: { xs: 2, sm: 3 } }}>
+      <Typography variant="h4" fontWeight={900} color="#1E3A8A" gutterBottom sx={{ letterSpacing: '-1px' }}>
+        Verify Registrations
+      </Typography>
+      <Typography variant="subtitle1" color="textSecondary" mb={4} fontWeight={600}>
+        New registrations in <strong>{anbiyam}</strong> awaiting your verification.
       </Typography>
 
-      {families.length === 0 ? (
-        <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4, bgcolor: 'transparent', border: '2px dashed #E2E8F0' }} elevation={0}>
-          <VerifiedUserIcon sx={{ fontSize: 60, color: '#10B981', mb: 2 }} />
-          <Typography variant="h6" fontWeight={800}>All Clear!</Typography>
-          <Typography color="textSecondary">No new registrations to verify in your group.</Typography>
-        </Paper>
-      ) : (
-        <Grid container spacing={3}>
-          {families.map((fam) => (
-            <Grid item xs={12} key={fam.family_id}>
-              <Card sx={{ 
-                borderRadius: 4, 
-                boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
-                transition: 'transform 0.2s',
-                '&:hover': { transform: 'translateY(-2px)' }
-              }}>
-                <CardContent sx={{ p: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Avatar sx={{ bgcolor: '#4F46E515', color: '#4F46E5', mr: 2, width: 50, height: 50 }}>
-                      <HomeWorkIcon />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6" fontWeight={800}>{fam.head_name}</Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        ID: {fam.family_id} • {fam.mobile_number}
-                      </Typography>
+      <Tabs 
+        value={tab} 
+        onChange={(e, v) => setTab(v)} 
+        variant="fullWidth"
+        sx={{ 
+          mb: 4, 
+          bgcolor: '#fff', 
+          borderRadius: 4, 
+          p: 0.5,
+          boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
+          '& .MuiTabs-indicator': { height: '100%', borderRadius: 3, bgcolor: '#4F46E510', zIndex: 0 },
+          '& .MuiTab-root': { zIndex: 1, fontWeight: 800, textTransform: 'none' }
+        }}
+      >
+        <Tab label={`Families (${families.length})`} />
+        <Tab label={`Members (${pendingMembers.length})`} />
+      </Tabs>
+
+      {tab === 0 && (
+        <Box sx={{ display: 'grid', gap: 2 }}>
+          {families.length === 0 ? (
+            <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4, bgcolor: 'transparent', border: '2px dashed #E2E8F0' }} elevation={0}>
+              <VerifiedUserIcon sx={{ fontSize: 60, color: '#10B981', mb: 2, opacity: 0.5 }} />
+              <Typography variant="h6" fontWeight={800} color="textSecondary">No new families to verify</Typography>
+            </Paper>
+          ) : (
+            families.map((fam) => (
+              <Card key={fam.family_id} sx={{ borderRadius: 4, boxShadow: '0 4px 15px rgba(0,0,0,0.02)', border: '1px solid #F1F5F9' }}>
+                <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                  <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', gap: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Avatar sx={{ bgcolor: '#4F46E515', color: '#4F46E5', mr: 2, width: 50, height: 50 }}>
+                        <HomeWorkIcon />
+                      </Avatar>
+                      <Box>
+                        <Typography variant="h6" fontWeight={900}>{fam.head_name}</Typography>
+                        <Typography variant="body2" color="textSecondary" fontWeight={600}>
+                          ID: {fam.family_id} • {fam.mobile_number}
+                        </Typography>
+                      </Box>
                     </Box>
+                    <Stack direction="row" spacing={1.5} width={{ xs: '100%', sm: 'auto' }}>
+                      <Button 
+                        variant="outlined" 
+                        startIcon={<VisibilityIcon />}
+                        onClick={() => handleReview(fam)}
+                        sx={{ flex: 1, borderRadius: 3, fontWeight: 800, textTransform: 'none', px: 3 }}
+                      >
+                        Review
+                      </Button>
+                      <Button 
+                        variant="contained" 
+                        color="success" 
+                        onClick={() => handleRecommend(fam.family_id)}
+                        sx={{ flex: 1, borderRadius: 3, fontWeight: 800, textTransform: 'none', px: 3 }}
+                      >
+                        Verify
+                      </Button>
+                    </Stack>
                   </Box>
-                  <Stack direction="row" spacing={1}>
-                    <Button 
-                      variant="outlined" 
-                      startIcon={<VisibilityIcon />}
-                      onClick={() => handleReview(fam)}
-                      sx={{ borderRadius: 2, fontWeight: 700, textTransform: 'none' }}
-                    >
-                      Review Details
-                    </Button>
-                    <Button 
-                      variant="contained" 
-                      color="success" 
-                      onClick={() => handleRecommend(fam.family_id)}
-                      sx={{ borderRadius: 2, fontWeight: 700, textTransform: 'none' }}
-                    >
-                      Quick Verify
-                    </Button>
-                  </Stack>
                 </CardContent>
               </Card>
-            </Grid>
-          ))}
-        </Grid>
+            ))
+          )}
+        </Box>
+      )}
+
+      {tab === 1 && (
+        <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' } }}>
+          {pendingMembers.length === 0 ? (
+            <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4, bgcolor: 'transparent', border: '2px dashed #E2E8F0', gridColumn: '1/-1' }} elevation={0}>
+              <VerifiedUserIcon sx={{ fontSize: 60, color: '#3B82F6', mb: 2, opacity: 0.5 }} />
+              <Typography variant="h6" fontWeight={800} color="textSecondary">No individual members to verify</Typography>
+            </Paper>
+          ) : (
+            pendingMembers.map((m) => (
+              <Card key={m.member_id} sx={{ borderRadius: 4, boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid #F1F5F9' }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box mb={2}>
+                    <Typography variant="h6" fontWeight={900}>{m.name}</Typography>
+                    <Typography variant="caption" color="primary" fontWeight={800} sx={{ textTransform: 'uppercase' }}>
+                      {m.relationship} • Family: {m.family_head}
+                    </Typography>
+                  </Box>
+                  <Button 
+                    fullWidth 
+                    variant="contained" 
+                    color="primary" 
+                    onClick={() => handleRecommendMember(m.member_id)} 
+                    sx={{ borderRadius: 3, fontWeight: 800, py: 1.2 }}
+                  >
+                    Verify Member
+                  </Button>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </Box>
       )}
 
       {/* Detailed Review Dialog */}
-      <Dialog open={openReview} onClose={() => setOpenReview(false)} maxWidth="sm" fullWidth scroll="paper" PaperProps={{ sx: { borderRadius: 4 } }}>
+      <Dialog 
+        open={openReview} 
+        onClose={() => setOpenReview(false)} 
+        maxWidth="sm" 
+        fullWidth 
+        PaperProps={{ sx: { borderRadius: 5, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' } }}
+      >
         <DialogTitle sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h6" fontWeight={800}>Registration Review</Typography>
-          <IconButton onClick={() => setOpenReview(false)}><CloseIcon /></IconButton>
+          <Typography variant="h6" fontWeight={900}>Vetting Review</Typography>
+          <IconButton onClick={() => setOpenReview(false)} sx={{ bgcolor: '#F1F5F9' }}><CloseIcon sx={{ fontSize: 20 }} /></IconButton>
         </DialogTitle>
-        <DialogContent dividers sx={{ p: 3 }}>
+        <DialogContent dividers sx={{ p: 3, borderTop: '1px solid #F1F5F9', borderBottom: '1px solid #F1F5F9' }}>
           {selectedFamily && (
             <Box>
-              <Typography variant="subtitle2" color="primary" fontWeight={800} gutterBottom>FAMILY INFORMATION</Typography>
-              <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid item xs={12}>
-                  <Typography variant="body2" color="textSecondary">Head Name</Typography>
-                  <Typography variant="body1" fontWeight={700}>{selectedFamily.head_name}</Typography>
+              <Typography variant="caption" color="primary" fontWeight={900} sx={{ letterSpacing: 1 }}>FAMILY DATA</Typography>
+              <Grid container spacing={2} sx={{ mt: 1, mb: 4 }}>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="caption" color="textSecondary" display="block">Head Name</Typography>
+                  <Typography variant="body1" fontWeight={800}>{selectedFamily.head_name}</Typography>
                 </Grid>
-                <Grid item xs={12}>
-                  <Typography variant="body2" color="textSecondary">Address</Typography>
-                  <Typography variant="body1">{selectedFamily.address_line1}, {selectedFamily.city} - {selectedFamily.pincode}</Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="textSecondary">Mobile</Typography>
-                  <Typography variant="body1" fontWeight={700}>{selectedFamily.mobile_number}</Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="textSecondary">Anbiyam</Typography>
-                  <Typography variant="body1" fontWeight={700}>{selectedFamily.anbiyam}</Typography>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="caption" color="textSecondary" display="block">Address</Typography>
+                  <Typography variant="body1" fontWeight={700}>{selectedFamily.address_line1}, {selectedFamily.city}</Typography>
                 </Grid>
               </Grid>
-
-              <Divider sx={{ mb: 3 }} />
-
-              <Typography variant="subtitle2" color="primary" fontWeight={800} gutterBottom>FAMILY MEMBERS ({members.length})</Typography>
-              <List sx={{ bgcolor: '#F8FAFC', borderRadius: 3, p: 0 }}>
+              
+              <Typography variant="caption" color="primary" fontWeight={900} sx={{ letterSpacing: 1 }}>MEMBERS ({members.length})</Typography>
+              <List sx={{ mt: 1, bgcolor: '#F8FAFC', borderRadius: 4, overflow: 'hidden' }}>
                 {members.map((m, idx) => (
-                  <ListItem key={idx} divider={idx < members.length - 1}>
+                  <ListItem key={idx} divider={idx < members.length - 1} sx={{ py: 1.5 }}>
                     <ListItemText 
-                      primary={<Typography variant="body1" fontWeight={700}>{m.name}</Typography>}
-                      secondary={m.relationship}
+                      primary={<Typography variant="body2" fontWeight={800}>{m.name}</Typography>} 
+                      secondary={<Typography variant="caption" fontWeight={600} color="textSecondary">{m.relationship} • {m.age} years</Typography>} 
                     />
                   </ListItem>
                 ))}
@@ -177,16 +239,16 @@ const VerifyRegistrations = () => {
             </Box>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setOpenReview(false)} variant="text" sx={{ fontWeight: 700 }}>Close</Button>
+        <DialogActions sx={{ p: 3, gap: 1.5 }}>
+          <Button onClick={() => setOpenReview(false)} sx={{ fontWeight: 800, color: '#64748B' }}>Cancel</Button>
           <Button 
             variant="contained" 
             color="success" 
             fullWidth
             onClick={() => handleRecommend(selectedFamily.family_id)}
-            sx={{ borderRadius: 2, py: 1.5, fontWeight: 700 }}
+            sx={{ borderRadius: 3, py: 1.5, fontWeight: 900, fontSize: '0.95rem', boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.2)' }}
           >
-            Verify & Recommend for Approval
+            Verify & Recommend
           </Button>
         </DialogActions>
       </Dialog>

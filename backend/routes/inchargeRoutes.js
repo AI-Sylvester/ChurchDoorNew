@@ -13,5 +13,7 @@ router.get('/update-requests', inchargeController.getGroupUpdateRequests);
 router.post('/verify-update/:id', inchargeController.verifyUpdateRequest);
 router.post('/report', inchargeController.submitReport);
 router.post('/recommend-approval/:familyId', inchargeController.recommendApproval);
+router.get('/pending-member-verifications', inchargeController.getPendingMemberVerifications);
+router.post('/recommend-member-approval/:memberId', inchargeController.recommendMemberApproval);
 
 module.exports = router;

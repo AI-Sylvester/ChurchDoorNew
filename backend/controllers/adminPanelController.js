@@ -73,3 +73,14 @@ exports.getPendingFamilies = async (req, res, next) => {
     next(new AppError('Failed to fetch pending families', 500));
   }
 };
+
+exports.getPendingMembers = async (req, res, next) => {
+  try {
+    const result = await db.query(
+      "SELECT m.*, f.head_name as family_head, f.anbiyam FROM members m JOIN families f ON m.family_id = f.id WHERE m.verification_status != 'approved' ORDER BY m.verification_status DESC, m.name ASC"
+    );
+    res.status(200).json(result.rows);
+  } catch (error) {
+    next(new AppError('Failed to fetch pending members', 500));
+  }
+};

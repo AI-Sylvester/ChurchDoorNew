@@ -16,8 +16,6 @@ import {
   DialogActions,
   TextField,
   CircularProgress,
-  FormControlLabel,
-  Switch,
   Avatar,
   Stack,
   Fade,
@@ -26,7 +24,6 @@ import {
   useMediaQuery,
   useTheme,
   Card,
-  Collapse,
   Chip,
   InputAdornment,
   Tabs,
@@ -47,8 +44,7 @@ const FamilyList = () => {
   const [families, setFamilies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showFilters] = useState(false);
-  const [activeOnly, setActiveOnly] = useState(true);
+  const [activeOnly] = useState(true);
   
   const [imageOpen, setImageOpen] = useState(false);
   
@@ -133,14 +129,6 @@ const FamilyList = () => {
         }}
       />
 
-      <Collapse in={showFilters}>
-        <Paper sx={{ p: 2, mb: 3, borderRadius: 3, bgcolor: '#F8FAFC', border: '1px solid #E2E8F0' }} elevation={0}>
-          <FormControlLabel
-            control={<Switch checked={activeOnly} onChange={(e) => setActiveOnly(e.target.checked)} />}
-            label={<Typography variant="body2" fontWeight={700}>Show Active Only</Typography>}
-          />
-        </Paper>
-      </Collapse>
 
       {isMobile ? (
         <Stack spacing={2}>
