@@ -88,3 +88,13 @@ exports.makePayment = async (req, res, next) => {
     next(new AppError('Failed to record payment', 500));
   }
 };
+
+exports.checkRegistration = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const result = await db.query('SELECT family_id FROM families WHERE created_by = $1', [userId]);
+    res.status(200).json({ hasFamily: result.rows.length > 0 });
+  } catch (error) {
+    next(new AppError('Failed to check registration status', 500));
+  }
+};
