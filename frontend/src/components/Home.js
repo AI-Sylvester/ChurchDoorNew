@@ -46,6 +46,8 @@ const Home = () => {
     seniors: 0,
   });
 
+  const [hasFamily, setHasFamily] = useState(true); // Default true to avoid flash
+
   const [todayReminders, setTodayReminders] = useState({ birthdays: 0, weddings: 0 });
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -105,8 +107,22 @@ const Home = () => {
       }
     };
 
+    const checkFamily = async () => {
+      if (role === 'family') {
+        try {
+          const res = await fetch(`${API_BASE_URL}/family-user/my-family`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setHasFamily(res.status === 200);
+        } catch (err) {
+          setHasFamily(false);
+        }
+      }
+    };
+
     fetchCounts();
-  }, [token]);
+    checkFamily();
+  }, [token, role]);
 
   const statsList = [];
   if (role === 'admin') {
@@ -151,12 +167,21 @@ const Home = () => {
     );
   } else {
     // Family role
+    if (hasFamily) {
+      actions.push(
+        { title: 'My Family', subtitle: 'View your details', path: '/my-family', icon: <Diversity3RoundedIcon />, color: '#1E3A8A' },
+        { title: 'Anbiyam Group', subtitle: 'Short view of group', path: '/anbiyam-summary', icon: <MapRoundedIcon />, color: '#7C3AED' },
+        { title: 'Subscriptions', subtitle: 'Monthly payments', path: '/payments', icon: <BarChartIcon />, color: '#059669' },
+        { title: 'Donations', subtitle: 'Support the church', path: '/donations', icon: <CakeRoundedIcon />, color: '#E11D48' },
+        { title: 'Update Request', subtitle: 'Change family details', path: '/raise-update', icon: <InfoOutlinedIcon />, color: '#4F46E5' }
+      );
+    } else {
+      actions.push(
+        { title: 'Submit Registration', subtitle: 'ACTION REQUIRED', path: '/addfamily', icon: <VerifiedUserIcon />, color: '#BE123C' },
+        { title: 'Anbiyam Contacts', subtitle: 'View group directory', path: '/contacts', icon: <MapRoundedIcon />, color: '#10B981' }
+      );
+    }
     actions.push(
-      { title: 'My Family', subtitle: 'View your details', path: '/my-family', icon: <Diversity3RoundedIcon />, color: '#1E3A8A' },
-      { title: 'Anbiyam Group', subtitle: 'Short view of group', path: '/anbiyam-summary', icon: <MapRoundedIcon />, color: '#7C3AED' },
-      { title: 'Subscriptions', subtitle: 'Monthly payments', path: '/payments', icon: <BarChartIcon />, color: '#059669' },
-      { title: 'Donations', subtitle: 'Support the church', path: '/donations', icon: <CakeRoundedIcon />, color: '#E11D48' },
-      { title: 'Update Request', subtitle: 'Change family details', path: '/raise-update', icon: <InfoOutlinedIcon />, color: '#4F46E5' },
       { title: 'Contact Book', subtitle: 'Anbiyam Contacts', path: '/contacts', icon: <MapRoundedIcon />, color: '#10B981' }
     );
   }

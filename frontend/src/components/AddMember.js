@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import {
   Box, TextField, Checkbox, FormControlLabel, FormControl,
   InputLabel, Select, MenuItem, Typography, Button, Stepper, Step, StepLabel, Paper
@@ -41,6 +42,8 @@ const AddMember = () => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role') || 'family';
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!dob) { setAge(''); return; }
@@ -194,8 +197,12 @@ const AddMember = () => {
               <TextField sx={{ flex: 1, minWidth: '200px' }} label="Church Group" value={churchGroup} onChange={(e) => setChurchGroup(e.target.value)} />
             </Box>
             <Box sx={{ display: 'flex', gap: 4, mt: 2 }}>
-              <FormControlLabel control={<Checkbox checked={residingHere} onChange={(e) => setResidingHere(e.target.checked)} />} label="Residing Here" />
-              <FormControlLabel control={<Checkbox checked={active} onChange={(e) => setActive(e.target.checked)} />} label="Active" />
+              {role === 'admin' && (
+                <>
+                  <FormControlLabel control={<Checkbox checked={residingHere} onChange={(e) => setResidingHere(e.target.checked)} />} label="Residing Here" />
+                  <FormControlLabel control={<Checkbox checked={active} onChange={(e) => setActive(e.target.checked)} />} label="Active" />
+                </>
+              )}
             </Box>
           </Box>
         );
@@ -243,7 +250,12 @@ const AddMember = () => {
       <Paper sx={{ p: 4, borderRadius: 2, boxShadow: 3 }}>
         {renderStepContent(activeStep)}
 
-        {message && <Typography color="success.main" mt={2} textAlign="center">{message}</Typography>}
+        {message && (
+          <Box textAlign="center" mt={2}>
+            <Typography color="success.main" mb={1}>{message}</Typography>
+            <Button variant="outlined" onClick={() => navigate('/')} size="small">Go to Dashboard</Button>
+          </Box>
+        )}
         {error && <Typography color="error" mt={2} textAlign="center">{error}</Typography>}
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>

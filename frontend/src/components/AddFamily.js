@@ -53,7 +53,8 @@ const [mapDialogOpen, setMapDialogOpen] = useState(false);
   const [family, setFamily] = useState(null);
   const [error, setError] = useState('');
   const token = localStorage.getItem('token');
-const [previewUrl, setPreviewUrl] = useState('');
+  const role = localStorage.getItem('role') || 'family';
+  const [previewUrl, setPreviewUrl] = useState('');
 const [uploadSuccess, setUploadSuccess] = useState(false);
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -328,19 +329,21 @@ const [uploadSuccess, setUploadSuccess] = useState(false);
 
              </Box>
 
-      {/* Active checkbox - full width, below all fields */}
-      <Box sx={{ mt: 3 }}>
-        <FormControlLabel
-          control={
-            <Checkbox
-              name="active"
-              checked={form.active}
-              onChange={handleChange}
-            />
-          }
-          label="Active"
-        />
-      </Box>
+      {/* Active checkbox - only for admins */}
+      {role === 'admin' && (
+        <Box sx={{ mt: 3 }}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                name="active"
+                checked={form.active}
+                onChange={handleChange}
+              />
+            }
+            label="Active"
+          />
+        </Box>
+      )}
 
       {/* Upload picture full width */}
       <Box sx={{ mt: 2 }}>
@@ -418,9 +421,11 @@ const [uploadSuccess, setUploadSuccess] = useState(false);
             >
               Add Member
             </Button>
-            <Button variant="outlined" onClick={resetForm}>
-              Add New
-            </Button>
+            {role === 'admin' && (
+              <Button variant="outlined" onClick={resetForm}>
+                Add New
+              </Button>
+            )}
           </Box>
         </Box>
       )}
