@@ -263,13 +263,16 @@ const AdminApprovals = () => {
                         {m.relationship}
                       </Typography>
                     </Box>
-                    <Chip 
-                      label={m.verification_status.replace('_', ' ')} 
-                      size="small" 
-                      variant="outlined"
-                      color={m.verification_status === 'recommended' ? 'info' : 'warning'}
-                      sx={{ fontWeight: 800, fontSize: '0.65rem' }} 
-                    />
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Chip 
+                        label={m.verification_status === 'recommended' ? 'Vetted' : 'New Registration'} 
+                        size="small" 
+                        color={m.verification_status === 'recommended' ? 'success' : 'warning'}
+                        variant={m.verification_status === 'recommended' ? 'filled' : 'outlined'}
+                        sx={{ fontWeight: 800, fontSize: '0.65rem', height: 20 }} 
+                      />
+                      {m.verification_status === 'recommended' && <VerifiedIcon sx={{ fontSize: 16, color: '#10B981' }} />}
+                    </Stack>
                   </Box>
                   <Box sx={{ bgcolor: '#F8FAFC', p: 1.5, borderRadius: 3, mb: 2, border: '1px solid #F1F5F9' }}>
                     <Typography variant="body2" color="textSecondary">
@@ -283,9 +286,14 @@ const AdminApprovals = () => {
                     variant="contained" 
                     color="success" 
                     onClick={() => handleApproveMember(m.member_id)} 
-                    sx={{ borderRadius: 3, fontWeight: 800, py: 1.2 }}
+                    sx={{ 
+                      borderRadius: 3, 
+                      fontWeight: 800, 
+                      py: 1.2,
+                      boxShadow: m.verification_status === 'recommended' ? '0 8px 20px rgba(16, 185, 129, 0.2)' : 'none'
+                    }}
                   >
-                    Approve Member
+                    {m.verification_status === 'recommended' ? 'Final Approve' : 'Approve Member'}
                   </Button>
                 </CardContent>
               </Card>
