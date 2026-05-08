@@ -36,6 +36,7 @@ const AdminApprovals = () => {
       setUsers(userRes.data);
       setFamilies(famRes.data);
       setPendingMembers(memRes.data);
+      console.log('Pending Members:', memRes.data);
     } catch (err) {
       setError('Failed to load pending data');
     } finally {
@@ -276,7 +277,7 @@ const AdminApprovals = () => {
                   </Box>
                   <Box sx={{ bgcolor: '#F8FAFC', p: 1.5, borderRadius: 3, mb: 2, border: '1px solid #F1F5F9' }}>
                     <Typography variant="body2" color="textSecondary">
-                      Family: <strong>{m.family_head}</strong> ({m.family_id})<br/>
+                      Family: <strong>{m.family_head}</strong> ({m.family_string_id})<br/>
                       Address: <strong>{m.address_line1}{m.address_line2 ? `, ${m.address_line2}` : ''}, {m.city}</strong><br/>
                       Anbiyam: <strong>{m.anbiyam}</strong>
                     </Typography>
