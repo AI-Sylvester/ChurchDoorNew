@@ -131,17 +131,18 @@ class MemberService {
   }
 
   static async getMembersByFamilyId(familyId, user = {}) {
+    const values = [familyId, user.isAdmin || false, user.role || '', user.userId || null];
     let queryStr = `
        SELECT m.*
        FROM members m
        JOIN families f ON (m.family_id::text = f.id::text OR m.family_id::text = f.family_id::text)
        WHERE f.family_id = $1 
-         AND (f.active = true OR $2 = true OR $3 = 'incharge' OR $3 = 'admin' OR f.created_by = $5)
-         AND (m.verification_status = 'approved' OR $2 = true OR $3 = 'incharge' OR $3 = 'admin' OR f.created_by = $5)`;
-    const values = [familyId, user.isAdmin || false, user.role || '', user.anbiyam, user.userId || null];
+         AND (f.active = true OR $2 = true OR $3 = 'incharge' OR $3 = 'admin' OR f.created_by = $4)
+         AND (m.verification_status = 'approved' OR $2 = true OR $3 = 'incharge' OR $3 = 'admin' OR f.created_by = $4)`;
 
     if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
-      queryStr += " AND f.anbiyam = $4";
+      values.push(user.anbiyam);
+      queryStr += ` AND f.anbiyam = $${values.length}`;
     }
 
     queryStr += " ORDER BY m.member_id";
