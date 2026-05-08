@@ -182,69 +182,30 @@ class FamilyService {
   }
 
   static async updateFamily(familyId, updateData, hasNewPic) {
-    // ... update logic (no changes needed for visibility restriction, 
-    // but usually you'd check if user has permission to update this specific family)
-    // For now, let's assume the frontend only allows editing visible families.
-    let setClause = `
-      head_name = $1,
-      address_line1 = $2,
-      address_line2 = $3,
-      city = $4,
-      pincode = $5,
-      mobile_number = $6,
-      mobile_number2 = $7,
-      cemetery = $8,
-      native = $9,
-      resident_from = $10,
-      house_type = $11,
-      subscription = $12,
-      active = $13,
-      location = $14,
-      anbiyam = $15,
-      cemetery_number = $16,
-      old_card_number = $17,
-      verification_status = $18
-    `;
-
-    const values = [
-      updateData.head_name,
-      updateData.address_line1,
-      updateData.address_line2,
-      updateData.city,
-      updateData.pincode,
-      updateData.mobile_number,
-      updateData.mobile_number2,
-      updateData.cemetery,
-      updateData.native,
-      updateData.resident_from,
-      updateData.house_type,
-      updateData.subscription,
-      updateData.active,
-      updateData.location,
-      updateData.anbiyam,
-      updateData.cemetery_number,
-      updateData.old_card_number,
-      updateData.verification_status || 'approved'
+    const fields = [
+      'head_name', 'address_line1', 'address_line2', 'city', 'pincode',
+      'mobile_number', 'mobile_number2', 'cemetery', 'native',
+      'resident_from', 'house_type', 'subscription', 'active', 'location',
+      'anbiyam', 'cemetery_number', 'old_card_number', 'verification_status'
     ];
 
-    if (hasNewPic) {
-      setClause += ', family_pic = $19';
-      values.push(updateData.family_pic);
-      values.push(familyId); // $20
-    } else {
-      values.push(familyId); // $19
+    const filteredFields = fields.filter(field => updateData[field] !== undefined);
+    
+    if (filteredFields.length === 0 && !hasNewPic) {
+        throw new Error('No valid fields provided for update');
     }
 
-    const familyIdPlaceholder = hasNewPic ? '$20' : '$19';
+    let updates = filteredFields.map((field, i) => `${field} = $${i + 2}`);
+    let values = filteredFields.map(field => updateData[field]);
 
-    const query = `
-      UPDATE families SET
-      ${setClause}
-      WHERE family_id = ${familyIdPlaceholder}
-      RETURNING *
-    `;
+    if (hasNewPic) {
+      updates.push(`family_pic = $${values.length + 2}`);
+      values.push(updateData.family_pic);
+    }
 
-    const result = await db.query(query, values);
+    const query = `UPDATE families SET ${updates.join(', ')} WHERE family_id = $1 RETURNING *`;
+    const result = await db.query(query, [familyId, ...values]);
+
     return result.rows[0];
   }
 

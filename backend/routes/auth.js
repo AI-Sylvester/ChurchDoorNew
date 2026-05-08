@@ -19,10 +19,13 @@ router.post('/login', async (req, res) => {
 
     const user = userRes.rows[0];
     
-    // Check if approved
+    // Allow login but ensure status is returned
+    // The frontend handles redirection based on is_approved status
+    /*
     if (!user.is_approved) {
       return res.status(403).json({ message: 'Your account is pending admin approval' });
     }
+    */
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) {

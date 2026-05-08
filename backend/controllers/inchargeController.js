@@ -85,7 +85,7 @@ exports.recommendMemberApproval = async (req, res, next) => {
 
     // Verify the member belongs to a family in the incharge's anbiyam
     const check = await db.query(
-      'SELECT f.anbiyam FROM members m JOIN families f ON m.family_id = f.id WHERE m.member_id = $1',
+      'SELECT f.anbiyam FROM members m JOIN families f ON (m.family_id::text = f.id::text OR m.family_id::text = f.family_id::text) WHERE m.member_id = $1',
       [memberId]
     );
     if (check.rows.length === 0 || check.rows[0].anbiyam !== anbiyam) {
@@ -108,7 +108,7 @@ exports.getPendingMemberVerifications = async (req, res, next) => {
   try {
     const { anbiyam } = req.user;
     const result = await db.query(
-      "SELECT m.*, f.head_name as family_head, f.address_line1, f.address_line2, f.city FROM members m JOIN families f ON m.family_id = f.id WHERE f.anbiyam = $1 AND m.verification_status = 'pending_incharge' ORDER BY m.name ASC",
+      "SELECT m.*, f.head_name as family_head, f.address_line1, f.address_line2, f.city FROM members m JOIN families f ON (m.family_id::text = f.id::text OR m.family_id::text = f.family_id::text) WHERE f.anbiyam = $1 AND m.verification_status = 'pending_incharge' ORDER BY m.name ASC",
       [anbiyam]
     );
     res.status(200).json(result.rows);
