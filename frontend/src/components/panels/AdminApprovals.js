@@ -71,7 +71,8 @@ const AdminApprovals = () => {
       setMembers(res.data || []);
       setOpenReview(true);
     } catch (err) {
-      alert('Failed to load family members');
+      console.error('FETCH MEMBERS ERROR:', err.response?.data || err.message);
+      alert('Failed to load family members: ' + (err.response?.data?.error || err.message));
     } finally {
       setLoading(false);
     }

@@ -29,7 +29,7 @@ exports.getMembersByFamilyId = async (req, res, next) => {
     const members = await MemberService.getMembersByFamilyId(familyId, req.user);
     res.status(200).json(members);
   } catch (error) {
-    next(new AppError('Failed to fetch members for family', 500));
+    res.status(500).json({ error: error.message, stack: error.stack });
   }
 };
 
