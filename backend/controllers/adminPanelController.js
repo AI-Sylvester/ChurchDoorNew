@@ -77,7 +77,9 @@ exports.getPendingFamilies = async (req, res, next) => {
 exports.getPendingMembers = async (req, res, next) => {
   try {
     const result = await db.query(
-      `SELECT m.*, f.family_id as family_string_id, f.head_name as family_head, f.anbiyam, f.address_line1, f.address_line2, f.city 
+      `SELECT m.*, f.family_id as family_string_id, f.head_name as family_head_name, 
+              f.anbiyam as family_anbiyam, f.address_line1 as family_address1, 
+              f.address_line2 as family_address2, f.city as family_city 
        FROM members m 
        LEFT JOIN families f ON m.family_id = f.id 
        WHERE m.verification_status != 'approved' 
