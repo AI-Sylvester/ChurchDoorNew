@@ -63,7 +63,7 @@ exports.getListInactive = async (req, res, next) => {
 
 exports.getFamilyById = async (req, res, next) => {
   try {
-    const activeOnly = !req.user.isAdmin && req.user.role !== 'incharge';
+    const activeOnly = !req.user.isAdmin && req.user.role !== 'incharge' && req.user.role !== 'admin';
     const family = await FamilyService.getFamilyById(req.params.familyId, activeOnly, req.user);
     if (!family) {
       return next(new AppError('Family not found', 404));

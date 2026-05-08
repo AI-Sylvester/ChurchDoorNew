@@ -146,7 +146,7 @@ function App() {
           }
         />
         <Route
-          path="/familydet"
+          path="/familydet/:familyId?"
           element={
             <PrivateRoute>
               <Layout>

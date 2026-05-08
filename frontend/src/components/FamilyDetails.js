@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import {
   Box,
@@ -30,8 +31,9 @@ import API_BASE_URL from '../config';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 const FamilyDetailsView = () => {
+  const { familyId: urlFamilyId } = useParams();
   const [familyIds, setFamilyIds] = useState([]);
-  const [selectedId, setSelectedId] = useState('');
+  const [selectedId, setSelectedId] = useState(urlFamilyId || '');
   const [familyDetails, setFamilyDetails] = useState(null);
   const [members, setMembers] = useState([]);
   const [error, setError] = useState('');
@@ -77,6 +79,40 @@ const FamilyDetailsView = () => {
     }
   };
 
+
+
+  const fetchFamilyDetails = useCallback(async (id) => {
+    setLoadingFamily(true);
+    try {
+      const res = await axios.get(`${API_BASE_URL}/family/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setFamilyDetails(res.data);
+      setError('');
+    } catch (err) {
+      setError('Failed to load family details');
+      setFamilyDetails(null);
+    } finally {
+      setLoadingFamily(false);
+    }
+  }, [token]);
+
+  const fetchFamilyMembers = useCallback(async (familyId) => {
+    setLoadingMembers(true);
+    try {
+      const res = await axios.get(`${API_BASE_URL}/member/byFamily/${familyId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setMembers(res.data);
+      setError('');
+    } catch (err) {
+      setError('Failed to load family members');
+      setMembers([]);
+    } finally {
+      setLoadingMembers(false);
+    }
+  }, [token]);
+
   useEffect(() => {
     const fetchFamilyIds = async () => {
       try {
@@ -92,37 +128,13 @@ const FamilyDetailsView = () => {
     if (token) fetchFamilyIds();
   }, [token]);
 
-  const fetchFamilyDetails = async (id) => {
-    setLoadingFamily(true);
-    try {
-      const res = await axios.get(`${API_BASE_URL}/family/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setFamilyDetails(res.data);
-      setError('');
-    } catch (err) {
-      setError('Failed to load family details');
-      setFamilyDetails(null);
-    } finally {
-      setLoadingFamily(false);
+  useEffect(() => {
+    if (urlFamilyId) {
+      setSelectedId(urlFamilyId);
+      fetchFamilyDetails(urlFamilyId);
+      fetchFamilyMembers(urlFamilyId);
     }
-  };
-
-  const fetchFamilyMembers = async (familyId) => {
-    setLoadingMembers(true);
-    try {
-      const res = await axios.get(`${API_BASE_URL}/member/byFamily/${familyId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setMembers(res.data);
-      setError('');
-    } catch (err) {
-      setError('Failed to load family members');
-      setMembers([]);
-    } finally {
-      setLoadingMembers(false);
-    }
-  };
+  }, [urlFamilyId, fetchFamilyDetails, fetchFamilyMembers]);
 
   const handleIdChange = async (e) => {
     const id = e.target.value;

@@ -136,13 +136,12 @@ class MemberService {
        FROM members m
        JOIN families f ON m.family_id = f.id
        WHERE f.family_id = $1 
-         AND (f.active = true OR $2 = true OR $3 = 'incharge' OR f.created_by = $5)
-         AND (m.verification_status = 'approved' OR $2 = true OR $3 = 'incharge' OR f.created_by = $5)`;
+         AND (f.active = true OR $2 = true OR $3 = 'incharge' OR $3 = 'admin' OR f.created_by = $5)
+         AND (m.verification_status = 'approved' OR $2 = true OR $3 = 'incharge' OR $3 = 'admin' OR f.created_by = $5)`;
     const values = [familyId, user.isAdmin || false, user.role || '', user.anbiyam, user.userId || null];
 
     if (!user.isAdmin && user.role !== 'admin' && user.anbiyam) {
       queryStr += " AND f.anbiyam = $4";
-      values.push(user.anbiyam);
     }
 
     queryStr += " ORDER BY m.member_id";
