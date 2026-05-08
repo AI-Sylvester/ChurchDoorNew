@@ -85,7 +85,7 @@ exports.getPendingMembers = async (req, res, next) => {
               COALESCE(f.address_line2, '') as family_address2, 
               COALESCE(f.city, 'NO_CITY') as family_city 
        FROM members m 
-       LEFT JOIN families f ON (m.family_id::text = f.id::text OR m.family_id::text = f.family_id::text)
+       LEFT JOIN families f ON (f.family_id = SPLIT_PART(m.member_id, '-', 1))
        WHERE m.verification_status != 'approved' 
        ORDER BY m.verification_status DESC, m.name ASC`
     );
