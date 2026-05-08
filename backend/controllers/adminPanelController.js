@@ -77,11 +77,15 @@ exports.getPendingFamilies = async (req, res, next) => {
 exports.getPendingMembers = async (req, res, next) => {
   try {
     const result = await db.query(
-      `SELECT m.*, f.family_id as family_string_id, f.head_name as family_head_name, 
-              f.anbiyam as family_anbiyam, f.address_line1 as family_address1, 
-              f.address_line2 as family_address2, f.city as family_city 
+      `SELECT m.*, 
+              COALESCE(f.family_id, 'NO_ID') as family_string_id, 
+              COALESCE(f.head_name, 'NO_HEAD') as family_head_name, 
+              COALESCE(f.anbiyam, 'NO_ANB') as family_anbiyam, 
+              COALESCE(f.address_line1, 'NO_ADDR') as family_address1, 
+              COALESCE(f.address_line2, '') as family_address2, 
+              COALESCE(f.city, 'NO_CITY') as family_city 
        FROM members m 
-       LEFT JOIN families f ON m.family_id = f.id 
+       LEFT JOIN families f ON (m.family_id::text = f.id::text OR m.family_id = f.family_id)
        WHERE m.verification_status != 'approved' 
        ORDER BY m.verification_status DESC, m.name ASC`
     );
