@@ -4,7 +4,7 @@ const AppError = require('../utils/AppError');
 exports.getPendingUsers = async (req, res, next) => {
   try {
     const result = await db.query(
-      "SELECT id, username, email, mobile, anbiyam, role, family_id, verification_status FROM users WHERE is_approved = false AND role != 'admin' ORDER BY id DESC"
+      "SELECT u.id, u.username, u.email, u.mobile, u.anbiyam, u.role, u.family_id, u.verification_status, f.head_name as family_head, f.address_line1, f.address_line2, f.city FROM users u LEFT JOIN families f ON u.family_id = f.family_id WHERE u.is_approved = false AND u.role != 'admin' ORDER BY u.id DESC"
     );
     res.status(200).json(result.rows);
   } catch (error) {
@@ -77,7 +77,7 @@ exports.getPendingFamilies = async (req, res, next) => {
 exports.getPendingMembers = async (req, res, next) => {
   try {
     const result = await db.query(
-      "SELECT m.*, f.head_name as family_head, f.anbiyam FROM members m JOIN families f ON m.family_id = f.id WHERE m.verification_status != 'approved' ORDER BY m.verification_status DESC, m.name ASC"
+      "SELECT m.*, f.head_name as family_head, f.anbiyam, f.address_line1, f.address_line2, f.city FROM members m JOIN families f ON m.family_id = f.id WHERE m.verification_status != 'approved' ORDER BY m.verification_status DESC, m.name ASC"
     );
     res.status(200).json(result.rows);
   } catch (error) {

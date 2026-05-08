@@ -108,7 +108,7 @@ exports.getPendingMemberVerifications = async (req, res, next) => {
   try {
     const { anbiyam } = req.user;
     const result = await db.query(
-      "SELECT m.*, f.head_name as family_head FROM members m JOIN families f ON m.family_id = f.id WHERE f.anbiyam = $1 AND m.verification_status = 'pending_incharge' ORDER BY m.name ASC",
+      "SELECT m.*, f.head_name as family_head, f.address_line1, f.address_line2, f.city FROM members m JOIN families f ON m.family_id = f.id WHERE f.anbiyam = $1 AND m.verification_status = 'pending_incharge' ORDER BY m.name ASC",
       [anbiyam]
     );
     res.status(200).json(result.rows);
@@ -156,7 +156,7 @@ exports.getPendingUserVerifications = async (req, res, next) => {
   try {
     const { anbiyam } = req.user;
     const result = await db.query(
-      "SELECT id, username, email, mobile, role, family_id, verification_status FROM users WHERE anbiyam = $1 AND verification_status = 'pending_incharge' AND is_approved = false ORDER BY username ASC",
+      "SELECT u.id, u.username, u.email, u.mobile, u.role, u.family_id, u.verification_status, f.head_name as family_head, f.address_line1, f.address_line2, f.city FROM users u LEFT JOIN families f ON u.family_id = f.family_id WHERE u.anbiyam = $1 AND u.verification_status = 'pending_incharge' AND u.is_approved = false ORDER BY u.username ASC",
       [anbiyam]
     );
     res.status(200).json(result.rows);

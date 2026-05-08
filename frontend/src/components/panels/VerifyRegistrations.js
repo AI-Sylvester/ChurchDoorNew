@@ -194,8 +194,11 @@ const VerifyRegistrations = () => {
                 <CardContent sx={{ p: 3 }}>
                   <Box mb={2}>
                     <Typography variant="h6" fontWeight={900}>{m.name}</Typography>
-                    <Typography variant="caption" color="primary" fontWeight={800} sx={{ textTransform: 'uppercase' }}>
+                    <Typography variant="caption" color="primary" fontWeight={800} sx={{ textTransform: 'uppercase', display: 'block', mb: 0.5 }}>
                       {m.relationship} • Family: {m.family_head}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary" sx={{ bgcolor: '#F8FAFC', p: 1, borderRadius: 2, border: '1px solid #F1F5F9' }}>
+                      {m.address_line1}{m.address_line2 ? `, ${m.address_line2}` : ''}, {m.city}
                     </Typography>
                   </Box>
                   <Button 
@@ -227,10 +230,11 @@ const VerifyRegistrations = () => {
                 <CardContent sx={{ p: 3 }}>
                   <Box mb={2}>
                     <Typography variant="h6" fontWeight={900}>{u.username}</Typography>
-                    <Typography variant="caption" color="secondary" fontWeight={800} sx={{ textTransform: 'uppercase' }}>
-                      {u.role} • Family: {u.family_id}
+                    <Typography variant="caption" color="secondary" fontWeight={800} sx={{ textTransform: 'uppercase', display: 'block' }}>
+                      {u.role} • Family: {u.family_head} ({u.family_id})
                     </Typography>
-                    <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+                    <Typography variant="body2" color="textSecondary" sx={{ mt: 1, mb: 1, bgcolor: '#F8FAFC', p: 1, borderRadius: 2, border: '1px solid #F1F5F9', fontSize: '0.8rem' }}>
+                      Address: {u.address_line1}{u.address_line2 ? `, ${u.address_line2}` : ''}, {u.city}<br/>
                       Mobile: {u.mobile}
                     </Typography>
                   </Box>

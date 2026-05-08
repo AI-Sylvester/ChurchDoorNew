@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
   Box, Typography, CircularProgress, Alert, Paper, Button, List, ListItem, 
-  ListItemText, Avatar, Divider, Chip, Tabs, Tab, 
+  ListItemText, Avatar, Chip, Tabs, Tab, 
   Grid, Card, CardContent, Dialog, DialogTitle, DialogContent, 
   DialogActions, IconButton, Stack
 } from '@mui/material';
@@ -152,11 +152,14 @@ const AdminApprovals = () => {
                       <Typography variant="caption" color="textSecondary" fontWeight={700}>{user.role.toUpperCase()} • {user.anbiyam}</Typography>
                     </Box>
                   </Box>
-                  <Divider sx={{ mb: 2, borderStyle: 'dashed' }} />
-                  <Typography variant="body2" color="textSecondary" mb={2}>
-                    Mobile: <strong>{user.mobile}</strong><br/>
-                    Email: <strong>{user.email || '-'}</strong>
-                  </Typography>
+                  <Box sx={{ bgcolor: '#F8FAFC', p: 1.5, borderRadius: 3, mb: 2, border: '1px solid #F1F5F9' }}>
+                    <Typography variant="body2" color="textSecondary">
+                      Family: <strong>{user.family_head}</strong> ({user.family_id})<br/>
+                      Address: <strong>{user.address_line1}{user.address_line2 ? `, ${user.address_line2}` : ''}, {user.city}</strong><br/>
+                      Mobile: <strong>{user.mobile}</strong><br/>
+                      Email: <strong>{user.email || '-'}</strong>
+                    </Typography>
+                  </Box>
                     <Button 
                       fullWidth 
                       variant="contained" 
@@ -268,9 +271,10 @@ const AdminApprovals = () => {
                       sx={{ fontWeight: 800, fontSize: '0.65rem' }} 
                     />
                   </Box>
-                  <Box sx={{ bgcolor: '#F8FAFC', p: 1.5, borderRadius: 3, mb: 2 }}>
+                  <Box sx={{ bgcolor: '#F8FAFC', p: 1.5, borderRadius: 3, mb: 2, border: '1px solid #F1F5F9' }}>
                     <Typography variant="body2" color="textSecondary">
                       Family: <strong>{m.family_head}</strong> ({m.family_id})<br/>
+                      Address: <strong>{m.address_line1}{m.address_line2 ? `, ${m.address_line2}` : ''}, {m.city}</strong><br/>
                       Anbiyam: <strong>{m.anbiyam}</strong>
                     </Typography>
                   </Box>
