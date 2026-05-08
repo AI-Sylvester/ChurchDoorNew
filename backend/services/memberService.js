@@ -86,7 +86,7 @@ class MemberService {
     let queryStr = `
        SELECT m.*, f.head_name as family_head_name, f.address_line2
        FROM members m
-       JOIN families f ON (m.family_id::text = f.id::text OR m.family_id::text = f.family_id::text)
+       JOIN families f ON (f.family_id = SPLIT_PART(m.member_id, '-', 1))
        WHERE (f.active = true OR $1 = true OR $2 = 'incharge')
          AND (m.verification_status = 'approved' OR $1 = true OR $2 = 'incharge' OR f.created_by = $3)`;
 
@@ -135,7 +135,7 @@ class MemberService {
     let queryStr = `
        SELECT m.*
        FROM members m
-       JOIN families f ON (m.family_id::text = f.id::text OR m.family_id::text = f.family_id::text)
+       JOIN families f ON (f.family_id = SPLIT_PART(m.member_id, '-', 1))
        WHERE f.family_id = $1 
          AND (f.active = true OR $2 = true OR $3 = 'incharge' OR $3 = 'admin' OR f.created_by = $4)
          AND (m.verification_status = 'approved' OR $2 = true OR $3 = 'incharge' OR $3 = 'admin' OR f.created_by = $4)`;
