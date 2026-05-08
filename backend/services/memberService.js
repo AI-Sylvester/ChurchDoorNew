@@ -157,7 +157,7 @@ class MemberService {
       'qualification', 'profession', 'residing_here', 'church_group', 'active',
       'baptism_date', 'baptism_place', 'holy_communion_date', 'holy_communion_place',
       'confirmation_date', 'confirmation_place', 'marriage_date', 'marriage_place',
-      'sex', 'mobile'
+      'sex', 'mobile', 'verification_status'
     ];
 
     const filteredFields = fields.filter(field => updateData[field] !== undefined);
