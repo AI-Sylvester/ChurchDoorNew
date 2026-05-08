@@ -76,11 +76,11 @@ router.post('/register', async (req, res) => {
 
     // Insert user into DB
     await query(
-      'INSERT INTO users (username, password, email, mobile, anbiyam, role, family_id, is_approved, is_admin) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
-      [username, hashedPassword, email, mobile, anbiyam, targetRole, family_id, false, false]
+      'INSERT INTO users (username, password, email, mobile, anbiyam, role, family_id, is_approved, is_admin, verification_status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+      [username, hashedPassword, email, mobile, anbiyam, targetRole, family_id, false, false, 'pending_incharge']
     );
 
-    res.status(201).json({ message: 'Registration successful! Please wait for admin approval.' });
+    res.status(201).json({ message: 'Registration successful! Please wait for Incharge verification and Admin approval.' });
   } catch (error) {
     console.error('Register error:', error);
     res.status(500).json({ message: 'Server error' });

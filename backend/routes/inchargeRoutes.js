@@ -15,5 +15,7 @@ router.post('/report', inchargeController.submitReport);
 router.post('/recommend-approval/:familyId', inchargeController.recommendApproval);
 router.get('/pending-member-verifications', inchargeController.getPendingMemberVerifications);
 router.post('/recommend-member-approval/:memberId', inchargeController.recommendMemberApproval);
+router.get('/pending-user-verifications', inchargeController.getPendingUserVerifications);
+router.post('/recommend-user-approval/:userId', inchargeController.recommendUserApproval);
 
 module.exports = router;

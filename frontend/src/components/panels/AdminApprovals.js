@@ -143,7 +143,12 @@ const AdminApprovals = () => {
                   <Box display="flex" alignItems="center" mb={2}>
                     <Avatar sx={{ bgcolor: '#4F46E515', color: '#4F46E5', mr: 2 }}><PersonIcon /></Avatar>
                     <Box>
-                      <Typography variant="h6" fontWeight={900}>{user.username}</Typography>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Typography variant="h6" fontWeight={900}>{user.username}</Typography>
+                        {user.verification_status === 'recommended' && (
+                          <Chip label="Vetted" size="small" color="success" variant="outlined" sx={{ fontWeight: 800, height: 18, fontSize: '0.6rem' }} />
+                        )}
+                      </Stack>
                       <Typography variant="caption" color="textSecondary" fontWeight={700}>{user.role.toUpperCase()} • {user.anbiyam}</Typography>
                     </Box>
                   </Box>
@@ -152,15 +157,20 @@ const AdminApprovals = () => {
                     Mobile: <strong>{user.mobile}</strong><br/>
                     Email: <strong>{user.email || '-'}</strong>
                   </Typography>
-                  <Button 
-                    fullWidth 
-                    variant="contained" 
-                    color="success" 
-                    onClick={() => handleApproveUser(user.id)} 
-                    sx={{ borderRadius: 3, fontWeight: 800, py: 1.2 }}
-                  >
-                    Approve User
-                  </Button>
+                    <Button 
+                      fullWidth 
+                      variant="contained" 
+                      color="success" 
+                      onClick={() => handleApproveUser(user.id)} 
+                      sx={{ 
+                        borderRadius: 3, 
+                        fontWeight: 900, 
+                        py: 1.2,
+                        boxShadow: user.verification_status === 'recommended' ? '0 8px 20px rgba(16, 185, 129, 0.2)' : 'none'
+                      }}
+                    >
+                      {user.verification_status === 'recommended' ? 'Final Approve' : 'Approve User'}
+                    </Button>
                 </CardContent>
               </Card>
             ))

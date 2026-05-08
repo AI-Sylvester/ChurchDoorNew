@@ -18,7 +18,7 @@ router.get('/', authMiddleware, adminMiddleware, async (req, res) => {
 router.put('/approve/:id', authMiddleware, adminMiddleware, async (req, res) => {
   const { id } = req.params;
   try {
-    await query('UPDATE users SET is_approved = TRUE WHERE id = $1', [id]);
+    await query("UPDATE users SET is_approved = TRUE, verification_status = 'approved' WHERE id = $1", [id]);
     res.json({ message: 'User approved successfully' });
   } catch (err) {
     res.status(500).json({ message: 'Error approving user' });

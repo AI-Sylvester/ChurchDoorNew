@@ -15,6 +15,7 @@ import {
 const VerifyRegistrations = () => {
   const [families, setFamilies] = useState([]);
   const [pendingMembers, setPendingMembers] = useState([]);
+  const [pendingUsers, setPendingUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [tab, setTab] = useState(0);
@@ -27,12 +28,14 @@ const VerifyRegistrations = () => {
   const fetchData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const [famRes, memRes] = await Promise.all([
+      const [famRes, memRes, userRes] = await Promise.all([
         axios.get(`${API_BASE_URL}/incharge/pending-verifications`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${API_BASE_URL}/incharge/pending-member-verifications`, { headers: { Authorization: `Bearer ${token}` } })
+        axios.get(`${API_BASE_URL}/incharge/pending-member-verifications`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_BASE_URL}/incharge/pending-user-verifications`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
       setFamilies(famRes.data);
       setPendingMembers(memRes.data);
+      setPendingUsers(userRes.data);
     } catch (err) {
       setError('Failed to load pending verifications');
     } finally {
@@ -66,6 +69,18 @@ const VerifyRegistrations = () => {
       setPendingMembers(pendingMembers.filter(m => m.member_id !== memberId));
     } catch (err) {
       alert('Failed to recommend member');
+    }
+  };
+  
+  const handleRecommendUser = async (userId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API_BASE_URL}/incharge/recommend-user-approval/${userId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPendingUsers(pendingUsers.filter(u => u.id !== userId));
+    } catch (err) {
+      alert('Failed to verify user');
     }
   };
 
@@ -114,6 +129,7 @@ const VerifyRegistrations = () => {
       >
         <Tab label={`Families (${families.length})`} />
         <Tab label={`Members (${pendingMembers.length})`} />
+        <Tab label={`Users (${pendingUsers.length})`} />
       </Tabs>
 
       {tab === 0 && (
@@ -190,6 +206,42 @@ const VerifyRegistrations = () => {
                     sx={{ borderRadius: 3, fontWeight: 800, py: 1.2 }}
                   >
                     Verify Member
+                  </Button>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </Box>
+      )}
+      
+      {tab === 2 && (
+        <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' } }}>
+          {pendingUsers.length === 0 ? (
+            <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4, bgcolor: 'transparent', border: '2px dashed #E2E8F0', gridColumn: '1/-1' }} elevation={0}>
+              <VerifiedUserIcon sx={{ fontSize: 60, color: '#8B5CF6', mb: 2, opacity: 0.5 }} />
+              <Typography variant="h6" fontWeight={800} color="textSecondary">No new user accounts to verify</Typography>
+            </Paper>
+          ) : (
+            pendingUsers.map((u) => (
+              <Card key={u.id} sx={{ borderRadius: 4, boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid #F1F5F9' }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box mb={2}>
+                    <Typography variant="h6" fontWeight={900}>{u.username}</Typography>
+                    <Typography variant="caption" color="secondary" fontWeight={800} sx={{ textTransform: 'uppercase' }}>
+                      {u.role} • Family: {u.family_id}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+                      Mobile: {u.mobile}
+                    </Typography>
+                  </Box>
+                  <Button 
+                    fullWidth 
+                    variant="contained" 
+                    color="secondary" 
+                    onClick={() => handleRecommendUser(u.id)} 
+                    sx={{ borderRadius: 3, fontWeight: 800, py: 1.2, bgcolor: '#8B5CF6', '&:hover': { bgcolor: '#7C3AED' } }}
+                  >
+                    Verify User Account
                   </Button>
                 </CardContent>
               </Card>

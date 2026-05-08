@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
   Box, Typography, CircularProgress, Alert, Paper, Grid, Avatar, 
-  Chip, Button, Stack, Fade, IconButton
+  Chip, Button, Stack, Fade, IconButton, Dialog
 } from '@mui/material';
 import API_BASE_URL from '../../config';
 import HomeWorkRoundedIcon from '@mui/icons-material/HomeWorkRounded';
@@ -20,24 +20,32 @@ const MyFamily = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const navigate = useNavigate();
 
+  const fetchMyFamily = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API_BASE_URL}/family-user/my-family`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setData(res.data);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load family details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchMyFamily = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get(`${API_BASE_URL}/family-user/my-family`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setData(res.data);
-      } catch (err) {
-        setError(err.response?.data?.message || 'Failed to load family details');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchMyFamily();
   }, []);
+
+  const handleMemberClick = (member) => {
+    setSelectedMember(member);
+    setDetailOpen(true);
+  };
 
   if (loading) return (
     <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" mt={15}>
@@ -220,30 +228,42 @@ const MyFamily = () => {
                   sx={{ ml: 1.5, fontWeight: 900, bgcolor: '#1E3A8A', color: '#fff' }} 
                 />
               </Typography>
-              {!family.active && (
-                <Button 
-                  startIcon={<GroupsRoundedIcon />}
-                  onClick={() => navigate(`/add-member?family_id=${family.family_id}`)}
-                  sx={{ fontWeight: 800, textTransform: 'none', borderRadius: 3 }}
-                >
-                  Add New
-                </Button>
-              )}
+              <Button 
+                startIcon={<GroupsRoundedIcon />}
+                onClick={() => navigate(`/add-member?family_id=${family.family_id}`)}
+                sx={{ 
+                  fontWeight: 900, 
+                  textTransform: 'none', 
+                  borderRadius: 3, 
+                  px: 2.5,
+                  bgcolor: '#EEF2FF',
+                  color: '#4338CA',
+                  '&:hover': { bgcolor: '#E0E7FF' }
+                }}
+              >
+                Add Member
+              </Button>
             </Stack>
 
             <Stack spacing={2}>
               {members.map((member, idx) => (
-                <Fade in timeout={1000 + (idx * 200)} key={member.id}>
-                  <Paper elevation={0} sx={{ 
-                    p: 2, 
-                    borderRadius: 4, 
-                    border: '1px solid #F1F5F9',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    transition: 'all 0.2s',
-                    '&:active': { transform: 'scale(0.98)', bgcolor: '#F8FAFC' }
-                  }}>
+                <Fade in timeout={1000 + (idx * 200)} key={member.id || idx}>
+                  <Paper 
+                    elevation={0} 
+                    onClick={() => handleMemberClick(member)}
+                    sx={{ 
+                      p: 2, 
+                      borderRadius: 4, 
+                      border: '1px solid #F1F5F9',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      '&:hover': { bgcolor: '#F8FAFC', borderColor: '#E2E8F0' },
+                      '&:active': { transform: 'scale(0.98)' }
+                    }}
+                  >
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <Avatar sx={{ 
                         width: 48, height: 48, 
@@ -258,25 +278,120 @@ const MyFamily = () => {
                       <Box>
                         <Typography fontWeight={800} color="#1E293B">{member.name}</Typography>
                         <Typography variant="caption" color="textSecondary" fontWeight={600}>
-                          {member.relationship} • {member.marital_status}
+                          {member.relationship} • {member.age} Yrs
                         </Typography>
                       </Box>
                     </Box>
-                    <IconButton size="small" onClick={() => navigate(`/view-member/${member.member_id}`)}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      {member.verification_status && member.verification_status !== 'approved' && (
+                        <Chip 
+                          label={member.verification_status === 'pending_incharge' ? 'Verifying' : 'Vetted'} 
+                          size="small"
+                          sx={{ 
+                            height: 20, 
+                            fontSize: '0.6rem', 
+                            fontWeight: 900, 
+                            textTransform: 'uppercase',
+                            bgcolor: member.verification_status === 'pending_incharge' ? '#FFF7ED' : '#EFF6FF',
+                            color: member.verification_status === 'pending_incharge' ? '#D97706' : '#2563EB'
+                          }} 
+                        />
+                      )}
                       <ChevronRightRoundedIcon sx={{ color: '#94A3B8' }} />
-                    </IconButton>
+                    </Box>
                   </Paper>
                 </Fade>
               ))}
             </Stack>
           </Box>
         </Box>
+
+        {/* Member Detail Dialog */}
+        <Dialog 
+          open={detailOpen} 
+          onClose={() => setDetailOpen(false)}
+          fullWidth
+          maxWidth="xs"
+          PaperProps={{
+            sx: { borderRadius: 6, p: 1 }
+          }}
+        >
+          {selectedMember && (
+            <Box sx={{ p: 2 }}>
+              <Box sx={{ textAlign: 'center', mb: 3, pt: 2 }}>
+                <Avatar sx={{ 
+                  width: 80, height: 80, 
+                  mx: 'auto', mb: 2,
+                  bgcolor: selectedMember.sex === 'Male' ? '#EFF6FF' : '#FFF1F2', 
+                  color: selectedMember.sex === 'Male' ? '#3B82F6' : '#F43F5E',
+                  fontWeight: 900,
+                  fontSize: '2rem',
+                  borderRadius: 4,
+                  boxShadow: '0 10px 25px rgba(0,0,0,0.05)'
+                }}>
+                  {selectedMember.name.charAt(0)}
+                </Avatar>
+                <Typography variant="h5" fontWeight={900} color="#1E293B">{selectedMember.name}</Typography>
+                <Typography color="primary" fontWeight={800} variant="subtitle2" sx={{ opacity: 0.8 }}>
+                  {selectedMember.relationship}
+                </Typography>
+              </Box>
+
+              <Stack spacing={1.5} sx={{ bgcolor: '#F8FAFC', p: 2, borderRadius: 5 }}>
+                <DetailRow label="Member ID" value={selectedMember.member_id} />
+                <DetailRow label="Age / Sex" value={`${selectedMember.age} Yrs / ${selectedMember.sex}`} />
+                <DetailRow label="Marital Status" value={selectedMember.marital_status} />
+                <DetailRow label="Profession" value={selectedMember.profession} />
+                <DetailRow label="Qualification" value={selectedMember.qualification} />
+                <DetailRow label="Blood Group" value={selectedMember.blood_group} />
+                <DetailRow label="Status" value={selectedMember.verification_status?.replace('_', ' ').toUpperCase() || 'APPROVED'} isStatus />
+              </Stack>
+
+              <Button 
+                fullWidth 
+                variant="contained" 
+                onClick={() => setDetailOpen(false)}
+                sx={{ 
+                  mt: 3, 
+                  borderRadius: 4, 
+                  py: 1.5, 
+                  fontWeight: 900, 
+                  textTransform: 'none',
+                  bgcolor: '#1E293B',
+                  boxShadow: '0 10px 20px rgba(30, 41, 59, 0.2)'
+                }}
+              >
+                Close
+              </Button>
+            </Box>
+          )}
+        </Dialog>
       </Box>
     </Fade>
   );
 };
 
-// Simple Chevron Icon replacement since I didn't import it
+const DetailRow = ({ label, value, isStatus }) => (
+  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <Typography variant="caption" color="textSecondary" fontWeight={800} sx={{ textTransform: 'uppercase' }}>{label}</Typography>
+    {isStatus ? (
+      <Chip 
+        label={value} 
+        size="small" 
+        sx={{ 
+          height: 20, 
+          fontSize: '0.65rem', 
+          fontWeight: 900, 
+          bgcolor: value === 'APPROVED' ? '#ECFDF5' : '#FFF7ED',
+          color: value === 'APPROVED' ? '#10B981' : '#D97706'
+        }} 
+      />
+    ) : (
+      <Typography variant="body2" fontWeight={700} color="#334155">{value || '-'}</Typography>
+    )}
+  </Box>
+);
+
 const ChevronRightRoundedIcon = (props) => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
     <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>

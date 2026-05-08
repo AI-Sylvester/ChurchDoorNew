@@ -4,7 +4,7 @@ const AppError = require('../utils/AppError');
 exports.getPendingUsers = async (req, res, next) => {
   try {
     const result = await db.query(
-      "SELECT id, username, email, mobile, anbiyam, role, family_id FROM users WHERE is_approved = false AND role != 'admin' ORDER BY id DESC"
+      "SELECT id, username, email, mobile, anbiyam, role, family_id, verification_status FROM users WHERE is_approved = false AND role != 'admin' ORDER BY id DESC"
     );
     res.status(200).json(result.rows);
   } catch (error) {

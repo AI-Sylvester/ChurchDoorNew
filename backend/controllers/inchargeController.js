@@ -151,3 +151,39 @@ exports.verifyUpdateRequest = async (req, res, next) => {
     next(new AppError('Failed to verify update request', 500));
   }
 };
+
+exports.getPendingUserVerifications = async (req, res, next) => {
+  try {
+    const { anbiyam } = req.user;
+    const result = await db.query(
+      "SELECT id, username, email, mobile, role, family_id, verification_status FROM users WHERE anbiyam = $1 AND verification_status = 'pending_incharge' AND is_approved = false ORDER BY username ASC",
+      [anbiyam]
+    );
+    res.status(200).json(result.rows);
+  } catch (error) {
+    next(new AppError('Failed to fetch pending user verifications', 500));
+  }
+};
+
+exports.recommendUserApproval = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const { anbiyam } = req.user;
+
+    // Verify the user belongs to the incharge's anbiyam
+    const check = await db.query('SELECT anbiyam FROM users WHERE id = $1', [userId]);
+    if (check.rows.length === 0 || check.rows[0].anbiyam !== anbiyam) {
+      return next(new AppError('Unauthorized: User not in your group', 403));
+    }
+
+    await db.query(
+      "UPDATE users SET verification_status = 'recommended' WHERE id = $1",
+      [userId]
+    );
+
+    res.status(200).json({ message: 'User registration verified and recommended to Admin' });
+  } catch (error) {
+    next(new AppError('Failed to verify user registration', 500));
+  }
+};
+
