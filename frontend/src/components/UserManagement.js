@@ -5,7 +5,6 @@ import {
   Typography,
   Chip,
   IconButton,
-  Tooltip,
   CircularProgress,
   Alert,
   Stack,
@@ -15,13 +14,18 @@ import {
   Button,
   Tabs,
   Tab,
-  Paper
+  Paper,
+  Fade,
+  Collapse,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import BlockIcon from '@mui/icons-material/Block';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import PhoneIphoneIcon from '@mui/icons-material/PhoneIphone';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import FingerprintIcon from '@mui/icons-material/Fingerprint';
+import PersonIcon from '@mui/icons-material/Person';
 import API_BASE_URL from '../config';
 
 const UserManagement = () => {
@@ -30,6 +34,7 @@ const UserManagement = () => {
   const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState(null);
   const [tabValue, setTabValue] = useState(0);
+  const [expandedId, setExpandedId] = useState(null);
 
   const token = localStorage.getItem('token');
 
@@ -67,216 +72,247 @@ const UserManagement = () => {
     }
   };
 
+  const toggleExpand = (id) => {
+    setExpandedId(expandedId === id ? null : id);
+  };
+
   const filteredUsers = users.filter(user => {
-    if (tabValue === 0) return true;
-    if (tabValue === 1) return user.role === 'incharge';
-    if (tabValue === 2) return user.role === 'family';
+    if (tabValue === 0) return user.role === 'incharge';
+    if (tabValue === 1) return user.role === 'family';
     return true;
   });
 
-  if (loading) return <Box textAlign="center" py={10}><CircularProgress thickness={5} size={60} /></Box>;
+  if (loading) return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '80vh', gap: 2 }}>
+      <CircularProgress thickness={5} size={60} sx={{ color: '#6366F1' }} />
+      <Typography variant="body2" color="textSecondary" fontWeight={700}>Loading User Records...</Typography>
+    </Box>
+  );
 
   return (
-    <Box sx={{ p: { xs: 2, sm: 4 }, backgroundColor: '#f8fafc', minHeight: '90vh' }}>
-      <Box sx={{ mb: 4, px: 1 }}>
-        <Typography variant="h4" fontWeight={900} color="#1E3A8A" gutterBottom sx={{ letterSpacing: '-1px' }}>
-          User Control
-        </Typography>
-        <Typography variant="body1" color="textSecondary" fontWeight={500}>
-          Manage account permissions, roles, and administrative access.
-        </Typography>
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#F8FAFC', pb: 10 }}>
+      {/* Premium Header Section */}
+      <Box 
+        sx={{ 
+          background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)', 
+          pt: { xs: 4, sm: 6 }, 
+          pb: { xs: 10, sm: 12 }, 
+          px: { xs: 3, sm: 4 },
+          position: 'relative',
+          overflow: 'hidden',
+          mb: -6
+        }}
+      >
+        <Box sx={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
+        <Box sx={{ position: 'absolute', bottom: -30, left: -20, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
+
+        <Box sx={{ maxWidth: 900, mx: 'auto', position: 'relative', zIndex: 1 }}>
+          <Typography variant="h3" fontWeight={900} color="#fff" sx={{ letterSpacing: '-2px', mb: 1, fontSize: { xs: '2rem', sm: '3rem' } }}>
+            User Control
+          </Typography>
+          <Typography variant="h6" color="rgba(255,255,255,0.8)" fontWeight={500} sx={{ maxWidth: 500, lineHeight: 1.4 }}>
+            Direct access to directory permissions and parish oversight.
+          </Typography>
+        </Box>
       </Box>
 
-      {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 3, fontWeight: 700 }}>{error}</Alert>}
+      <Box sx={{ maxWidth: 900, mx: 'auto', px: { xs: 2, sm: 4 }, position: 'relative', zIndex: 2 }}>
+        {error && (
+          <Fade in>
+            <Alert severity="error" sx={{ mb: 4, borderRadius: 4, fontWeight: 700, boxShadow: '0 10px 30px rgba(239, 68, 68, 0.1)' }}>{error}</Alert>
+          </Fade>
+        )}
 
-      <Paper elevation={0} sx={{ borderRadius: 4, mb: 4, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.05)' }}>
-        <Tabs 
-          value={tabValue} 
-          onChange={(e, v) => setTabValue(v)} 
-          variant="fullWidth"
-          indicatorColor="primary"
-          textColor="primary"
-          sx={{ bgcolor: '#fff' }}
+        {/* Tab Control */}
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            borderRadius: 5, 
+            mb: 4, 
+            overflow: 'hidden', 
+            border: '1px solid rgba(255,255,255,0.8)',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.04)',
+            backdropFilter: 'blur(10px)',
+            bgcolor: 'rgba(255,255,255,0.9)'
+          }}
         >
-          <Tab label="All Users" sx={{ fontWeight: 800, py: 2.5 }} />
-          <Tab label="Incharges" sx={{ fontWeight: 800, py: 2.5 }} />
-          <Tab label="Family Users" sx={{ fontWeight: 800, py: 2.5 }} />
-        </Tabs>
-      </Paper>
-
-      <Stack spacing={2.5}>
-        {filteredUsers.map((user) => (
-          <Card 
-            key={user.id} 
+          <Tabs 
+            value={tabValue} 
+            onChange={(e, v) => setTabValue(v)} 
+            variant="fullWidth"
             sx={{ 
-              borderRadius: 5, 
-              border: '1px solid rgba(0,0,0,0.05)',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.02)',
-              overflow: 'hidden',
-              transition: 'transform 0.2s',
-              '&:hover': { boxShadow: '0 15px 40px rgba(0,0,0,0.04)' }
+              '& .MuiTabs-indicator': { height: 4, borderRadius: '4px 4px 0 0' },
+              '& .MuiTab-root': { py: 3, fontWeight: 800, fontSize: '0.9rem', color: '#64748B' },
+              '& .Mui-selected': { color: '#4F46E5 !important' }
             }}
           >
-            <Box sx={{ p: 3 }}>
-              {/* User Header */}
-              <Stack direction="row" spacing={2.5} alignItems="center" mb={3}>
-                <Avatar 
-                  sx={{ 
-                    bgcolor: user.role === 'admin' ? '#E11D48' : user.role === 'incharge' ? '#4F46E5' : '#1E3A8A', 
-                    width: 60, 
-                    height: 60,
-                    fontWeight: 900,
-                    fontSize: '1.5rem',
-                    boxShadow: '0 8px 16px rgba(0,0,0,0.1)'
-                  }}
-                >
-                  {user.username.charAt(0).toUpperCase()}
-                </Avatar>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="h5" fontWeight={900} color="#1E293B" sx={{ mb: 0.5 }}>
-                    {user.username}
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary" fontWeight={600}>
-                    {user.email}
-                  </Typography>
-                </Box>
-                <Stack direction="column" spacing={1} alignItems="flex-end">
-                    {user.role === 'admin' ? (
-                      <Chip label="ADMIN" size="small" sx={{ bgcolor: '#FEF2F2', color: '#E11D48', fontWeight: 900, border: '1px solid #FEE2E2', fontSize: '0.7rem' }} />
-                    ) : user.role === 'incharge' ? (
-                      <Chip label="INCHARGE" size="small" sx={{ bgcolor: '#EEF2FF', color: '#4F46E5', fontWeight: 900, border: '1px solid #E0E7FF', fontSize: '0.7rem' }} />
-                    ) : (
-                      <Chip label="FAMILY" size="small" sx={{ bgcolor: '#F0FDF4', color: '#16A34A', fontWeight: 900, border: '1px solid #DCFCE7', fontSize: '0.7rem' }} />
-                    )}
-                    {user.is_approved ? (
-                      <Chip label="ACTIVE" size="small" color="success" sx={{ fontWeight: 900, fontSize: '0.65rem' }} />
-                    ) : (
-                      <Chip label="RESTRICTED" size="small" color="warning" sx={{ fontWeight: 900, fontSize: '0.65rem' }} />
-                    )}
-                </Stack>
-              </Stack>
+            <Tab label="Incharge Panel" />
+            <Tab label="Family Users" />
+          </Tabs>
+        </Paper>
 
-              <Divider sx={{ my: 2.5, borderStyle: 'dashed', opacity: 0.6 }} />
-
-              {/* Details Section */}
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 3, mb: 4 }}>
-                <Box>
-                  <Typography variant="caption" color="textSecondary" fontWeight={800} sx={{ textTransform: 'uppercase', letterSpacing: 1, mb: 0.5, display: 'block' }}>
-                    Anbiyam
-                  </Typography>
-                  <Typography variant="body1" fontWeight={700} color="#334155">
-                    {user.anbiyam || 'None'}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="textSecondary" fontWeight={800} sx={{ textTransform: 'uppercase', letterSpacing: 1, mb: 0.5, display: 'block' }}>
-                    Mobile
-                  </Typography>
-                  <Typography variant="body1" fontWeight={700} color="#334155">
-                    {user.mobile || 'N/A'}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="textSecondary" fontWeight={800} sx={{ textTransform: 'uppercase', letterSpacing: 1, mb: 0.5, display: 'block' }}>
-                    Family Head
-                  </Typography>
-                  <Typography variant="body1" fontWeight={700} color="#1E3A8A">
-                    {user.head_name || 'Not Linked'}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="textSecondary" fontWeight={800} sx={{ textTransform: 'uppercase', letterSpacing: 1, mb: 0.5, display: 'block' }}>
-                    Family ID
-                  </Typography>
-                  <Typography variant="body1" fontWeight={700} color="#1E3A8A">
-                    {user.family_id || 'N/A'}
-                  </Typography>
-                </Box>
-              </Box>
-
-              {/* Action Buttons */}
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                {!user.is_approved ? (
-                  <Button
-                    variant="contained"
-                    fullWidth
-                    color="success"
-                    startIcon={<CheckCircleIcon />}
-                    disabled={actionLoading === user.id}
-                    onClick={() => handleAction(user.id, `approve/${user.id}`)}
-                    sx={{ borderRadius: 3, py: 1.5, fontWeight: 900, textTransform: 'none' }}
-                  >
-                    Approve Account
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outlined"
-                    fullWidth
-                    color="warning"
-                    startIcon={<BlockIcon />}
-                    disabled={actionLoading === user.id}
-                    onClick={() => handleAction(user.id, `restrict/${user.id}`)}
-                    sx={{ borderRadius: 3, py: 1.5, fontWeight: 900, textTransform: 'none', borderWeight: 2 }}
-                  >
-                    Restrict Access
-                  </Button>
-                )}
-
-                <Stack direction="row" spacing={1.5} sx={{ width: { xs: '100%', sm: 'auto' } }}>
-                  {user.role !== 'admin' && (
-                    <Button
-                      variant="outlined"
-                      onClick={() => handleAction(user.id, `update-role/${user.id}`, 'put', { role: user.role === 'family' ? 'incharge' : 'family' })}
-                      sx={{ borderRadius: 3, fontWeight: 800, textTransform: 'none', minWidth: 160, borderColor: '#CBD5E1', color: '#64748B' }}
-                      startIcon={<AccountCircleIcon />}
-                    >
-                      Set as {user.role === 'family' ? 'Incharge' : 'Family'}
-                    </Button>
-                  )}
-
-                  <Tooltip title={user.is_admin ? "Revoke Admin" : "Grant Admin"}>
-                    <IconButton 
+        <Stack spacing={2}>
+          {filteredUsers.map((user, index) => (
+            <Fade in timeout={300 + (index * 50)} key={user.id}>
+              <Card 
+                sx={{ 
+                  borderRadius: 4, 
+                  border: expandedId === user.id ? '2px solid #6366F1' : '1px solid rgba(226, 232, 240, 0.8)',
+                  boxShadow: expandedId === user.id ? '0 20px 40px rgba(99, 102, 241, 0.1)' : '0 4px 12px rgba(0,0,0,0.015)',
+                  overflow: 'hidden',
+                  background: '#fff',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover': { transform: expandedId === user.id ? 'none' : 'translateY(-2px)', boxShadow: '0 12px 25px rgba(0,0,0,0.04)' }
+                }}
+                onClick={() => toggleExpand(user.id)}
+              >
+                <Box sx={{ p: { xs: 2, sm: 2.5 } }}>
+                  {/* Compact Card Header */}
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Avatar 
                       sx={{ 
-                        bgcolor: user.is_admin ? '#FEF2F2' : '#F1F5F9', 
-                        borderRadius: 3, 
-                        color: user.is_admin ? '#E11D48' : '#64748B',
-                        width: 48,
-                        height: 48
+                        background: user.role === 'admin' ? '#EF4444' : user.role === 'incharge' ? '#6366F1' : '#1E3A8A', 
+                        width: 44, 
+                        height: 44,
+                        fontWeight: 900,
+                        fontSize: '1.2rem',
+                        boxShadow: '0 4px 10px rgba(0,0,0,0.05)'
                       }}
-                      disabled={actionLoading === user.id}
-                      onClick={() => handleAction(user.id, `toggle-admin/${user.id}`, 'put', { isAdmin: !user.is_admin })}
                     >
-                      <AdminPanelSettingsIcon />
-                    </IconButton>
-                  </Tooltip>
+                      {user.username.charAt(0).toUpperCase()}
+                    </Avatar>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="subtitle1" fontWeight={900} color="#1E293B" sx={{ lineHeight: 1.2 }}>
+                        {user.username}
+                      </Typography>
+                      <Typography variant="caption" color="textSecondary" fontWeight={600} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <LocationOnIcon sx={{ fontSize: 12 }} /> {user.anbiyam || 'Not Assigned'}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                        <Chip 
+                          label={user.is_approved ? "ACTIVE" : "PENDING"} 
+                          size="small" 
+                          color={user.is_approved ? "success" : "warning"}
+                          sx={{ fontWeight: 900, fontSize: '0.6rem', height: 20, borderRadius: 1.5 }} 
+                        />
+                        <Box sx={{ 
+                          color: '#CBD5E1', 
+                          transform: expandedId === user.id ? 'rotate(180deg)' : 'none',
+                          transition: 'transform 0.3s'
+                        }}>
+                          <FingerprintIcon sx={{ fontSize: 20 }} />
+                        </Box>
+                    </Box>
+                  </Stack>
 
-                  <Tooltip title="Delete Account">
-                    <IconButton 
-                      sx={{ bgcolor: '#FEF2F2', borderRadius: 3, color: '#E11D48', width: 48, height: 48 }}
-                      disabled={actionLoading === user.id}
-                      onClick={() => {
-                        if (window.confirm('Delete this user account permanently?')) {
-                          handleAction(user.id, `${user.id}`, 'delete');
-                        }
-                      }}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
-                </Stack>
-              </Stack>
+                  {/* Expanded Content */}
+                  <Collapse in={expandedId === user.id} timeout="auto" unmountOnExit>
+                    <Divider sx={{ my: 2.5, opacity: 0.5 }} />
+                    
+                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2.5, mb: 4 }}>
+                      <InfoBlock icon={<FingerprintIcon sx={{ fontSize: 18, color: '#6366F1' }} />} label="Email" value={user.email} />
+                      <InfoBlock icon={<PhoneIphoneIcon sx={{ fontSize: 18, color: '#10B981' }} />} label="Mobile" value={user.mobile || 'N/A'} />
+                      <InfoBlock icon={<PersonIcon sx={{ fontSize: 18, color: '#F59E0B' }} />} label="Family Head" value={user.head_name || 'Not Linked'} primary />
+                      <InfoBlock icon={<FingerprintIcon sx={{ fontSize: 18, color: '#3B82F6' }} />} label="Family ID" value={user.family_id || 'N/A'} primary />
+                    </Box>
+
+                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} onClick={(e) => e.stopPropagation()}>
+                      {!user.is_approved ? (
+                        <Button
+                          variant="contained"
+                          fullWidth
+                          onClick={() => handleAction(user.id, `approve/${user.id}`)}
+                          startIcon={<CheckCircleIcon />}
+                          disabled={actionLoading === user.id}
+                          sx={{ borderRadius: 3, py: 1.5, fontWeight: 900, textTransform: 'none', background: '#10B981', '&:hover': { background: '#059669' } }}
+                        >
+                          Approve Account
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="contained"
+                          fullWidth
+                          onClick={() => handleAction(user.id, `restrict/${user.id}`)}
+                          startIcon={<BlockIcon />}
+                          disabled={actionLoading === user.id}
+                          sx={{ borderRadius: 3, py: 1.5, fontWeight: 900, textTransform: 'none', background: '#F59E0B', '&:hover': { background: '#D97706' } }}
+                        >
+                          Restrict Account
+                        </Button>
+                      )}
+
+                      <Stack direction="row" spacing={1.5} sx={{ width: { xs: '100%', md: 'auto' } }}>
+                        {user.role !== 'admin' && (
+                          <Button
+                            variant="outlined"
+                            fullWidth
+                            onClick={() => handleAction(user.id, `update-role/${user.id}`, 'put', { role: user.role === 'family' ? 'incharge' : 'family' })}
+                            sx={{ borderRadius: 3, fontWeight: 800, textTransform: 'none', minWidth: 150, borderColor: '#E2E8F0', color: '#64748B' }}
+                          >
+                            Set to {user.role === 'family' ? 'Incharge' : 'Family'}
+                          </Button>
+                        )}
+                        <IconButton 
+                          onClick={() => handleAction(user.id, `toggle-admin/${user.id}`, 'put', { isAdmin: !user.is_admin })}
+                          sx={{ bgcolor: user.is_admin ? '#FEF2F2' : '#F1F5F9', borderRadius: 3, color: user.is_admin ? '#E11D48' : '#64748B' }}
+                          disabled={actionLoading === user.id}
+                        >
+                          <AdminPanelSettingsIcon />
+                        </IconButton>
+                        <IconButton 
+                          onClick={() => { if (window.confirm('Delete user permanently?')) handleAction(user.id, `${user.id}`, 'delete'); }}
+                          sx={{ bgcolor: '#FEF2F2', borderRadius: 3, color: '#EF4444' }}
+                          disabled={actionLoading === user.id}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Stack>
+                    </Stack>
+                  </Collapse>
+                </Box>
+              </Card>
+            </Fade>
+          ))}
+        </Stack>
+
+        {filteredUsers.length === 0 && (
+          <Fade in>
+            <Box textAlign="center" py={12} sx={{ bgcolor: 'rgba(255,255,255,0.6)', borderRadius: 8, border: '2px dashed #E2E8F0' }}>
+              <Avatar sx={{ width: 80, height: 80, bgcolor: '#F1F5F9', color: '#94A3B8', mx: 'auto', mb: 3 }}>
+                <PersonIcon sx={{ fontSize: 40 }} />
+              </Avatar>
+              <Typography variant="h6" color="#64748B" fontWeight={800}>No user records found</Typography>
+              <Typography variant="body2" color="textSecondary">Try switching tabs or check your database connection.</Typography>
             </Box>
-          </Card>
-        ))}
-      </Stack>
-
-      {filteredUsers.length === 0 && (
-        <Box textAlign="center" py={12} sx={{ bgcolor: '#fff', borderRadius: 5, border: '1px dashed #E2E8F0' }}>
-          <Typography color="textSecondary" fontWeight={600}>No users found in this category.</Typography>
-        </Box>
-      )}
+          </Fade>
+        )}
+      </Box>
     </Box>
   );
 };
+
+const InfoBlock = ({ icon, label, value, primary = false }) => (
+  <Stack direction="row" spacing={2} alignItems="center">
+    <Box 
+      sx={{ 
+        width: 48, height: 48, borderRadius: 3, 
+        bgcolor: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        border: '1px solid #F1F5F9'
+      }}
+    >
+      {icon}
+    </Box>
+    <Box>
+      <Typography variant="caption" color="textSecondary" fontWeight={800} sx={{ textTransform: 'uppercase', letterSpacing: 1.5, fontSize: '0.65rem' }}>
+        {label}
+      </Typography>
+      <Typography variant="body1" fontWeight={primary ? 900 : 700} color={primary ? '#1E3A8A' : '#334155'}>
+        {value}
+      </Typography>
+    </Box>
+  </Stack>
+);
 
 export default UserManagement;
