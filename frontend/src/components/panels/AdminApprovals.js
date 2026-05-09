@@ -447,6 +447,14 @@ const AdminApprovals = () => {
                   </ListItem>
                 ))}
               </List>
+              <Box sx={{ mt: 3, p: 2, bgcolor: '#EEF2FF', borderRadius: 3, border: '1px solid #E0E7FF' }}>
+                <Typography variant="caption" color="#4F46E5" fontWeight={900} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <VerifiedIcon sx={{ fontSize: 16 }} /> OFFICIAL IDENTITY WILL BE GENERATED
+                </Typography>
+                <Typography variant="body2" color="#4338CA" fontWeight={600} sx={{ mt: 0.5 }}>
+                  A unique card number will be assigned for {selectedFamily.anbiyam} starting from the next available sequence.
+                </Typography>
+              </Box>
             </Box>
           )}
         </DialogContent>

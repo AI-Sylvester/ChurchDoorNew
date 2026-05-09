@@ -10,7 +10,7 @@ router.get('/', authMiddleware, adminMiddleware, async (req, res) => {
     const result = await query(`
       SELECT 
         u.id, u.username, u.email, u.mobile, u.anbiyam, u.role, u.is_approved, u.is_admin, u.family_id,
-        f.head_name
+        f.head_name, f.card_number
       FROM users u
       LEFT JOIN families f ON u.family_id = f.family_id
       ORDER BY u.id DESC

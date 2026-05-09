@@ -168,9 +168,16 @@ const FamilyList = () => {
                    </Typography>
                    <Stack direction="row" spacing={1} alignItems="center">
                       <Chip 
-                        label={fam.family_id} 
+                        label={fam.card_number || fam.family_id} 
                         size="small" 
-                        sx={{ height: 20, borderRadius: 1.5, fontWeight: 900, fontSize: '0.65rem', bgcolor: '#F1F5F9' }} 
+                        sx={{ 
+                          height: 20, 
+                          borderRadius: 1.5, 
+                          fontWeight: 900, 
+                          fontSize: '0.65rem', 
+                          bgcolor: fam.card_number ? '#EEF2FF' : '#F1F5F9',
+                          color: fam.card_number ? '#4F46E5' : 'inherit'
+                        }} 
                       />
                       <Box sx={{ 
                         px: 1, py: 0.3, borderRadius: 1.5, 

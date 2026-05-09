@@ -215,7 +215,7 @@ const UserManagement = () => {
                       <InfoBlock icon={<FingerprintIcon sx={{ fontSize: 18, color: '#6366F1' }} />} label="Email" value={user.email} />
                       <InfoBlock icon={<PhoneIphoneIcon sx={{ fontSize: 18, color: '#10B981' }} />} label="Mobile" value={user.mobile || 'N/A'} />
                       <InfoBlock icon={<PersonIcon sx={{ fontSize: 18, color: '#F59E0B' }} />} label="Family Head" value={user.head_name || 'Not Linked'} primary />
-                      <InfoBlock icon={<FingerprintIcon sx={{ fontSize: 18, color: '#3B82F6' }} />} label="Family ID" value={user.family_id || 'N/A'} primary />
+                      <InfoBlock icon={<FingerprintIcon sx={{ fontSize: 18, color: '#3B82F6' }} />} label={user.card_number ? "Official ID" : "Family ID"} value={user.card_number || user.family_id || 'N/A'} primary />
                     </Box>
 
                     <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} onClick={(e) => e.stopPropagation()}>

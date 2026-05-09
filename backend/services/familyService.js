@@ -195,8 +195,35 @@ class FamilyService {
       'head_name', 'address_line1', 'address_line2', 'city', 'pincode',
       'mobile_number', 'mobile_number2', 'cemetery', 'native',
       'resident_from', 'house_type', 'subscription', 'active', 'location',
-      'anbiyam', 'cemetery_number', 'old_card_number', 'verification_status'
+      'anbiyam', 'cemetery_number', 'old_card_number', 'verification_status', 'card_number'
     ];
+
+    // Card Number Generation Logic on Approval
+    if (updateData.active === true && updateData.verification_status === 'approved') {
+      const currentFamilyRes = await db.query('SELECT anbiyam, card_number FROM families WHERE family_id = $1', [familyId]);
+      const currentFamily = currentFamilyRes.rows[0];
+
+      if (currentFamily && !currentFamily.card_number && !updateData.card_number) {
+        const anbiyam = updateData.anbiyam || currentFamily.anbiyam;
+        if (anbiyam) {
+          const seqRes = await db.query(
+            "SELECT card_number FROM families WHERE anbiyam = $1 AND card_number LIKE $2",
+            [anbiyam, `${anbiyam} - %`]
+          );
+
+          let maxSeq = 0;
+          seqRes.rows.forEach(row => {
+            const parts = row.card_number.split(' - ');
+            if (parts.length === 2) {
+              const seq = parseInt(parts[1], 10);
+              if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
+            }
+          });
+
+          updateData.card_number = `${anbiyam} - ${maxSeq + 1}`;
+        }
+      }
+    }
 
     const filteredFields = fields.filter(field => updateData[field] !== undefined);
     
