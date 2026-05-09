@@ -159,7 +159,15 @@ class FamilyService {
     // 2. The user is the one who created this family record (handles stale tokens)
     const isOwnFamily = user.familyId === familyId;
     
-    let queryStr = `SELECT * FROM families WHERE family_id = $1`;
+    let queryStr = `
+      SELECT f.*, 
+             COALESCE(f.head_name, u.username, 'NO_NAME') as head_name,
+             COALESCE(f.mobile_number, u.mobile, 'NO_MOBILE') as mobile_number,
+             COALESCE(f.address_line1, 'NO_ADDR') as address_line1,
+             COALESCE(f.city, 'NO_CITY') as city
+      FROM families f
+      LEFT JOIN users u ON f.created_by = u.id
+      WHERE f.family_id = $1`;
     const values = [familyId];
     const result = await db.query(queryStr, values);
     

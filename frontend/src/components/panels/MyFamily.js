@@ -105,7 +105,7 @@ const MyFamily = () => {
             </Avatar>
             <Box flex={1}>
               <Typography variant="h4" fontWeight={900} color="#1E293B" sx={{ letterSpacing: '-1.5px', lineHeight: 1.1 }}>
-                {family.head_name}
+                {family.head_name || 'Family Profile'}
               </Typography>
               <Typography variant="subtitle1" color="primary" fontWeight={800} sx={{ mt: 0.5, opacity: 0.8 }}>
                 {family.family_id} • {family.anbiyam}
@@ -186,7 +186,9 @@ const MyFamily = () => {
                     <Box>
                       <Typography variant="caption" color="textSecondary" fontWeight={800} sx={{ textTransform: 'uppercase' }}>Location</Typography>
                       <Typography variant="body2" fontWeight={600} color="#475569">
-                        {family.address_line1}, {family.address_line2 && `${family.address_line2}, `} {family.city} - {family.pincode}
+                        {[family.address_line1, family.address_line2].filter(v => v && v !== 'null').join(', ') || 'No Address Provided'}
+                        {(family.city && family.city !== 'null') && ` • ${family.city}`}
+                        {(family.pincode && family.pincode !== 'null') && ` - ${family.pincode}`}
                       </Typography>
                     </Box>
                   </Box>

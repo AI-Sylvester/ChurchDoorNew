@@ -514,9 +514,9 @@ const toBase64 = (url) =>
           <Typography variant="h6" fontWeight={800} color="#0B3D91" mb={3}>
             Contact & Location
           </Typography>
-          <InfoLine label="Address" value={`${familyDetails.address_line1}, ${familyDetails.address_line2}`} />
-          <InfoLine label="City & Pincode" value={`${familyDetails.city} - ${familyDetails.pincode}`} />
-          <InfoLine label="Contact" value={`${familyDetails.mobile_number}${familyDetails.mobile_number2 ? `, ${familyDetails.mobile_number2}` : ''}`} />
+          <InfoLine label="Address" value={[familyDetails.address_line1, familyDetails.address_line2].filter(v => v && v !== 'null').join(', ') || '-'} />
+          <InfoLine label="City & Pincode" value={[familyDetails.city, familyDetails.pincode].filter(v => v && v !== 'null').join(' - ') || '-'} />
+          <InfoLine label="Contact" value={[familyDetails.mobile_number, familyDetails.mobile_number2].filter(v => v && v !== 'null').join(', ') || '-'} />
           <InfoLine label="Location" value={familyDetails.location} />
           <InfoLine label="Native" value={familyDetails.native} />
           <InfoLine label="Resident From" value={familyDetails.resident_from ? new Date(familyDetails.resident_from).toLocaleDateString() : '-'} />

@@ -156,10 +156,10 @@ const AdminApprovals = () => {
                   </Box>
                   <Box sx={{ bgcolor: '#F8FAFC', p: 1.5, borderRadius: 3, mb: 2, border: '1px solid #F1F5F9' }}>
                     <Typography variant="body2" color="textSecondary">
-                      Family: <strong>{user.family_head}</strong> ({user.family_id})<br/>
-                      Address: <strong>{user.address_line1}{user.address_line2 ? `, ${user.address_line2}` : ''}, {user.city}</strong><br/>
-                      Mobile: <strong>{user.mobile}</strong><br/>
-                      Email: <strong>{user.email || '-'}</strong>
+                      Family: <strong>{user.family_head && user.family_head !== 'null' ? user.family_head : 'No Family Name'}</strong> ({user.family_id || 'N/A'})<br/>
+                      Address: <strong>{[user.address_line1, user.address_line2].filter(v => v && v !== 'null').join(', ') || 'No Address'}{user.city && user.city !== 'null' ? `, ${user.city}` : ''}</strong><br/>
+                      Mobile: <strong>{user.mobile && user.mobile !== 'null' ? user.mobile : '-'}</strong><br/>
+                      Email: <strong>{user.email && user.email !== 'null' ? user.email : '-'}</strong>
                     </Typography>
                   </Box>
                     <Button 
@@ -278,13 +278,9 @@ const AdminApprovals = () => {
                   </Box>
                   <Box sx={{ bgcolor: '#F8FAFC', p: 1.5, borderRadius: 3, mb: 2, border: '1px solid #F1F5F9' }}>
                     <Typography variant="body2" color="textSecondary">
-                      {(() => {
-                        console.log('Member raw data:', m);
-                        return null;
-                      })()}
-                      Family: <strong>{m.family_head_name}</strong> ({m.family_string_id})<br/>
-                      Address: <strong>{m.family_address1}{m.family_address2 ? `, ${m.family_address2}` : ''}, {m.family_city}</strong><br/>
-                      Anbiyam: <strong>{m.family_anbiyam}</strong>
+                      Family: <strong>{m.family_head_name && m.family_head_name !== 'null' ? m.family_head_name : 'No Family Name'}</strong> ({m.family_string_id})<br/>
+                      Address: <strong>{[m.family_address1, m.family_address2].filter(v => v && v !== 'null').join(', ') || 'No Address'}{m.family_city && m.family_city !== 'null' ? `, ${m.family_city}` : ''}</strong><br/>
+                      Anbiyam: <strong>{m.family_anbiyam && m.family_anbiyam !== 'null' ? m.family_anbiyam : 'N/A'}</strong>
                     </Typography>
                   </Box>
                   <Button 
