@@ -54,13 +54,13 @@ class MemberService {
         qualification, profession, residing_here, church_group, active,
         baptism_date, baptism_place, holy_communion_date, holy_communion_place,
         confirmation_date, confirmation_place, marriage_date, marriage_place,
-        sex, mobile, verification_status
+        sex, mobile, verification_status, created_by
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7,
         $8, $9, $10, $11, $12,
         $13, $14, $15, $16,
         $17, $18, $19, $20,
-        $21, $22, $23
+        $21, $22, $23, $24
       ) RETURNING *`,
       [
         familyDbId, memberId, memberData.name, age, memberData.dob || null,
@@ -73,7 +73,8 @@ class MemberService {
         memberData.confirmation_date || null, memberData.confirmation_place || null,
         memberData.marriage_date || null, memberData.marriage_place || null,
         memberData.sex || null, memberData.mobile || null,
-        verification_status
+        verification_status,
+        user.userId || null
       ]
     );
 

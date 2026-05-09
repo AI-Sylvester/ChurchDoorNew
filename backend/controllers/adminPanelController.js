@@ -73,8 +73,12 @@ exports.getEventReports = async (req, res, next) => {
 
 exports.getPendingFamilies = async (req, res, next) => {
   try {
-    const result = await db.query(
-      "SELECT * FROM families WHERE active = false AND (verification_status = 'recommended' OR verification_status = 'pending_incharge') ORDER BY verification_status DESC, head_name ASC"
+    const result = await db.query(`
+      SELECT f.*, u.username as creator_name 
+      FROM families f 
+      LEFT JOIN users u ON f.created_by = u.id 
+      WHERE f.active = false AND (f.verification_status = 'recommended' OR f.verification_status = 'pending_incharge') 
+      ORDER BY f.verification_status DESC, f.head_name ASC`
     );
     res.status(200).json(result.rows);
   } catch (error) {
@@ -88,19 +92,21 @@ exports.getPendingMembers = async (req, res, next) => {
       `SELECT m.*, 
               COALESCE(f.family_id, SPLIT_PART(m.member_id, '-', 1)) as family_string_id, 
               f.head_name as family_head_name, 
-              COALESCE(f.anbiyam, u.anbiyam, 'NO_ANB') as family_anbiyam, 
+              COALESCE(f.anbiyam, u_fam.anbiyam, 'NO_ANB') as family_anbiyam, 
               COALESCE(f.address_line1, 'NO_ADDR') as family_address1, 
               COALESCE(f.address_line2, '') as family_address2, 
               COALESCE(f.city, 'NO_CITY') as family_city,
-              COALESCE(f.mobile_number, u.mobile, 'NO_MOBILE') as family_mobile,
-              u.username as creator_username
+              COALESCE(f.mobile_number, u_fam.mobile, 'NO_MOBILE') as family_mobile,
+              u_creator.username as creator_username,
+              m.created_at as entry_date
        FROM members m 
        LEFT JOIN families f ON f.id = m.family_id
+       LEFT JOIN users u_creator ON m.created_by = u_creator.id
        LEFT JOIN LATERAL (
          SELECT username, anbiyam, mobile FROM users 
          WHERE family_id = SPLIT_PART(m.member_id, '-', 1) 
          LIMIT 1
-       ) u ON TRUE
+       ) u_fam ON TRUE
        WHERE m.verification_status = 'pending_incharge' OR m.verification_status = 'recommended' 
        ORDER BY m.id DESC`
     );

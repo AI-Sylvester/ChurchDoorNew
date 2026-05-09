@@ -251,6 +251,9 @@ const AdminApprovals = () => {
                         <Typography variant="body2" color="textSecondary" fontWeight={600}>
                           {fam.family_id} • {fam.anbiyam}
                         </Typography>
+                        <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: '#64748B', fontWeight: 700 }}>
+                          ENTRY BY: {fam.creator_name || 'System'} • {fam.created_at ? new Date(fam.created_at).toLocaleDateString() : 'N/A'}
+                        </Typography>
                       </Box>
                     </Box>
                     <Stack direction="row" spacing={1.5} width={{ xs: '100%', sm: 'auto' }}>
@@ -321,8 +324,8 @@ const AdminApprovals = () => {
                       </Typography>
                     </Box>
                     <Box>
-                      <Typography variant="caption" color="textSecondary" fontWeight={800} display="block" sx={{ fontSize: '0.65rem' }}>REGISTERED BY</Typography>
-                      <Typography variant="body2" fontWeight={700} color="#334155">{m.creator_username || 'N/A'}</Typography>
+                      <Typography variant="caption" color="textSecondary" fontWeight={800} display="block" sx={{ fontSize: '0.65rem' }}>REGISTERED BY & DATE</Typography>
+                      <Typography variant="body2" fontWeight={700} color="#334155">{m.creator_username || 'N/A'} • {m.entry_date ? new Date(m.entry_date).toLocaleDateString() : 'N/A'}</Typography>
                     </Box>
                     <Box>
                       <Typography variant="caption" color="textSecondary" fontWeight={800} display="block" sx={{ fontSize: '0.65rem' }}>ADDRESS & ANBIYAM</Typography>
