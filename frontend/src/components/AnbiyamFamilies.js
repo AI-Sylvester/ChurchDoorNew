@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-  Paper, Typography, CircularProgress, Alert, Grid,
+  Paper, Typography, CircularProgress, Alert,
   Box, Table, TableHead, TableRow,
   TableCell, TableBody, Button, useTheme, useMediaQuery, Tabs, Tab,
   Card, Stack, Avatar, Chip, Autocomplete, TextField
@@ -202,8 +202,8 @@ const AnbiyamFamilyView = () => {
           overflow: 'hidden'
         }}
       >
-        <Grid container spacing={3} alignItems="center">
-          <Grid item xs={12} md={role === 'admin' ? 7 : 12}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3, alignItems: 'center' }}>
+          <Box sx={{ flex: { xs: '1 1 100%', md: role === 'admin' ? '1 1 58%' : '1 1 100%' } }}>
             {role === 'admin' ? (
               <Box>
                 <Typography variant="caption" color="primary" fontWeight={800} sx={{ textTransform: 'uppercase', mb: 1, display: 'block', letterSpacing: '1px' }}>
@@ -246,14 +246,15 @@ const AnbiyamFamilyView = () => {
                 <Typography variant="body2" color="textSecondary">Managing families and members in your assigned group.</Typography>
               </Box>
             )}
-          </Grid>
-          <Grid item xs={12} md={5}>
+          </Box>
+          <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 40%' } }}>
             {selectedAnbiyam ? (
               <Stack direction="row" spacing={1.5} justifyContent={{ xs: 'center', md: 'flex-start' }}>
                 <Box sx={{ 
                   px: 2, py: 1, borderRadius: 3, 
                   bgcolor: '#EFF6FF', color: '#1E3A8A', 
-                  textAlign: 'center', border: '1px solid #DBEAFE' 
+                  textAlign: 'center', border: '1px solid #DBEAFE',
+                  flex: 1
                 }}>
                   <Typography variant="h6" fontWeight={900}>{families.length}</Typography>
                   <Typography variant="caption" fontWeight={700}>FAMILIES</Typography>
@@ -261,7 +262,8 @@ const AnbiyamFamilyView = () => {
                 <Box sx={{ 
                   px: 2, py: 1, borderRadius: 3, 
                   bgcolor: '#F5F3FF', color: '#7C3AED', 
-                  textAlign: 'center', border: '1px solid #EDE9FE' 
+                  textAlign: 'center', border: '1px solid #EDE9FE',
+                  flex: 1
                 }}>
                   <Typography variant="h6" fontWeight={900}>{members.length}</Typography>
                   <Typography variant="caption" fontWeight={700}>MEMBERS</Typography>
@@ -274,8 +276,8 @@ const AnbiyamFamilyView = () => {
                 </Typography>
               </Box>
             )}
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Paper>
 
       {selectedAnbiyam && (
@@ -347,16 +349,16 @@ const AnbiyamFamilyView = () => {
                               <Avatar sx={{ width: 36, height: 36, fontSize: '0.9rem', bgcolor: '#1E3A8A', mr: 2, fontWeight: 900 }}>{idx + 1}</Avatar>
                               <Typography variant="subtitle1" fontWeight={900} color="#1E293B">{fam.head_name}</Typography>
                             </Box>
-                            <Grid container spacing={1}>
-                              <Grid item xs={6}>
+                            <Stack direction="row" spacing={2}>
+                              <Box sx={{ flex: 1 }}>
                                 <Typography variant="caption" color="textSecondary" fontWeight={700}>FAMILY ID</Typography>
                                 <Typography variant="body2" fontWeight={600}>{fam.family_id}</Typography>
-                              </Grid>
-                              <Grid item xs={6}>
+                              </Box>
+                              <Box sx={{ flex: 1 }}>
                                 <Typography variant="caption" color="textSecondary" fontWeight={700}>MOBILE</Typography>
                                 <Typography variant="body2" fontWeight={600}>{fam.mobile_number || '-'}</Typography>
-                              </Grid>
-                            </Grid>
+                              </Box>
+                            </Stack>
                             <Divider sx={{ my: 1.5, opacity: 0.5 }} />
                             <Typography variant="caption" color="textSecondary" fontWeight={700}>ADDRESS</Typography>
                             <Typography variant="body2" color="#475569" sx={{ mt: 0.5 }}>
@@ -404,16 +406,16 @@ const AnbiyamFamilyView = () => {
                               <Chip label={mem.sex} size="small" sx={{ fontWeight: 800, bgcolor: mem.sex === 'Male' ? '#EFF6FF' : '#FFF1F2', color: mem.sex === 'Male' ? '#1E3A8A' : '#BE123C' }} />
                               <Chip label={`Age: ${mem.age}`} size="small" variant="outlined" sx={{ fontWeight: 800 }} />
                             </Stack>
-                            <Grid container spacing={1}>
-                              <Grid item xs={6}>
+                            <Stack direction="row" spacing={2}>
+                              <Box sx={{ flex: 1 }}>
                                 <Typography variant="caption" color="textSecondary" fontWeight={700}>MEMBER ID</Typography>
                                 <Typography variant="body2" fontWeight={600}>{mem.member_id}</Typography>
-                              </Grid>
-                              <Grid item xs={6}>
+                              </Box>
+                              <Box sx={{ flex: 1 }}>
                                 <Typography variant="caption" color="textSecondary" fontWeight={700}>MOBILE</Typography>
                                 <Typography variant="body2" fontWeight={600}>{mem.mobile || '-'}</Typography>
-                              </Grid>
-                            </Grid>
+                              </Box>
+                            </Stack>
                           </Card>
                         ))}
                       </Stack>

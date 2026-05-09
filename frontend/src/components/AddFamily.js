@@ -3,7 +3,7 @@ import {
   Box, TextField, MenuItem, FormControl, InputLabel, Select, Button, 
   Typography, Checkbox, FormControlLabel, Dialog, 
   DialogContent, DialogActions, IconButton, InputAdornment, 
-  Autocomplete, Paper, Fade, Avatar, Stack, Grid, CircularProgress,
+  Autocomplete, Paper, Fade, Avatar, Stack, CircularProgress,
   Alert, Stepper, Step, StepLabel, StepContent
 } from '@mui/material';
 import axios from 'axios';
@@ -228,75 +228,59 @@ const AddFamily = ({ isEdit = false }) => {
       label: 'Primary Info',
       icon: <ContactPhoneRoundedIcon />,
       content: (
-        <Grid container spacing={2.5}>
-          <Grid item xs={12}>
-            <TextField label="Head Name*" name="head_name" value={form.head_name} onChange={handleChange} fullWidth variant="outlined" placeholder="Full name of family head" />
-          </Grid>
-          <Grid item xs={12}>
-            <Autocomplete
-              options={anbiyamList.map((item) => item.name)}
-              value={form.anbiyam || null}
-              onChange={(e, v) => setForm(p => ({ ...p, anbiyam: v || '' }))}
-              renderInput={(params) => <TextField {...params} label="Anbiyam Group" />}
-              disabled={role === 'family' && !!userAnbiyam}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField label="Mobile Number*" name="mobile_number" value={form.mobile_number} onChange={handleChange} fullWidth placeholder="Main contact number" />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField label="Alternate Mobile" name="mobile_number2" value={form.mobile_number2} onChange={handleChange} fullWidth />
-          </Grid>
-        </Grid>
+        <Stack spacing={2.5}>
+          <TextField label="Head Name*" name="head_name" value={form.head_name} onChange={handleChange} fullWidth variant="outlined" placeholder="Full name of family head" />
+          <Autocomplete
+            options={anbiyamList.map((item) => item.name)}
+            value={form.anbiyam || null}
+            onChange={(e, v) => setForm(p => ({ ...p, anbiyam: v || '' }))}
+            renderInput={(params) => <TextField {...params} label="Anbiyam Group" />}
+            disabled={role === 'family' && !!userAnbiyam}
+          />
+          <TextField label="Mobile Number*" name="mobile_number" value={form.mobile_number} onChange={handleChange} fullWidth placeholder="Main contact number" />
+          <TextField label="Alternate Mobile" name="mobile_number2" value={form.mobile_number2} onChange={handleChange} fullWidth />
+        </Stack>
       )
     },
     {
       label: 'Location Details',
       icon: <MapRoundedIcon />,
       content: (
-        <Grid container spacing={2.5}>
-          <Grid item xs={12}>
-            <TextField label="Address Line 1" name="address_line1" value={form.address_line1} onChange={handleChange} fullWidth placeholder="House No / Door No" />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField label="Address Line 2" name="address_line2" value={form.address_line2} onChange={handleChange} fullWidth placeholder="Street / Area Name" />
-          </Grid>
-          <Grid item xs={6}>
-            <TextField label="City" name="city" value={form.city} onChange={handleChange} fullWidth />
-          </Grid>
-          <Grid item xs={6}>
-            <TextField label="Pincode" name="pincode" value={form.pincode} onChange={handleChange} fullWidth />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              label="Geo Location Pin"
-              name="location"
-              value={form.location}
-              onChange={handleChange}
-              fullWidth
-              InputProps={{
-                readOnly: true,
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton onClick={() => setMapDialogOpen(true)} color="primary" sx={{ bgcolor: 'rgba(59, 130, 246, 0.1)' }}>
-                      <RoomIcon />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-              helperText="Tap the map icon to pick your house location"
-            />
-          </Grid>
-        </Grid>
+        <Stack spacing={2.5}>
+          <TextField label="Address Line 1" name="address_line1" value={form.address_line1} onChange={handleChange} fullWidth placeholder="House No / Door No" />
+          <TextField label="Address Line 2" name="address_line2" value={form.address_line2} onChange={handleChange} fullWidth placeholder="Street / Area Name" />
+          <Stack direction="row" spacing={2}>
+            <TextField label="City" name="city" value={form.city} onChange={handleChange} sx={{ flex: 1 }} />
+            <TextField label="Pincode" name="pincode" value={form.pincode} onChange={handleChange} sx={{ flex: 1 }} />
+          </Stack>
+          <TextField
+            label="Geo Location Pin"
+            name="location"
+            value={form.location}
+            onChange={handleChange}
+            fullWidth
+            InputProps={{
+              readOnly: true,
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={() => setMapDialogOpen(true)} color="primary" sx={{ bgcolor: 'rgba(59, 130, 246, 0.1)' }}>
+                    <RoomIcon />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            helperText="Tap the map icon to pick your house location"
+          />
+        </Stack>
       )
     },
     {
       label: 'Parish Info',
       icon: <InfoRoundedIcon />,
       content: (
-        <Grid container spacing={2.5}>
-          <Grid item xs={6}>
-            <FormControl fullWidth>
+        <Stack spacing={2.5}>
+          <Stack direction="row" spacing={2}>
+            <FormControl sx={{ flex: 1 }}>
               <InputLabel>House Type</InputLabel>
               <Select name="house_type" value={form.house_type} onChange={handleChange} label="House Type">
                 <MenuItem value="Own">Own</MenuItem>
@@ -304,23 +288,17 @@ const AddFamily = ({ isEdit = false }) => {
                 <MenuItem value="Lease">Lease</MenuItem>
               </Select>
             </FormControl>
-          </Grid>
-          <Grid item xs={6}>
-            <FormControl fullWidth>
+            <FormControl sx={{ flex: 1 }}>
               <InputLabel>Cemetery</InputLabel>
               <Select name="cemetery" value={form.cemetery} onChange={handleChange} label="Cemetery">
                 <MenuItem value="no">No</MenuItem>
                 <MenuItem value="yes">Yes</MenuItem>
               </Select>
             </FormControl>
-          </Grid>
-          <Grid item xs={12}>
-            <TextField label="Resident From (Year)" name="resident_from" value={form.resident_from} onChange={handleChange} fullWidth placeholder="e.g. 1995" />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField label="Native Place" name="native" value={form.native} onChange={handleChange} fullWidth />
-          </Grid>
-        </Grid>
+          </Stack>
+          <TextField label="Resident From (Year)" name="resident_from" value={form.resident_from} onChange={handleChange} fullWidth placeholder="e.g. 1995" />
+          <TextField label="Native Place" name="native" value={form.native} onChange={handleChange} fullWidth />
+        </Stack>
       )
     },
     {

@@ -4,7 +4,7 @@ import { useLocation } from 'react-router-dom';
 import { 
   Box, Typography, CircularProgress, Alert, Paper, Button, List, ListItem, 
   ListItemText, Avatar, Chip, Tabs, Tab, 
-  Grid, Card, CardContent, Dialog, DialogTitle, DialogContent, 
+  Card, CardContent, Dialog, DialogTitle, DialogContent, 
   DialogActions, IconButton, Stack
 } from '@mui/material';
 import API_BASE_URL from '../../config';
@@ -156,49 +156,63 @@ const AdminApprovals = () => {
       </Tabs>
 
       {tab === 0 && (
-        <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' } }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {users.length === 0 ? (
-            <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4, bgcolor: 'transparent', border: '2px dashed #E2E8F0', gridColumn: '1/-1' }} elevation={0}>
+            <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4, bgcolor: 'transparent', border: '2px dashed #E2E8F0' }} elevation={0}>
               <Typography variant="h6" fontWeight={800} color="textSecondary">No pending users</Typography>
             </Paper>
           ) : (
             users.map((user) => (
-              <Card key={user.id} sx={{ borderRadius: 4, boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid #F1F5F9' }}>
-                <CardContent sx={{ p: 3 }}>
-                  <Box display="flex" alignItems="center" mb={2}>
-                    <Avatar sx={{ bgcolor: '#4F46E515', color: '#4F46E5', mr: 2 }}><PersonIcon /></Avatar>
+              <Card key={user.id} sx={{ borderRadius: 5, boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid #F1F5F9' }}>
+                <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                  <Box display="flex" alignItems="center" mb={2.5}>
+                    <Avatar sx={{ bgcolor: '#4F46E515', color: '#4F46E5', mr: 2, width: 48, height: 48 }}><PersonIcon /></Avatar>
                     <Box>
                       <Stack direction="row" spacing={1} alignItems="center">
-                        <Typography variant="h6" fontWeight={900}>{user.username}</Typography>
+                        <Typography variant="subtitle1" fontWeight={900} color="#1E293B">{user.username}</Typography>
                         {user.verification_status === 'recommended' && (
                           <Chip label="Vetted" size="small" color="success" variant="outlined" sx={{ fontWeight: 800, height: 18, fontSize: '0.6rem' }} />
                         )}
                       </Stack>
-                      <Typography variant="caption" color="textSecondary" fontWeight={700}>{user.role.toUpperCase()} • {user.anbiyam}</Typography>
+                      <Typography variant="caption" color="textSecondary" fontWeight={700} sx={{ textTransform: 'uppercase', letterSpacing: '0.5px' }}>{user.role} • {user.anbiyam}</Typography>
                     </Box>
                   </Box>
-                  <Box sx={{ bgcolor: '#F8FAFC', p: 1.5, borderRadius: 3, mb: 2, border: '1px solid #F1F5F9' }}>
-                    <Typography variant="body2" color="textSecondary">
-                      Account: <strong>{user.username}</strong><br/>
-                      Family Head: <strong>{user.family_head_name && user.family_head_name !== 'null' ? user.family_head_name : 'Pending Registration'}</strong> ({user.family_id || 'N/A'})<br/>
-                      Address: <strong>{[user.address_line1, user.address_line2].filter(v => v && v !== 'null').join(', ') || 'No Address'}{user.city && user.city !== 'null' ? `, ${user.city}` : ''}</strong><br/>
-                      Mobile: <strong>{user.mobile && user.mobile !== 'null' ? user.mobile : '-'}</strong>
-                    </Typography>
-                  </Box>
-                    <Button 
-                      fullWidth 
-                      variant="contained" 
-                      color="success" 
-                      onClick={() => handleApproveUser(user.id)} 
-                      sx={{ 
-                        borderRadius: 3, 
-                        fontWeight: 900, 
-                        py: 1.2,
-                        boxShadow: user.verification_status === 'recommended' ? '0 8px 20px rgba(16, 185, 129, 0.2)' : 'none'
-                      }}
-                    >
-                      {user.verification_status === 'recommended' ? 'Final Approve' : 'Approve User'}
-                    </Button>
+                  
+                  <Stack spacing={1.5} sx={{ bgcolor: '#F8FAFC', p: 2, borderRadius: 4, mb: 2.5, border: '1px solid #F1F5F9' }}>
+                    <Box>
+                      <Typography variant="caption" color="textSecondary" fontWeight={800} display="block" sx={{ fontSize: '0.65rem' }}>FAMILY HEAD / ID</Typography>
+                      <Typography variant="body2" fontWeight={700} color="#334155">
+                        {user.family_head_name && user.family_head_name !== 'null' ? user.family_head_name : 'Pending Registration'} 
+                        <Typography component="span" variant="caption" sx={{ ml: 1, opacity: 0.7 }}>({user.family_id || 'N/A'})</Typography>
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="textSecondary" fontWeight={800} display="block" sx={{ fontSize: '0.65rem' }}>ADDRESS</Typography>
+                      <Typography variant="body2" fontWeight={700} color="#334155">
+                        {[user.address_line1, user.address_line2].filter(v => v && v !== 'null').join(', ') || 'No Address'}{user.city && user.city !== 'null' ? `, ${user.city}` : ''}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="textSecondary" fontWeight={800} display="block" sx={{ fontSize: '0.65rem' }}>CONTACT</Typography>
+                      <Typography variant="body2" fontWeight={700} color="#334155">{user.mobile && user.mobile !== 'null' ? user.mobile : '-'}</Typography>
+                    </Box>
+                  </Stack>
+
+                  <Button 
+                    fullWidth 
+                    variant="contained" 
+                    color="success" 
+                    onClick={() => handleApproveUser(user.id)} 
+                    sx={{ 
+                      borderRadius: 3.5, 
+                      fontWeight: 900, 
+                      py: 1.5,
+                      textTransform: 'none',
+                      boxShadow: user.verification_status === 'recommended' ? '0 10px 25px rgba(16, 185, 129, 0.25)' : 'none'
+                    }}
+                  >
+                    {user.verification_status === 'recommended' ? 'Verify & Approve Account' : 'Approve Account'}
+                  </Button>
                 </CardContent>
               </Card>
             ))
@@ -268,58 +282,70 @@ const AdminApprovals = () => {
       )}
 
       {tab === 2 && (
-        <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' } }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {pendingMembers.length === 0 ? (
-            <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4, bgcolor: 'transparent', border: '2px dashed #E2E8F0', gridColumn: '1/-1' }} elevation={0}>
+            <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4, bgcolor: 'transparent', border: '2px dashed #E2E8F0' }} elevation={0}>
               <Typography variant="h6" fontWeight={800} color="textSecondary">No pending member additions</Typography>
             </Paper>
           ) : (
             pendingMembers.map((m) => (
               <Card key={m.member_id} sx={{ 
-                borderRadius: 4, 
+                borderRadius: 5, 
                 boxShadow: '0 4px 12px rgba(0,0,0,0.03)', 
-                border: m.verification_status === 'recommended' ? '2px solid #3B82F6' : '1px solid #F1F5F9' 
+                border: m.verification_status === 'recommended' ? '2.5px solid #10B981' : '1px solid #F1F5F9' 
               }}>
-                <CardContent sx={{ p: 3 }}>
-                  <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
+                  <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2.5}>
                     <Box>
-                      <Typography variant="h6" fontWeight={900} color="#1E293B">{m.name}</Typography>
-                      <Typography variant="caption" color="primary" fontWeight={800} sx={{ textTransform: 'uppercase' }}>
-                        {m.relationship}
+                      <Typography variant="h6" fontWeight={900} color="#1E293B" sx={{ mb: 0.5 }}>{m.name}</Typography>
+                      <Typography variant="caption" color="primary" fontWeight={900} sx={{ textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        {m.relationship} • {m.age} Years
                       </Typography>
                     </Box>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <Chip 
-                        label={m.verification_status === 'recommended' ? 'Vetted' : 'New Registration'} 
+                        label={m.verification_status === 'recommended' ? 'Vetted' : 'New Add'} 
                         size="small" 
                         color={m.verification_status === 'recommended' ? 'success' : 'warning'}
-                        variant={m.verification_status === 'recommended' ? 'filled' : 'outlined'}
-                        sx={{ fontWeight: 800, fontSize: '0.65rem', height: 20 }} 
+                        sx={{ fontWeight: 900, fontSize: '0.6rem', height: 20 }} 
                       />
-                      {m.verification_status === 'recommended' && <VerifiedIcon sx={{ fontSize: 16, color: '#10B981' }} />}
                     </Stack>
                   </Box>
-                  <Box sx={{ bgcolor: '#F8FAFC', p: 1.5, borderRadius: 3, mb: 2, border: '1px solid #F1F5F9' }}>
-                    <Typography variant="body2" color="textSecondary">
-                      Registered By: <strong>{m.creator_username || 'N/A'}</strong><br/>
-                      Family Head: <strong>{m.family_head_name && m.family_head_name !== 'null' ? m.family_head_name : 'No Family Name'}</strong> ({m.family_string_id})<br/>
-                      Address: <strong>{[m.family_address1, m.family_address2].filter(v => v && v !== 'null').join(', ') || 'No Address'}{m.family_city && m.family_city !== 'null' ? `, ${m.family_city}` : ''}</strong><br/>
-                      Anbiyam: <strong>{m.family_anbiyam && m.family_anbiyam !== 'null' ? m.family_anbiyam : 'N/A'}</strong>
-                    </Typography>
-                  </Box>
+
+                  <Stack spacing={1.5} sx={{ bgcolor: '#F8FAFC', p: 2, borderRadius: 4, mb: 3, border: '1px solid #F1F5F9' }}>
+                    <Box>
+                      <Typography variant="caption" color="textSecondary" fontWeight={800} display="block" sx={{ fontSize: '0.65rem' }}>FAMILY CONTEXT</Typography>
+                      <Typography variant="body2" fontWeight={700} color="#334155">
+                        {m.family_head_name && m.family_head_name !== 'null' ? m.family_head_name : 'No Family Name'}
+                        <Typography component="span" variant="caption" sx={{ ml: 1, opacity: 0.7 }}>({m.family_string_id})</Typography>
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="textSecondary" fontWeight={800} display="block" sx={{ fontSize: '0.65rem' }}>REGISTERED BY</Typography>
+                      <Typography variant="body2" fontWeight={700} color="#334155">{m.creator_username || 'N/A'}</Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="textSecondary" fontWeight={800} display="block" sx={{ fontSize: '0.65rem' }}>ADDRESS & ANBIYAM</Typography>
+                      <Typography variant="body2" fontWeight={700} color="#334155" sx={{ fontSize: '0.8rem' }}>
+                        {[m.family_address1, m.family_address2].filter(v => v && v !== 'null').join(', ')} | {m.family_anbiyam}
+                      </Typography>
+                    </Box>
+                  </Stack>
+
                   <Button 
                     fullWidth 
                     variant="contained" 
                     color="success" 
                     onClick={() => handleApproveMember(m.member_id)} 
                     sx={{ 
-                      borderRadius: 3, 
-                      fontWeight: 800, 
-                      py: 1.2,
-                      boxShadow: m.verification_status === 'recommended' ? '0 8px 20px rgba(16, 185, 129, 0.2)' : 'none'
+                      borderRadius: 3.5, 
+                      fontWeight: 900, 
+                      py: 1.5,
+                      textTransform: 'none',
+                      boxShadow: m.verification_status === 'recommended' ? '0 10px 25px rgba(16, 185, 129, 0.25)' : 'none'
                     }}
                   >
-                    {m.verification_status === 'recommended' ? 'Final Approve' : 'Approve Member'}
+                    {m.verification_status === 'recommended' ? 'Final Approve Member' : 'Approve Addition'}
                   </Button>
                 </CardContent>
               </Card>
@@ -398,20 +424,17 @@ const AdminApprovals = () => {
           {selectedFamily && (
             <Box>
               <Typography variant="caption" color="primary" fontWeight={900} sx={{ letterSpacing: 1 }}>FAMILY DATA</Typography>
-              <Grid container spacing={2} sx={{ mt: 1, mb: 4 }}>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="caption" color="textSecondary" display="block">Head Name</Typography>
-                  <Typography variant="body1" fontWeight={800}>{selectedFamily.head_name}</Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="caption" color="textSecondary" display="block">Family ID</Typography>
-                  <Typography variant="body1" fontWeight={800}>{selectedFamily.family_id}</Typography>
-                </Grid>
-                <Grid item xs={12}>
-                  <Typography variant="caption" color="textSecondary" display="block">Address</Typography>
+              <Typography variant="caption" color="primary" fontWeight={900} sx={{ letterSpacing: 1 }}>FAMILY DATA</Typography>
+              <Stack spacing={2} sx={{ mt: 1.5, mb: 4 }}>
+                <Box>
+                  <Typography variant="caption" color="textSecondary" display="block" fontWeight={700}>HEAD NAME & ID</Typography>
+                  <Typography variant="body1" fontWeight={800}>{selectedFamily.head_name} ({selectedFamily.family_id})</Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="textSecondary" display="block" fontWeight={700}>ADDRESS</Typography>
                   <Typography variant="body1" fontWeight={700}>{selectedFamily.address_line1}, {selectedFamily.city}</Typography>
-                </Grid>
-              </Grid>
+                </Box>
+              </Stack>
               
               <Typography variant="caption" color="primary" fontWeight={900} sx={{ letterSpacing: 1 }}>MEMBERS ({members.length})</Typography>
               <List sx={{ mt: 1, bgcolor: '#F8FAFC', borderRadius: 4, overflow: 'hidden' }}>

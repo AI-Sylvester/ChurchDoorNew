@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import {
   Box, Typography, CircularProgress, Avatar, Stack, Fade, IconButton, 
-  Card, InputAdornment, TextField, Grid, CardActionArea, 
+  Card, InputAdornment, TextField, CardActionArea, 
   Collapse, Paper, FormControl, InputLabel, Select, MenuItem
 } from '@mui/material';
 import API_BASE_URL from '../config';
@@ -113,126 +113,118 @@ const MemberList = () => {
 
       <Collapse in={showFilters}>
         <Paper sx={{ p: 2.5, mb: 4, borderRadius: 5, border: '1px solid #E2E8F0', bgcolor: '#fff' }} elevation={0}>
-          <Grid container spacing={2}>
-            <Grid item xs={6}>
-              <FormControl fullWidth size="small">
-                <InputLabel sx={{ fontWeight: 700 }}>Gender</InputLabel>
-                <Select 
-                  value={genderFilter} 
-                  label="Gender" 
-                  onChange={(e) => setGenderFilter(e.target.value)}
-                  sx={{ borderRadius: 3, fontWeight: 700 }}
-                >
-                  <MenuItem value="all">All Genders</MenuItem>
-                  <MenuItem value="Male">Male</MenuItem>
-                  <MenuItem value="Female">Female</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={6}>
-              <FormControl fullWidth size="small">
-                <InputLabel sx={{ fontWeight: 700 }}>Status</InputLabel>
-                <Select 
-                  value={statusFilter} 
-                  label="Status" 
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  sx={{ borderRadius: 3, fontWeight: 700 }}
-                >
-                  <MenuItem value="all">All Status</MenuItem>
-                  <MenuItem value="approved">Approved</MenuItem>
-                  <MenuItem value="pending">Pending</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
+          <Stack direction="row" spacing={2}>
+            <FormControl fullWidth size="small">
+              <InputLabel sx={{ fontWeight: 700 }}>Gender</InputLabel>
+              <Select 
+                value={genderFilter} 
+                label="Gender" 
+                onChange={(e) => setGenderFilter(e.target.value)}
+                sx={{ borderRadius: 3, fontWeight: 700 }}
+              >
+                <MenuItem value="all">All Genders</MenuItem>
+                <MenuItem value="Male">Male</MenuItem>
+                <MenuItem value="Female">Female</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl fullWidth size="small">
+              <InputLabel sx={{ fontWeight: 700 }}>Status</InputLabel>
+              <Select 
+                value={statusFilter} 
+                label="Status" 
+                onChange={(e) => setStatusFilter(e.target.value)}
+                sx={{ borderRadius: 3, fontWeight: 700 }}
+              >
+                <MenuItem value="all">All Status</MenuItem>
+                <MenuItem value="approved">Approved</MenuItem>
+                <MenuItem value="pending">Pending</MenuItem>
+              </Select>
+            </FormControl>
+          </Stack>
         </Paper>
       </Collapse>
 
-      <Grid container spacing={2.5}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, flexWrap: 'wrap', gap: 2.5 }}>
         {filteredMembers.map((member, idx) => (
-          <Grid item xs={12} sm={6} lg={4} key={member.member_id}>
-            <Fade in timeout={400 + (idx * 50)}>
-              <Card 
-                sx={{ 
-                  borderRadius: 6, 
-                  overflow: 'hidden',
-                  border: '1px solid rgba(0,0,0,0.04)',
-                  boxShadow: '0 4px 25px rgba(0,0,0,0.03)',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  '&:hover': {
-                    transform: 'translateY(-6px)',
-                    boxShadow: '0 20px 40px rgba(30, 58, 138, 0.1)',
-                  }
-                }}
+          <Fade key={member.member_id} in timeout={400 + (idx * 50)}>
+            <Card 
+              sx={{ 
+                flex: { xs: '1 1 100%', md: '0 1 calc(50% - 20px)', lg: '0 1 calc(33.333% - 20px)' },
+                borderRadius: 6, 
+                overflow: 'hidden',
+                border: '1px solid rgba(0,0,0,0.04)',
+                boxShadow: '0 4px 25px rgba(0,0,0,0.03)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:active': { transform: 'scale(0.98)' }
+              }}
+            >
+              <CardActionArea 
+                onClick={() => navigate(`/familydet/${member.family_id}`)} 
+                sx={{ p: 3 }}
               >
-                <CardActionArea 
-                  onClick={() => navigate(`/familydet/${member.family_id}`)} 
-                  sx={{ p: 3 }}
-                >
-                  <Box display="flex" alignItems="center" gap={2.5} mb={2.5}>
-                    <Avatar
-                      sx={{ 
-                        width: 64, height: 64, 
-                        borderRadius: 3,
-                        bgcolor: member.sex === 'Male' ? '#EFF6FF' : '#FFF1F2', 
-                        color: member.sex === 'Male' ? '#3B82F6' : '#F43F5E',
-                        fontWeight: 900, fontSize: '1.2rem',
-                        boxShadow: '0 8px 16px rgba(0,0,0,0.05)'
-                      }}
-                    >
-                      {member.name.charAt(0)}
-                    </Avatar>
-                    <Box flex={1}>
-                      <Typography variant="h6" fontWeight={900} color="#1E293B" sx={{ letterSpacing: '-0.5px', lineHeight: 1.1, mb: 0.5 }}>
-                        {member.name}
+                <Box display="flex" alignItems="center" gap={2.5} mb={2.5}>
+                  <Avatar
+                    sx={{ 
+                      width: 64, height: 64, 
+                      borderRadius: 3,
+                      bgcolor: member.sex === 'Male' ? '#EFF6FF' : '#FFF1F2', 
+                      color: member.sex === 'Male' ? '#3B82F6' : '#F43F5E',
+                      fontWeight: 900, fontSize: '1.2rem',
+                      boxShadow: '0 8px 16px rgba(0,0,0,0.05)'
+                    }}
+                  >
+                    {member.name.charAt(0)}
+                  </Avatar>
+                  <Box flex={1}>
+                    <Typography variant="h6" fontWeight={900} color="#1E293B" sx={{ letterSpacing: '-0.5px', lineHeight: 1.1, mb: 0.5 }}>
+                      {member.name}
+                    </Typography>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Typography variant="caption" fontWeight={800} color="textSecondary" sx={{ textTransform: 'uppercase' }}>
+                        {member.relationship} • {member.age} Yrs
                       </Typography>
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Typography variant="caption" fontWeight={800} color="textSecondary" sx={{ textTransform: 'uppercase' }}>
-                          {member.relationship} • {member.age} Yrs
-                        </Typography>
-                        <Box sx={{ 
-                          px: 1, py: 0.2, borderRadius: 1.5, 
-                          bgcolor: member.verification_status === 'approved' ? '#ECFDF5' : '#FFF7ED',
-                          color: member.verification_status === 'approved' ? '#10B981' : '#F59E0B',
-                          fontWeight: 900, fontSize: '0.55rem', textTransform: 'uppercase'
-                        }}>
-                          {member.verification_status === 'approved' ? 'Approved' : (member.verification_status || 'Approved')}
-                        </Box>
-                      </Stack>
-                    </Box>
+                      <Box sx={{ 
+                        px: 1, py: 0.2, borderRadius: 1.5, 
+                        bgcolor: member.verification_status === 'approved' ? '#ECFDF5' : '#FFF7ED',
+                        color: member.verification_status === 'approved' ? '#10B981' : '#F59E0B',
+                        fontWeight: 900, fontSize: '0.55rem', textTransform: 'uppercase'
+                      }}>
+                        {member.verification_status === 'approved' ? 'Approved' : (member.verification_status || 'Approved')}
+                      </Box>
+                    </Stack>
                   </Box>
+                </Box>
 
-                  <Stack spacing={1.2}>
-                    <Box display="flex" alignItems="center" gap={1.5}>
-                       <Avatar sx={{ width: 28, height: 28, bgcolor: '#F8FAFC', color: '#64748B', borderRadius: 1.5 }}>
-                         <PersonRoundedIcon sx={{ fontSize: 14 }} />
-                       </Avatar>
-                       <Typography variant="body2" fontWeight={700} color="#475569">ID: {member.member_id}</Typography>
-                    </Box>
-                    <Box display="flex" alignItems="center" gap={1.5}>
-                       <Avatar sx={{ width: 28, height: 28, bgcolor: '#F8FAFC', color: '#64748B', borderRadius: 1.5 }}>
-                         <SchoolRoundedIcon sx={{ fontSize: 14 }} />
-                       </Avatar>
-                       <Typography variant="body2" fontWeight={700} color="#475569" noWrap>{member.qualification || 'N/A'}</Typography>
-                    </Box>
-                    <Box display="flex" alignItems="center" gap={1.5}>
-                       <Avatar sx={{ width: 28, height: 28, bgcolor: '#F8FAFC', color: '#64748B', borderRadius: 1.5 }}>
-                         <WorkRoundedIcon sx={{ fontSize: 14 }} />
-                       </Avatar>
-                       <Typography variant="body2" fontWeight={700} color="#475569" noWrap>{member.profession || 'N/A'}</Typography>
-                    </Box>
-                  </Stack>
-
-                  <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                     <Typography variant="caption" color="#94A3B8" fontWeight={800}>GO TO FAMILY PROFILE</Typography>
-                     <ChevronRightRoundedIcon sx={{ color: '#CBD5E1' }} />
+                <Stack spacing={1.2}>
+                  <Box display="flex" alignItems="center" gap={1.5}>
+                     <Avatar sx={{ width: 28, height: 28, bgcolor: '#F8FAFC', color: '#64748B', borderRadius: 1.5 }}>
+                       <PersonRoundedIcon sx={{ fontSize: 14 }} />
+                     </Avatar>
+                     <Typography variant="body2" fontWeight={700} color="#475569">ID: {member.member_id}</Typography>
                   </Box>
-                </CardActionArea>
-              </Card>
-            </Fade>
-          </Grid>
+                  <Box display="flex" alignItems="center" gap={1.5}>
+                     <Avatar sx={{ width: 28, height: 28, bgcolor: '#F8FAFC', color: '#64748B', borderRadius: 1.5 }}>
+                       <SchoolRoundedIcon sx={{ fontSize: 14 }} />
+                     </Avatar>
+                     <Typography variant="body2" fontWeight={700} color="#475569" noWrap>{member.qualification || 'N/A'}</Typography>
+                  </Box>
+                  <Box display="flex" alignItems="center" gap={1.5}>
+                     <Avatar sx={{ width: 28, height: 28, bgcolor: '#F8FAFC', color: '#64748B', borderRadius: 1.5 }}>
+                       <WorkRoundedIcon sx={{ fontSize: 14 }} />
+                     </Avatar>
+                     <Typography variant="body2" fontWeight={700} color="#475569" noWrap>{member.profession || 'N/A'}</Typography>
+                  </Box>
+                </Stack>
+
+                <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                   <Typography variant="caption" color="#94A3B8" fontWeight={800}>GO TO FAMILY PROFILE</Typography>
+                   <ChevronRightRoundedIcon sx={{ color: '#CBD5E1' }} />
+                </Box>
+              </CardActionArea>
+            </Card>
+          </Fade>
         ))}
-      </Grid>
+      </Box>
 
       {filteredMembers.length === 0 && (
         <Box textAlign="center" py={10}>

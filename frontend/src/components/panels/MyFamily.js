@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
-  Box, Typography, CircularProgress, Alert, Paper, Grid, Avatar, 
+  Box, Typography, CircularProgress, Alert, Paper, Avatar, 
   Chip, Button, Stack, Fade, IconButton, Dialog
 } from '@mui/material';
 import API_BASE_URL from '../../config';
@@ -167,56 +167,53 @@ const MyFamily = () => {
               )}
             </Stack>
 
-            <Grid container spacing={3}>
-              <Grid item xs={12} sm={6}>
-                <Stack spacing={2.5}>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Avatar sx={{ width: 40, height: 40, bgcolor: '#EFF6FF', color: '#3B82F6', mr: 2, borderRadius: 3 }}>
-                      <PhoneRoundedIcon sx={{ fontSize: 20 }} />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="caption" color="textSecondary" fontWeight={800} sx={{ textTransform: 'uppercase' }}>Phone</Typography>
-                      <Typography fontWeight={700} color="#1E293B">{family.mobile_number}</Typography>
-                    </Box>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 3 }}>
+              <Stack spacing={2.5} sx={{ flex: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Avatar sx={{ width: 40, height: 40, bgcolor: '#EFF6FF', color: '#3B82F6', mr: 2, borderRadius: 3 }}>
+                    <PhoneRoundedIcon sx={{ fontSize: 20 }} />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="caption" color="textSecondary" fontWeight={800} sx={{ textTransform: 'uppercase' }}>Phone</Typography>
+                    <Typography fontWeight={700} color="#1E293B">{family.mobile_number}</Typography>
                   </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'start' }}>
-                    <Avatar sx={{ width: 40, height: 40, bgcolor: '#F5F3FF', color: '#8B5CF6', mr: 2, borderRadius: 3, mt: 0.5 }}>
-                      <LocationOnRoundedIcon sx={{ fontSize: 20 }} />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="caption" color="textSecondary" fontWeight={800} sx={{ textTransform: 'uppercase' }}>Location</Typography>
-                      <Typography variant="body2" fontWeight={600} color="#475569">
-                        {[family.address_line1, family.address_line2].filter(v => v && v !== 'null').join(', ') || 'No Address Provided'}
-                        {(family.city && family.city !== 'null') && ` • ${family.city}`}
-                        {(family.pincode && family.pincode !== 'null') && ` - ${family.pincode}`}
-                      </Typography>
-                    </Box>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'start' }}>
+                  <Avatar sx={{ width: 40, height: 40, bgcolor: '#F5F3FF', color: '#8B5CF6', mr: 2, borderRadius: 3, mt: 0.5 }}>
+                    <LocationOnRoundedIcon sx={{ fontSize: 20 }} />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="caption" color="textSecondary" fontWeight={800} sx={{ textTransform: 'uppercase' }}>Location</Typography>
+                    <Typography variant="body2" fontWeight={600} color="#475569">
+                      {[family.address_line1, family.address_line2].filter(v => v && v !== 'null').join(', ') || 'No Address Provided'}
+                      {(family.city && family.city !== 'null') && ` • ${family.city}`}
+                      {(family.pincode && family.pincode !== 'null') && ` - ${family.pincode}`}
+                    </Typography>
                   </Box>
-                </Stack>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Stack spacing={2.5}>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Avatar sx={{ width: 40, height: 40, bgcolor: '#FFF7ED', color: '#F59E0B', mr: 2, borderRadius: 3 }}>
-                      <CalendarMonthRoundedIcon sx={{ fontSize: 20 }} />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="caption" color="textSecondary" fontWeight={800} sx={{ textTransform: 'uppercase' }}>Resident Since</Typography>
-                      <Typography fontWeight={700} color="#1E293B">{family.resident_from || 'Not Specified'}</Typography>
-                    </Box>
+                </Box>
+              </Stack>
+
+              <Stack spacing={2.5} sx={{ flex: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Avatar sx={{ width: 40, height: 40, bgcolor: '#FFF7ED', color: '#F59E0B', mr: 2, borderRadius: 3 }}>
+                    <CalendarMonthRoundedIcon sx={{ fontSize: 20 }} />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="caption" color="textSecondary" fontWeight={800} sx={{ textTransform: 'uppercase' }}>Resident Since</Typography>
+                    <Typography fontWeight={700} color="#1E293B">{family.resident_from || 'Not Specified'}</Typography>
                   </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Avatar sx={{ width: 40, height: 40, bgcolor: '#ECFDF5', color: '#10B981', mr: 2, borderRadius: 3 }}>
-                      <NightShelterRoundedIcon sx={{ fontSize: 20 }} />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="caption" color="textSecondary" fontWeight={800} sx={{ textTransform: 'uppercase' }}>House Type</Typography>
-                      <Typography fontWeight={700} color="#1E293B">{family.house_type || 'Owned'}</Typography>
-                    </Box>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Avatar sx={{ width: 40, height: 40, bgcolor: '#ECFDF5', color: '#10B981', mr: 2, borderRadius: 3 }}>
+                    <NightShelterRoundedIcon sx={{ fontSize: 20 }} />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="caption" color="textSecondary" fontWeight={800} sx={{ textTransform: 'uppercase' }}>House Type</Typography>
+                    <Typography fontWeight={700} color="#1E293B">{family.house_type || 'Owned'}</Typography>
                   </Box>
-                </Stack>
-              </Grid>
-            </Grid>
+                </Box>
+              </Stack>
+            </Box>
           </Paper>
 
           {/* Members Section */}

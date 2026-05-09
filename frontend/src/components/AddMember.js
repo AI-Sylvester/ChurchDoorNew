@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box, TextField, Checkbox, FormControlLabel, FormControl,
   InputLabel, Select, MenuItem, Typography, Button, Stepper, Step, 
-  StepLabel, Paper, Fade, Avatar, Stack, Divider, Grid, Alert, CircularProgress
+  StepLabel, Paper, Fade, Avatar, Stack, Divider, Alert, CircularProgress
 } from '@mui/material';
 import API_BASE_URL from '../config';
 import PersonAddRoundedIcon from '@mui/icons-material/PersonAddRounded';
@@ -203,29 +203,21 @@ const AddMember = () => {
             <Fade in>
               <Box>
                 <Typography variant="subtitle2" color="primary" fontWeight={800} sx={{ mb: 3, textTransform: 'uppercase', letterSpacing: '1px' }}>Basic Details</Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12}>
-                    <TextField label="Family ID*" value={familyId} onChange={(e) => setFamilyId(e.target.value.toUpperCase())} fullWidth placeholder="FAM0000000" />
-                  </Grid>
+                <Stack spacing={2.5}>
+                  <TextField label="Family ID*" value={familyId} onChange={(e) => setFamilyId(e.target.value.toUpperCase())} fullWidth placeholder="FAM0000000" />
                   {familyHead && (
-                    <Grid item xs={12}>
-                      <Paper variant="outlined" sx={{ p: 2, bgcolor: '#F8FAFC', borderStyle: 'dashed', borderRadius: 3 }}>
-                         <Typography variant="caption" color="textSecondary" fontWeight={800}>REGISTERING FOR FAMILY HEAD</Typography>
-                         <Typography variant="h6" fontWeight={900} color="#1E3A8A">{familyHead}</Typography>
-                      </Paper>
-                    </Grid>
+                    <Paper variant="outlined" sx={{ p: 2, bgcolor: '#F8FAFC', borderStyle: 'dashed', borderRadius: 3 }}>
+                       <Typography variant="caption" color="textSecondary" fontWeight={800}>REGISTERING FOR FAMILY HEAD</Typography>
+                       <Typography variant="h6" fontWeight={900} color="#1E3A8A">{familyHead}</Typography>
+                    </Paper>
                   )}
-                  <Grid item xs={12}>
-                    <FormControlLabel 
-                      control={<Checkbox checked={headAsMember} onChange={(e) => handleToggleHeadAsMember(e.target.checked)} disabled={!familyHead} />} 
-                      label={<Typography fontWeight={800} variant="body2">This member is the Family Head</Typography>} 
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField label="Full Name*" value={name} onChange={(e) => setName(e.target.value)} disabled={headAsMember} fullWidth />
-                  </Grid>
-                  <Grid item xs={6}>
-                    <FormControl fullWidth>
+                  <FormControlLabel 
+                    control={<Checkbox checked={headAsMember} onChange={(e) => handleToggleHeadAsMember(e.target.checked)} disabled={!familyHead} />} 
+                    label={<Typography fontWeight={800} variant="body2">This member is the Family Head</Typography>} 
+                  />
+                  <TextField label="Full Name*" value={name} onChange={(e) => setName(e.target.value)} disabled={headAsMember} fullWidth />
+                  <Stack direction="row" spacing={2}>
+                    <FormControl sx={{ flex: 1 }}>
                       <InputLabel>Sex*</InputLabel>
                       <Select value={sex} onChange={(e) => setSex(e.target.value)} label="Sex*">
                         <MenuItem value="Male">Male</MenuItem>
@@ -233,14 +225,10 @@ const AddMember = () => {
                         <MenuItem value="Transgender">Transgender</MenuItem>
                       </Select>
                     </FormControl>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <TextField label="Relationship" value={relationship} onChange={(e) => setRelationship(e.target.value)} fullWidth disabled={headAsMember} placeholder="e.g. Spouse, Child" />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField label="Date of Birth*" type="date" value={dob} onChange={(e) => setDob(e.target.value)} InputLabelProps={{ shrink: true }} fullWidth />
-                  </Grid>
-                </Grid>
+                    <TextField label="Relationship" value={relationship} onChange={(e) => setRelationship(e.target.value)} sx={{ flex: 1 }} disabled={headAsMember} placeholder="e.g. Spouse" />
+                  </Stack>
+                  <TextField label="Date of Birth*" type="date" value={dob} onChange={(e) => setDob(e.target.value)} InputLabelProps={{ shrink: true }} fullWidth />
+                </Stack>
               </Box>
             </Fade>
           )}
@@ -249,36 +237,24 @@ const AddMember = () => {
             <Fade in>
               <Box>
                 <Typography variant="subtitle2" color="primary" fontWeight={800} sx={{ mb: 3, textTransform: 'uppercase', letterSpacing: '1px' }}>Contact & Profession</Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <FormControl fullWidth>
-                      <InputLabel>Marital Status</InputLabel>
-                      <Select value={maritalStatus} onChange={(e) => setMaritalStatus(e.target.value)} label="Marital Status">
-                        {["Single", "Married", "Divorced", "Widowed"].map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField label="Mobile Number" value={mobile} onChange={(e) => setMobile(e.target.value)} fullWidth />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField label="Qualification" value={qualification} onChange={(e) => setQualification(e.target.value)} fullWidth placeholder="e.g. B.Tech, Ph.D" />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField label="Profession" value={profession} onChange={(e) => setProfession(e.target.value)} fullWidth />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField label="Church Group / Ministry" value={churchGroup} onChange={(e) => setChurchGroup(e.target.value)} fullWidth placeholder="e.g. Choir, Youth League" />
-                  </Grid>
+                <Stack spacing={2.5}>
+                  <FormControl fullWidth>
+                    <InputLabel>Marital Status</InputLabel>
+                    <Select value={maritalStatus} onChange={(e) => setMaritalStatus(e.target.value)} label="Marital Status">
+                      {["Single", "Married", "Divorced", "Widowed"].map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                  <TextField label="Mobile Number" value={mobile} onChange={(e) => setMobile(e.target.value)} fullWidth />
+                  <TextField label="Qualification" value={qualification} onChange={(e) => setQualification(e.target.value)} fullWidth placeholder="e.g. B.Tech, Ph.D" />
+                  <TextField label="Profession" value={profession} onChange={(e) => setProfession(e.target.value)} fullWidth />
+                  <TextField label="Church Group / Ministry" value={churchGroup} onChange={(e) => setChurchGroup(e.target.value)} fullWidth placeholder="e.g. Choir, Youth League" />
                   {role === 'admin' && (
-                    <Grid item xs={12}>
-                       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                          <FormControlLabel control={<Checkbox checked={residingHere} onChange={(e) => setResidingHere(e.target.checked)} />} label={<Typography variant="body2" fontWeight={700}>Residing here</Typography>} />
-                          <FormControlLabel control={<Checkbox checked={active} onChange={(e) => setActive(e.target.checked)} />} label={<Typography variant="body2" fontWeight={700}>Active record</Typography>} />
-                       </Stack>
-                    </Grid>
+                     <Stack spacing={1}>
+                        <FormControlLabel control={<Checkbox checked={residingHere} onChange={(e) => setResidingHere(e.target.checked)} />} label={<Typography variant="body2" fontWeight={700}>Residing here</Typography>} />
+                        <FormControlLabel control={<Checkbox checked={active} onChange={(e) => setActive(e.target.checked)} />} label={<Typography variant="body2" fontWeight={700}>Active record</Typography>} />
+                     </Stack>
                   )}
-                </Grid>
+                </Stack>
               </Box>
             </Fade>
           )}
@@ -287,25 +263,27 @@ const AddMember = () => {
             <Fade in>
               <Box>
                 <Typography variant="subtitle2" color="primary" fontWeight={800} sx={{ mb: 3, textTransform: 'uppercase', letterSpacing: '1px' }}>Sacraments</Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={6}><TextField label="Baptism Date" type="date" value={baptismDate} onChange={(e) => setBaptismDate(e.target.value)} InputLabelProps={{ shrink: true }} fullWidth /></Grid>
-                  <Grid item xs={6}><TextField label="Place" value={baptismPlace} onChange={(e) => setBaptismPlace(e.target.value)} fullWidth /></Grid>
-                  
-                  <Grid item xs={12}><Divider sx={{ my: 1, opacity: 0.5 }} /></Grid>
-                  
-                  <Grid item xs={6}><TextField label="Holy Com. Date" type="date" value={holyCommunionDate} onChange={(e) => setHolyCommunionDate(e.target.value)} InputLabelProps={{ shrink: true }} fullWidth /></Grid>
-                  <Grid item xs={6}><TextField label="Place" value={holyCommunionPlace} onChange={(e) => setHolyCommunionPlace(e.target.value)} fullWidth /></Grid>
-                  
-                  <Grid item xs={12}><Divider sx={{ my: 1, opacity: 0.5 }} /></Grid>
-                  
-                  <Grid item xs={6}><TextField label="Confirmation Date" type="date" value={confirmationDate} onChange={(e) => setConfirmationDate(e.target.value)} InputLabelProps={{ shrink: true }} fullWidth /></Grid>
-                  <Grid item xs={6}><TextField label="Place" value={confirmationPlace} onChange={(e) => setConfirmationPlace(e.target.value)} fullWidth /></Grid>
-                  
-                  <Grid item xs={12}><Divider sx={{ my: 1, opacity: 0.5 }} /></Grid>
-                  
-                  <Grid item xs={6}><TextField label="Marriage Date" type="date" value={marriageDate} onChange={(e) => setMarriageDate(e.target.value)} InputLabelProps={{ shrink: true }} fullWidth /></Grid>
-                  <Grid item xs={6}><TextField label="Place" value={marriagePlace} onChange={(e) => setMarriagePlace(e.target.value)} fullWidth /></Grid>
-                </Grid>
+                <Stack spacing={2.5}>
+                  <Stack direction="row" spacing={2}>
+                    <TextField label="Baptism Date" type="date" value={baptismDate} onChange={(e) => setBaptismDate(e.target.value)} InputLabelProps={{ shrink: true }} sx={{ flex: 1 }} />
+                    <TextField label="Place" value={baptismPlace} onChange={(e) => setBaptismPlace(e.target.value)} sx={{ flex: 1 }} />
+                  </Stack>
+                  <Divider sx={{ opacity: 0.5 }} />
+                  <Stack direction="row" spacing={2}>
+                    <TextField label="Holy Com. Date" type="date" value={holyCommunionDate} onChange={(e) => setHolyCommunionDate(e.target.value)} InputLabelProps={{ shrink: true }} sx={{ flex: 1 }} />
+                    <TextField label="Place" value={holyCommunionPlace} onChange={(e) => setHolyCommunionPlace(e.target.value)} sx={{ flex: 1 }} />
+                  </Stack>
+                  <Divider sx={{ opacity: 0.5 }} />
+                  <Stack direction="row" spacing={2}>
+                    <TextField label="Confirmation Date" type="date" value={confirmationDate} onChange={(e) => setConfirmationDate(e.target.value)} InputLabelProps={{ shrink: true }} sx={{ flex: 1 }} />
+                    <TextField label="Place" value={confirmationPlace} onChange={(e) => setConfirmationPlace(e.target.value)} sx={{ flex: 1 }} />
+                  </Stack>
+                  <Divider sx={{ opacity: 0.5 }} />
+                  <Stack direction="row" spacing={2}>
+                    <TextField label="Marriage Date" type="date" value={marriageDate} onChange={(e) => setMarriageDate(e.target.value)} InputLabelProps={{ shrink: true }} sx={{ flex: 1 }} />
+                    <TextField label="Place" value={marriagePlace} onChange={(e) => setMarriagePlace(e.target.value)} sx={{ flex: 1 }} />
+                  </Stack>
+                </Stack>
               </Box>
             </Fade>
           )}

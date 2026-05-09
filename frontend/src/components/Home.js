@@ -10,7 +10,6 @@ import {
   Snackbar,
   Alert,
   Chip,
-  Fade,
   Paper,
 } from '@mui/material';
 
@@ -221,15 +220,17 @@ const Home = () => {
               mt: 4, 
               position: 'relative', 
               zIndex: 1,
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(4, 1fr)' },
-              gap: 2
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 1.5
             }}
           >
             {statsList.map((stat, idx) => (
               <Box 
                 key={idx}
                 sx={{ 
+                  flex: '1 1 calc(50% - 12px)',
+                  minWidth: { xs: 'calc(50% - 12px)', sm: '120px' },
                   bgcolor: 'rgba(255,255,255,0.15)', 
                   backdropFilter: 'blur(15px)',
                   p: 2, 
@@ -308,74 +309,52 @@ const Home = () => {
           </Box>
         )}
 
-        <Box sx={{ px: 2, mt: 5 }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} px={1}>
-            <Typography variant="h5" fontWeight={900} color="#1E293B">
-              Quick Services
-            </Typography>
-            <Typography variant="caption" color="primary" fontWeight={800} sx={{ cursor: 'pointer' }}>
-              VIEW ALL
-            </Typography>
-          </Box>
-
-          <Box 
-            sx={{ 
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)' },
-              gap: 2.5
-            }}
-          >
-            {actions.map((action, index) => (
-              <Fade key={index} in timeout={1200 + (index * 100)}>
-                <Card 
-                  sx={{ 
-                    borderRadius: 5, 
-                    boxShadow: '0 4px 15px rgba(0,0,0,0.02)',
-                    border: '1px solid rgba(0,0,0,0.04)',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&:hover': {
-                      transform: 'translateY(-5px)',
-                      boxShadow: '0 20px 40px rgba(30, 58, 138, 0.1)',
-                      borderColor: 'rgba(30, 58, 138, 0.1)',
-                    }
-                  }}
-                >
-                  <CardActionArea 
-                    onClick={() => navigate(action.path)}
-                    sx={{ p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Box 
+        <Box sx={{ px: 3, mt: 4, position: 'relative', zIndex: 2 }}>
+          <Typography variant="overline" color="textSecondary" fontWeight={900} sx={{ letterSpacing: 1, ml: 1, mb: 1.5, display: 'block' }}>
+            Quick Services
+          </Typography>
+          
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {actions.map((action, idx) => (
+              <Card 
+                key={idx} 
+                sx={{ 
+                  borderRadius: 5, 
+                  boxShadow: '0 8px 30px rgba(0,0,0,0.04)', 
+                  border: '1px solid #F1F5F9',
+                  overflow: 'hidden',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:active': { transform: 'scale(0.97)', bgcolor: '#F8FAFC' }
+                }}
+              >
+                <CardActionArea onClick={() => navigate(action.path)} sx={{ p: 2.5 }}>
+                  <Box display="flex" alignItems="center" justifyContent="space-between">
+                    <Box display="flex" alignItems="center">
+                      <Avatar 
                         sx={{ 
-                          width: 56, 
-                          height: 56, 
-                          bgcolor: `${action.color}12`, 
-                          color: action.color,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          mr: 2.5,
-                          borderRadius: 4,
-                          boxShadow: `0 8px 16px ${action.color}15`
+                          bgcolor: `${action.color}15`, 
+                          color: action.color, 
+                          mr: 2.5, 
+                          width: 52, 
+                          height: 52,
+                          boxShadow: `0 8px 20px ${action.color}15`
                         }}
                       >
                         {action.icon}
-                      </Box>
+                      </Avatar>
                       <Box>
-                        <Typography variant="subtitle1" fontWeight={800} color="#1E293B" sx={{ lineHeight: 1.2, mb: 0.5 }}>
+                        <Typography variant="subtitle1" fontWeight={900} color="#1E293B" sx={{ lineHeight: 1.2 }}>
                           {action.title}
                         </Typography>
-                        <Typography variant="body2" color="#64748B" fontWeight={500}>
+                        <Typography variant="caption" color="textSecondary" fontWeight={600}>
                           {action.subtitle}
                         </Typography>
                       </Box>
                     </Box>
-                    <Avatar sx={{ width: 28, height: 28, bgcolor: '#F1F5F9', color: '#94A3B8' }}>
-                      <ChevronRightRoundedIcon sx={{ fontSize: 18 }} />
-                    </Avatar>
-                  </CardActionArea>
-                </Card>
-              </Fade>
+                    <ChevronRightRoundedIcon sx={{ color: '#CBD5E1' }} />
+                  </Box>
+                </CardActionArea>
+              </Card>
             ))}
           </Box>
         </Box>

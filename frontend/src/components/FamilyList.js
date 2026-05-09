@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import {
   Box, Typography, CircularProgress, Avatar, Stack, Fade, IconButton, 
-  Card, Chip, InputAdornment, Tabs, Tab, TextField, Grid, CardActionArea
+  Card, Chip, InputAdornment, Tabs, Tab, TextField, CardActionArea
 } from '@mui/material';
 import API_BASE_URL from '../config';
 import SearchIcon from '@mui/icons-material/Search';
@@ -111,114 +111,111 @@ const FamilyList = () => {
         }}
       />
 
-      <Grid container spacing={2.5}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, flexWrap: 'wrap', gap: 2.5 }}>
         {filteredFamilies.map((fam, idx) => (
-          <Grid item xs={12} sm={6} lg={4} key={fam.family_id}>
-            <Fade in timeout={400 + (idx * 50)}>
-              <Card 
-                sx={{ 
-                  borderRadius: 6, 
-                  overflow: 'hidden',
-                  border: '1px solid rgba(0,0,0,0.04)',
-                  boxShadow: '0 4px 25px rgba(0,0,0,0.03)',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  '&:hover': {
-                    transform: 'translateY(-6px)',
-                    boxShadow: '0 20px 40px rgba(30, 58, 138, 0.1)',
-                  }
-                }}
-              >
-                <Box sx={{ position: 'relative' }}>
-                   <Box sx={{ 
-                     height: 80, 
-                     background: 'linear-gradient(45deg, #1E3A8A 0%, #3B82F6 100%)',
-                     opacity: 0.1
-                   }} />
-                   <Avatar
-                     variant="rounded"
-                     src={fam.family_pic}
+          <Fade key={fam.family_id} in timeout={400 + (idx * 50)}>
+            <Card 
+              sx={{ 
+                flex: { xs: '1 1 100%', md: '0 1 calc(50% - 20px)', lg: '0 1 calc(33.333% - 20px)' },
+                borderRadius: 6, 
+                overflow: 'hidden',
+                border: '1px solid rgba(0,0,0,0.04)',
+                boxShadow: '0 4px 25px rgba(0,0,0,0.03)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:active': { transform: 'scale(0.98)' }
+              }}
+            >
+              <Box sx={{ position: 'relative' }}>
+                 <Box sx={{ 
+                   height: 80, 
+                   background: 'linear-gradient(45deg, #1E3A8A 0%, #3B82F6 100%)',
+                   opacity: 0.1
+                 }} />
+                 <Avatar
+                   variant="rounded"
+                   src={fam.family_pic}
+                   sx={{ 
+                     width: 80, height: 80, 
+                     position: 'absolute', top: 40, left: 24,
+                     borderRadius: 4, border: '4px solid #fff',
+                     boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
+                     bgcolor: '#fff', color: '#1E3A8A', fontWeight: 900, fontSize: '1.5rem'
+                   }}
+                 >
+                   {!fam.family_pic && (fam.head_name || 'F').charAt(0)}
+                 </Avatar>
+                 
+                 {(role === 'admin' || role === 'incharge') && (
+                   <IconButton 
+                     onClick={(e) => { e.stopPropagation(); navigate(`/edit-family/${fam.family_id}`); }}
                      sx={{ 
-                       width: 80, height: 80, 
-                       position: 'absolute', top: 40, left: 24,
-                       borderRadius: 4, border: '4px solid #fff',
-                       boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
-                       bgcolor: '#fff', color: '#1E3A8A', fontWeight: 900, fontSize: '1.5rem'
+                       position: 'absolute', top: 12, right: 12, 
+                       bgcolor: 'rgba(255,255,255,0.8)', 
+                       backdropFilter: 'blur(10px)',
+                       '&:hover': { bgcolor: '#fff' }
                      }}
+                     size="small"
                    >
-                     {!fam.family_pic && (fam.head_name || 'F').charAt(0)}
-                   </Avatar>
-                   
-                   {(role === 'admin' || role === 'incharge') && (
-                     <IconButton 
-                       onClick={() => navigate(`/edit-family/${fam.family_id}`)}
-                       sx={{ 
-                         position: 'absolute', top: 12, right: 12, 
-                         bgcolor: 'rgba(255,255,255,0.8)', 
-                         backdropFilter: 'blur(10px)',
-                         '&:hover': { bgcolor: '#fff' }
-                       }}
-                       size="small"
-                     >
-                       <EditIcon fontSize="small" />
-                     </IconButton>
-                   )}
-                </Box>
+                     <EditIcon fontSize="small" />
+                   </IconButton>
+                 )}
+              </Box>
 
-                <CardActionArea onClick={() => navigate(`/familydet/${fam.family_id}`)} sx={{ pt: 6, px: 3, pb: 3 }}>
-                   <Box mb={2}>
-                     <Typography variant="h6" fontWeight={900} color="#1E293B" sx={{ letterSpacing: '-0.5px', mb: 0.5 }}>
-                       {fam.head_name}
-                     </Typography>
-                     <Stack direction="row" spacing={1} alignItems="center">
-                        <Chip 
-                          label={fam.family_id} 
-                          size="small" 
-                          sx={{ height: 20, borderRadius: 1.5, fontWeight: 900, fontSize: '0.65rem', bgcolor: '#F1F5F9' }} 
-                        />
-                        <Box sx={{ 
-                          px: 1, py: 0.3, borderRadius: 1.5, 
-                          bgcolor: fam.active ? '#ECFDF5' : '#FFF7ED',
-                          color: fam.active ? '#10B981' : '#F59E0B',
-                          fontWeight: 900, fontSize: '0.6rem', textTransform: 'uppercase'
-                        }}>
-                          {fam.active ? 'Approved' : 'Pending'}
-                        </Box>
-                     </Stack>
-                   </Box>
-
-                   <Stack spacing={1.5}>
-                     <Box display="flex" alignItems="center" gap={1.5}>
-                        <Avatar sx={{ width: 32, height: 32, bgcolor: '#EFF6FF', color: '#3B82F6', borderRadius: 2 }}>
-                          <LocationOnRoundedIcon sx={{ fontSize: 16 }} />
-                        </Avatar>
-                        <Box>
-                          <Typography variant="caption" color="textSecondary" fontWeight={700} sx={{ display: 'block', lineHeight: 1 }}>Location</Typography>
-                          <Typography variant="body2" fontWeight={700} color="#475569" noWrap sx={{ maxWidth: 180 }}>
-                            {fam.anbiyam} • {fam.city}
-                          </Typography>
-                        </Box>
-                     </Box>
-                     <Box display="flex" alignItems="center" gap={1.5}>
-                        <Avatar sx={{ width: 32, height: 32, bgcolor: '#F5F3FF', color: '#8B5CF6', borderRadius: 2 }}>
-                          <PhoneRoundedIcon sx={{ fontSize: 16 }} />
-                        </Avatar>
-                        <Box>
-                          <Typography variant="caption" color="textSecondary" fontWeight={700} sx={{ display: 'block', lineHeight: 1 }}>Contact</Typography>
-                          <Typography variant="body2" fontWeight={700} color="#475569">{fam.mobile_number || 'N/A'}</Typography>
-                        </Box>
-                     </Box>
+              <CardActionArea onClick={() => navigate(`/familydet/${fam.family_id}`)} sx={{ pt: 6, px: 3, pb: 3 }}>
+                 <Box mb={2}>
+                   <Typography variant="h6" fontWeight={900} color="#1E293B" sx={{ letterSpacing: '-0.5px', mb: 0.5 }}>
+                     {fam.head_name}
+                   </Typography>
+                   <Stack direction="row" spacing={1} alignItems="center">
+                      <Chip 
+                        label={fam.family_id} 
+                        size="small" 
+                        sx={{ height: 20, borderRadius: 1.5, fontWeight: 900, fontSize: '0.65rem', bgcolor: '#F1F5F9' }} 
+                      />
+                      <Box sx={{ 
+                        px: 1, py: 0.3, borderRadius: 1.5, 
+                        bgcolor: fam.active ? '#ECFDF5' : '#FFF7ED',
+                        color: fam.active ? '#10B981' : '#F59E0B',
+                        fontWeight: 900, fontSize: '0.6rem', textTransform: 'uppercase'
+                      }}>
+                        {fam.active ? 'Approved' : 'Pending'}
+                      </Box>
                    </Stack>
+                 </Box>
 
-                   <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography variant="caption" color="#94A3B8" fontWeight={800}>TAP TO VIEW PROFILE</Typography>
-                      <ChevronRightRoundedIcon sx={{ color: '#CBD5E1' }} />
+                 <Stack spacing={1.5}>
+                   <Box display="flex" alignItems="center" gap={1.5}>
+                      <Avatar sx={{ width: 32, height: 32, bgcolor: '#EFF6FF', color: '#3B82F6', borderRadius: 2 }}>
+                        <LocationOnRoundedIcon sx={{ fontSize: 16 }} />
+                      </Avatar>
+                      <Box>
+                        <Typography variant="caption" color="textSecondary" fontWeight={700} sx={{ display: 'block', lineHeight: 1 }}>Location</Typography>
+                        <Typography variant="body2" fontWeight={700} color="#475569" noWrap sx={{ maxWidth: 180 }}>
+                          {fam.anbiyam} • {fam.city}
+                        </Typography>
+                      </Box>
                    </Box>
-                </CardActionArea>
-              </Card>
-            </Fade>
-          </Grid>
+                   <Box display="flex" alignItems="center" gap={1.5}>
+                      <Avatar sx={{ width: 32, height: 32, bgcolor: '#F5F3FF', color: '#8B5CF6', borderRadius: 2 }}>
+                        <PhoneRoundedIcon sx={{ fontSize: 16 }} />
+                      </Avatar>
+                      <Box>
+                        <Typography variant="caption" color="textSecondary" fontWeight={700} sx={{ display: 'block', lineHeight: 1 }}>Contact</Typography>
+                        <Typography variant="body2" fontWeight={700} color="#475569">
+                          {fam.mobile_number}
+                        </Typography>
+                      </Box>
+                   </Box>
+                 </Stack>
+                 
+                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                    <ChevronRightRoundedIcon sx={{ color: '#CBD5E1' }} />
+                 </Box>
+              </CardActionArea>
+            </Card>
+          </Fade>
         ))}
-      </Grid>
+      </Box>
 
       {filteredFamilies.length === 0 && (
         <Box textAlign="center" py={10}>

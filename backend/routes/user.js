@@ -7,7 +7,14 @@ const adminMiddleware = require('../middleware/adminMiddleware');
 // Get all users
 router.get('/', authMiddleware, adminMiddleware, async (req, res) => {
   try {
-    const result = await query('SELECT id, username, email, mobile, anbiyam, role, is_approved, is_admin FROM users ORDER BY id DESC');
+    const result = await query(`
+      SELECT 
+        u.id, u.username, u.email, u.mobile, u.anbiyam, u.role, u.is_approved, u.is_admin, u.family_id,
+        f.head_name
+      FROM users u
+      LEFT JOIN families f ON u.family_id = f.family_id
+      ORDER BY u.id DESC
+    `);
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching users' });

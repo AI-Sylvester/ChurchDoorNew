@@ -8,7 +8,7 @@ import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from '@mui/icons-material/Close';
 import { 
-  Grid, Card, CardContent, Dialog, DialogTitle, 
+  Card, CardContent, Dialog, DialogTitle, 
   DialogContent, DialogActions, IconButton, Stack, 
   Avatar, Tabs, Tab
 } from '@mui/material';
@@ -157,7 +157,7 @@ const VerifyRegistrations = () => {
       </Tabs>
 
       {tab === 0 && (
-        <Box sx={{ display: 'grid', gap: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {families.length === 0 ? (
             <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4, bgcolor: 'transparent', border: '2px dashed #E2E8F0' }} elevation={0}>
               <VerifiedUserIcon sx={{ fontSize: 60, color: '#10B981', mb: 2, opacity: 0.5 }} />
@@ -165,39 +165,37 @@ const VerifyRegistrations = () => {
             </Paper>
           ) : (
             families.map((fam) => (
-              <Card key={fam.family_id} sx={{ borderRadius: 4, boxShadow: '0 4px 15px rgba(0,0,0,0.02)', border: '1px solid #F1F5F9' }}>
-                <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-                  <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', gap: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Avatar sx={{ bgcolor: '#4F46E515', color: '#4F46E5', mr: 2, width: 50, height: 50 }}>
-                        <HomeWorkIcon />
-                      </Avatar>
-                      <Box>
-                        <Typography variant="h6" fontWeight={900}>{fam.head_name}</Typography>
-                        <Typography variant="body2" color="textSecondary" fontWeight={600}>
-                          ID: {fam.family_id} • {fam.mobile_number}
-                        </Typography>
-                      </Box>
+              <Card key={fam.family_id} sx={{ borderRadius: 5, boxShadow: '0 4px 15px rgba(0,0,0,0.02)', border: '1px solid #F1F5F9', overflow: 'hidden' }}>
+                <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5 }}>
+                    <Avatar sx={{ bgcolor: '#4F46E515', color: '#4F46E5', mr: 2, width: 52, height: 52 }}>
+                      <HomeWorkIcon />
+                    </Avatar>
+                    <Box>
+                      <Typography variant="subtitle1" fontWeight={900} color="#1E293B" sx={{ lineHeight: 1.2 }}>{fam.head_name}</Typography>
+                      <Typography variant="caption" color="textSecondary" fontWeight={700} sx={{ letterSpacing: '0.5px' }}>
+                        ID: {fam.family_id} • {fam.mobile_number}
+                      </Typography>
                     </Box>
-                    <Stack direction="row" spacing={1.5} width={{ xs: '100%', sm: 'auto' }}>
-                      <Button 
-                        variant="outlined" 
-                        startIcon={<VisibilityIcon />}
-                        onClick={() => handleReview(fam)}
-                        sx={{ flex: 1, borderRadius: 3, fontWeight: 800, textTransform: 'none', px: 3 }}
-                      >
-                        Review
-                      </Button>
-                      <Button 
-                        variant="contained" 
-                        color="success" 
-                        onClick={() => handleRecommend(fam.family_id)}
-                        sx={{ flex: 1, borderRadius: 3, fontWeight: 800, textTransform: 'none', px: 3 }}
-                      >
-                        Verify
-                      </Button>
-                    </Stack>
                   </Box>
+                  <Stack direction="row" spacing={1.5}>
+                    <Button 
+                      variant="outlined" 
+                      startIcon={<VisibilityIcon />}
+                      onClick={() => handleReview(fam)}
+                      sx={{ flex: 1, borderRadius: 3.5, fontWeight: 900, textTransform: 'none', py: 1.2 }}
+                    >
+                      Review
+                    </Button>
+                    <Button 
+                      variant="contained" 
+                      color="success" 
+                      onClick={() => handleRecommend(fam.family_id)}
+                      sx={{ flex: 1, borderRadius: 3.5, fontWeight: 900, textTransform: 'none', py: 1.2, boxShadow: '0 8px 20px rgba(16, 185, 129, 0.15)' }}
+                    >
+                      Verify
+                    </Button>
+                  </Stack>
                 </CardContent>
               </Card>
             ))
@@ -206,22 +204,22 @@ const VerifyRegistrations = () => {
       )}
 
       {tab === 1 && (
-        <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' } }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {pendingMembers.length === 0 ? (
-            <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4, bgcolor: 'transparent', border: '2px dashed #E2E8F0', gridColumn: '1/-1' }} elevation={0}>
+            <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4, bgcolor: 'transparent', border: '2px dashed #E2E8F0' }} elevation={0}>
               <VerifiedUserIcon sx={{ fontSize: 60, color: '#3B82F6', mb: 2, opacity: 0.5 }} />
               <Typography variant="h6" fontWeight={800} color="textSecondary">No individual members to verify</Typography>
             </Paper>
           ) : (
             pendingMembers.map((m) => (
-              <Card key={m.member_id} sx={{ borderRadius: 4, boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid #F1F5F9' }}>
-                <CardContent sx={{ p: 3 }}>
+              <Card key={m.member_id} sx={{ borderRadius: 5, boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid #F1F5F9' }}>
+                <CardContent sx={{ p: 2.5 }}>
                   <Box mb={2}>
-                    <Typography variant="h6" fontWeight={900}>{m.name}</Typography>
-                    <Typography variant="caption" color="primary" fontWeight={800} sx={{ textTransform: 'uppercase', display: 'block', mb: 0.5 }}>
+                    <Typography variant="h6" fontWeight={900} color="#1E293B">{m.name}</Typography>
+                    <Typography variant="caption" color="primary" fontWeight={900} sx={{ textTransform: 'uppercase', display: 'block', mb: 1.5, letterSpacing: '0.5px' }}>
                       {m.relationship} • Family: {m.family_head}
                     </Typography>
-                    <Typography variant="body2" color="textSecondary" sx={{ bgcolor: '#F8FAFC', p: 1, borderRadius: 2, border: '1px solid #F1F5F9' }}>
+                    <Typography variant="body2" color="textSecondary" sx={{ bgcolor: '#F8FAFC', p: 1.5, borderRadius: 3, border: '1px solid #F1F5F9', fontSize: '0.85rem', fontWeight: 600 }}>
                       {m.address_line1}{m.address_line2 ? `, ${m.address_line2}` : ''}, {m.city}
                     </Typography>
                   </Box>
@@ -230,9 +228,9 @@ const VerifyRegistrations = () => {
                     variant="contained" 
                     color="primary" 
                     onClick={() => handleRecommendMember(m.member_id)} 
-                    sx={{ borderRadius: 3, fontWeight: 800, py: 1.2 }}
+                    sx={{ borderRadius: 3.5, fontWeight: 900, py: 1.4, textTransform: 'none', boxShadow: '0 8px 20px rgba(59, 130, 246, 0.2)' }}
                   >
-                    Verify Member
+                    Verify Member Addition
                   </Button>
                 </CardContent>
               </Card>
@@ -242,34 +240,36 @@ const VerifyRegistrations = () => {
       )}
       
       {tab === 2 && (
-        <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' } }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {pendingUsers.length === 0 ? (
-            <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4, bgcolor: 'transparent', border: '2px dashed #E2E8F0', gridColumn: '1/-1' }} elevation={0}>
+            <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4, bgcolor: 'transparent', border: '2px dashed #E2E8F0' }} elevation={0}>
               <VerifiedUserIcon sx={{ fontSize: 60, color: '#8B5CF6', mb: 2, opacity: 0.5 }} />
               <Typography variant="h6" fontWeight={800} color="textSecondary">No new user accounts to verify</Typography>
             </Paper>
           ) : (
             pendingUsers.map((u) => (
-              <Card key={u.id} sx={{ borderRadius: 4, boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid #F1F5F9' }}>
-                <CardContent sx={{ p: 3 }}>
+              <Card key={u.id} sx={{ borderRadius: 5, boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid #F1F5F9' }}>
+                <CardContent sx={{ p: 2.5 }}>
                   <Box mb={2}>
-                    <Typography variant="h6" fontWeight={900}>{u.username}</Typography>
-                    <Typography variant="caption" color="secondary" fontWeight={800} sx={{ textTransform: 'uppercase', display: 'block' }}>
+                    <Typography variant="h6" fontWeight={900} color="#1E293B">{u.username}</Typography>
+                    <Typography variant="caption" color="secondary" fontWeight={900} sx={{ textTransform: 'uppercase', display: 'block', mb: 1.5, letterSpacing: '0.5px' }}>
                       {u.role} • Family: {u.family_head} ({u.family_id})
                     </Typography>
-                    <Typography variant="body2" color="textSecondary" sx={{ mt: 1, mb: 1, bgcolor: '#F8FAFC', p: 1, borderRadius: 2, border: '1px solid #F1F5F9', fontSize: '0.8rem' }}>
-                      Address: {u.address_line1}{u.address_line2 ? `, ${u.address_line2}` : ''}, {u.city}<br/>
-                      Mobile: {u.mobile}
-                    </Typography>
+                    <Box sx={{ bgcolor: '#F8FAFC', p: 1.5, borderRadius: 3, border: '1px solid #F1F5F9', fontSize: '0.8rem' }}>
+                      <Typography variant="body2" color="textSecondary" fontWeight={600}>
+                        Address: <strong>{u.address_line1}{u.address_line2 ? `, ${u.address_line2}` : ''}, {u.city}</strong><br/>
+                        Mobile: <strong>{u.mobile}</strong>
+                      </Typography>
+                    </Box>
                   </Box>
                   <Button 
                     fullWidth 
                     variant="contained" 
                     color="secondary" 
                     onClick={() => handleRecommendUser(u.id)} 
-                    sx={{ borderRadius: 3, fontWeight: 800, py: 1.2, bgcolor: '#8B5CF6', '&:hover': { bgcolor: '#7C3AED' } }}
+                    sx={{ borderRadius: 3.5, fontWeight: 900, py: 1.4, textTransform: 'none', bgcolor: '#8B5CF6', '&:hover': { bgcolor: '#7C3AED' }, boxShadow: '0 8px 20px rgba(139, 92, 246, 0.2)' }}
                   >
-                    Verify User Account
+                    Verify Account Registration
                   </Button>
                 </CardContent>
               </Card>
@@ -336,16 +336,17 @@ const VerifyRegistrations = () => {
           {selectedFamily && (
             <Box>
               <Typography variant="caption" color="primary" fontWeight={900} sx={{ letterSpacing: 1 }}>FAMILY DATA</Typography>
-              <Grid container spacing={2} sx={{ mt: 1, mb: 4 }}>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="caption" color="textSecondary" display="block">Head Name</Typography>
+              <Typography variant="caption" color="primary" fontWeight={900} sx={{ letterSpacing: 1 }}>FAMILY DATA</Typography>
+              <Stack spacing={2} sx={{ mt: 1.5, mb: 4 }}>
+                <Box>
+                  <Typography variant="caption" color="textSecondary" display="block" fontWeight={700}>HEAD NAME</Typography>
                   <Typography variant="body1" fontWeight={800}>{selectedFamily.head_name}</Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="caption" color="textSecondary" display="block">Address</Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="textSecondary" display="block" fontWeight={700}>ADDRESS</Typography>
                   <Typography variant="body1" fontWeight={700}>{selectedFamily.address_line1}, {selectedFamily.city}</Typography>
-                </Grid>
-              </Grid>
+                </Box>
+              </Stack>
               
               <Typography variant="caption" color="primary" fontWeight={900} sx={{ letterSpacing: 1 }}>MEMBERS ({members.length})</Typography>
               <List sx={{ mt: 1, bgcolor: '#F8FAFC', borderRadius: 4, overflow: 'hidden' }}>
