@@ -25,6 +25,7 @@ const Login = () => {
   const [mobile, setMobile] = useState('');
   const [anbiyam, setAnbiyam] = useState('');
   const [role, setRole] = useState('family');
+  const [familyId, setFamilyId] = useState('');
   const [anbiyamList, setAnbiyamList] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -88,6 +89,10 @@ const Login = () => {
         setError('All fields are required');
         return;
       }
+      if (role === 'incharge' && !familyId) {
+        setError('Family ID is mandatory for Incharge registration');
+        return;
+      }
       try {
         await axios.post(`${API_BASE_URL}/auth/register`, {
           username,
@@ -95,6 +100,7 @@ const Login = () => {
           mobile,
           anbiyam,
           role,
+          family_id: familyId,
           email: `${username}@churchdoor.com` // Auto-generate internal email if DB requires it
         });
         setSuccess('Registration successful! Please wait for admin approval.');
@@ -102,6 +108,7 @@ const Login = () => {
         setPassword('');
         setMobile('');
         setAnbiyam('');
+        setFamilyId('');
         setTimeout(() => setMode('login'), 5000);
       } catch (err) {
         setError(err.response?.data?.message || 'Registration failed');
@@ -236,6 +243,19 @@ const Login = () => {
                     value={mobile}
                     onChange={(e) => setMobile(e.target.value)}
                     required
+                    fullWidth
+                    sx={{ 
+                      mb: 2,
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 3,
+                        backgroundColor: '#F8FAFC',
+                      }
+                    }}
+                  />
+                  <TextField
+                    placeholder="Family ID (Optional for Family, Required for Incharge)"
+                    value={familyId}
+                    onChange={(e) => setFamilyId(e.target.value)}
                     fullWidth
                     sx={{ 
                       mb: 2,
