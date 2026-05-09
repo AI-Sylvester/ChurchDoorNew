@@ -1,41 +1,18 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import {
-  Box,
-  Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Button,
-  Dialog,
-  DialogContent,
-  DialogActions,
-  TextField,
-  CircularProgress,
-  Avatar,
-  Stack,
-  Fade,
-  CardActionArea,
-  IconButton,
-  useMediaQuery,
-  useTheme,
-  Card,
-  Chip,
-  InputAdornment,
-  Tabs,
-  Tab
+  Box, Typography, CircularProgress, Avatar, Stack, Fade, IconButton, 
+  Card, Chip, InputAdornment, Tabs, Tab, TextField, Grid, CardActionArea
 } from '@mui/material';
 import API_BASE_URL from '../config';
 import SearchIcon from '@mui/icons-material/Search';
 import EditIcon from '@mui/icons-material/Edit';
 import { useNavigate } from 'react-router-dom';
+import LocationOnRoundedIcon from '@mui/icons-material/LocationOnRounded';
+import PhoneRoundedIcon from '@mui/icons-material/PhoneRounded';
 
 const ChevronRightRoundedIcon = (props) => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
     <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
@@ -44,16 +21,10 @@ const FamilyList = () => {
   const [families, setFamilies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeOnly] = useState(true);
-  
-  const [imageOpen, setImageOpen] = useState(false);
-  
+  const [tab, setTab] = useState(0);
   const navigate = useNavigate();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const token = localStorage.getItem('token');
   const role = (localStorage.getItem('role') || 'family').toLowerCase();
-  const [tab, setTab] = useState(0);
 
   const fetchFamilies = useCallback(async () => {
     try {
@@ -75,51 +46,62 @@ const FamilyList = () => {
   }, [fetchFamilies]);
 
   const filteredFamilies = useMemo(() => {
-    return families.filter(fam => {
-      const matchesSearch = (fam.head_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            fam.family_id?.toLowerCase().includes(searchQuery.toLowerCase()));
-      // If we are in vetting tab, they are all technically inactive/pending
-      const matchesStatus = tab === 1 ? true : (activeOnly ? fam.active : true);
-      return matchesSearch && matchesStatus;
-    });
-  }, [families, searchQuery, activeOnly, tab]);
-
-  const handleView = (familyId) => {
-    navigate(`/familydet/${familyId}`);
-  };
-
-  const handleEdit = (familyId) => {
-    navigate(`/edit-family/${familyId}`);
-  };
+    return families.filter(fam => 
+      fam.head_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      fam.family_id?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [families, searchQuery]);
 
   if (loading) return (
     <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
-      <CircularProgress />
+      <CircularProgress thickness={5} size={50} sx={{ color: '#1E3A8A' }} />
     </Box>
   );
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 }, pb: 12 }}>
+    <Box sx={{ p: { xs: 2, md: 4 }, pb: 12, bgcolor: '#F8FAFC', minHeight: '100vh' }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" fontWeight={900} color="#1E293B" sx={{ letterSpacing: '-1.5px', mb: 1 }}>
+          Church Directory
+        </Typography>
+        <Typography variant="subtitle2" color="textSecondary" fontWeight={600}>
+          Browse and manage parish families
+        </Typography>
+      </Box>
+
       {(role === 'admin' || role === 'incharge') && (
         <Tabs 
           value={tab} 
           onChange={(e, v) => setTab(v)} 
-          sx={{ mb: 3, borderBottom: '1px solid #E2E8F0' }}
-          textColor="primary"
-          indicatorColor="primary"
+          sx={{ 
+            mb: 4, 
+            bgcolor: '#fff', 
+            borderRadius: 4, 
+            p: 0.5,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
+            '& .MuiTabs-indicator': { height: '100%', borderRadius: 3, bgcolor: '#4F46E508', zIndex: 0 },
+            '& .MuiTab-root': { zIndex: 1, fontWeight: 900, textTransform: 'none', minHeight: 48 }
+          }}
         >
-          <Tab label="Active Directory" sx={{ fontWeight: 800 }} />
-          <Tab label="Pending Vetting" sx={{ fontWeight: 800 }} />
+          <Tab label="Active Members" />
+          <Tab label="Pending Vetting" />
         </Tabs>
       )}
 
       <TextField
         fullWidth
-        variant="outlined"
-        placeholder="Search by name or Family ID..."
+        placeholder="Search by name, ID or Anbiyam..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        sx={{ mb: 3, bgcolor: '#fff', borderRadius: 2 }}
+        sx={{ 
+          mb: 4, 
+          bgcolor: '#fff', 
+          '& .MuiOutlinedInput-root': { 
+            borderRadius: 4,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
+            border: '1px solid #E2E8F0'
+          }
+        }}
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
@@ -129,118 +111,120 @@ const FamilyList = () => {
         }}
       />
 
-
-      {isMobile ? (
-        <Stack spacing={2}>
-          {filteredFamilies.map((fam, idx) => (
-            <Fade in timeout={500 + (idx * 50)} key={fam.family_id}>
+      <Grid container spacing={2.5}>
+        {filteredFamilies.map((fam, idx) => (
+          <Grid item xs={12} sm={6} lg={4} key={fam.family_id}>
+            <Fade in timeout={400 + (idx * 50)}>
               <Card 
                 sx={{ 
-                  borderRadius: 5, 
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.02)', 
-                  position: 'relative',
-                  border: '1px solid rgba(0,0,0,0.05)',
-                  transition: 'transform 0.2s',
-                  '&:active': { transform: 'scale(0.98)' }
+                  borderRadius: 6, 
+                  overflow: 'hidden',
+                  border: '1px solid rgba(0,0,0,0.04)',
+                  boxShadow: '0 4px 25px rgba(0,0,0,0.03)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover': {
+                    transform: 'translateY(-6px)',
+                    boxShadow: '0 20px 40px rgba(30, 58, 138, 0.1)',
+                  }
                 }}
               >
-                <CardActionArea onClick={() => handleView(fam.family_id)} sx={{ p: 2 }}>
-                  <Box display="flex" alignItems="center" gap={2}>
-                    <Avatar
-                      variant="rounded"
-                      src={fam.family_pic}
-                      sx={{ 
-                        width: 60, 
-                        height: 60, 
-                        bgcolor: '#F1F5F9', 
-                        color: '#1E3A8A',
-                        borderRadius: 3,
-                        boxShadow: '0 8px 16px rgba(0,0,0,0.05)',
-                        fontWeight: 900
-                      }}
-                    >
-                      {!fam.family_pic && (fam.head_name || 'F').charAt(0)}
-                    </Avatar>
-                    <Box flex={1} sx={{ minWidth: 0 }}>
-                      <Typography variant="subtitle1" fontWeight={900} color="#1E293B" noWrap sx={{ letterSpacing: '-0.5px' }}>
-                        {fam.head_name}
-                      </Typography>
-                      <Typography variant="caption" color="textSecondary" fontWeight={600} display="block" noWrap>
-                        {fam.anbiyam} • {fam.city}
-                      </Typography>
-                      <Stack direction="row" spacing={1} mt={1} alignItems="center">
-                         <Box sx={{
-                          px: 1, py: 0.2, borderRadius: 1.5, display: 'inline-block',
+                <Box sx={{ position: 'relative' }}>
+                   <Box sx={{ 
+                     height: 80, 
+                     background: 'linear-gradient(45deg, #1E3A8A 0%, #3B82F6 100%)',
+                     opacity: 0.1
+                   }} />
+                   <Avatar
+                     variant="rounded"
+                     src={fam.family_pic}
+                     sx={{ 
+                       width: 80, height: 80, 
+                       position: 'absolute', top: 40, left: 24,
+                       borderRadius: 4, border: '4px solid #fff',
+                       boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
+                       bgcolor: '#fff', color: '#1E3A8A', fontWeight: 900, fontSize: '1.5rem'
+                     }}
+                   >
+                     {!fam.family_pic && (fam.head_name || 'F').charAt(0)}
+                   </Avatar>
+                   
+                   {(role === 'admin' || role === 'incharge') && (
+                     <IconButton 
+                       onClick={() => navigate(`/edit-family/${fam.family_id}`)}
+                       sx={{ 
+                         position: 'absolute', top: 12, right: 12, 
+                         bgcolor: 'rgba(255,255,255,0.8)', 
+                         backdropFilter: 'blur(10px)',
+                         '&:hover': { bgcolor: '#fff' }
+                       }}
+                       size="small"
+                     >
+                       <EditIcon fontSize="small" />
+                     </IconButton>
+                   )}
+                </Box>
+
+                <CardActionArea onClick={() => navigate(`/familydet/${fam.family_id}`)} sx={{ pt: 6, px: 3, pb: 3 }}>
+                   <Box mb={2}>
+                     <Typography variant="h6" fontWeight={900} color="#1E293B" sx={{ letterSpacing: '-0.5px', mb: 0.5 }}>
+                       {fam.head_name}
+                     </Typography>
+                     <Stack direction="row" spacing={1} alignItems="center">
+                        <Chip 
+                          label={fam.family_id} 
+                          size="small" 
+                          sx={{ height: 20, borderRadius: 1.5, fontWeight: 900, fontSize: '0.65rem', bgcolor: '#F1F5F9' }} 
+                        />
+                        <Box sx={{ 
+                          px: 1, py: 0.3, borderRadius: 1.5, 
                           bgcolor: fam.active ? '#ECFDF5' : '#FFF7ED',
                           color: fam.active ? '#10B981' : '#F59E0B',
-                          fontWeight: 900, fontSize: '0.6rem', textTransform: 'uppercase',
-                          letterSpacing: '0.5px'
+                          fontWeight: 900, fontSize: '0.6rem', textTransform: 'uppercase'
                         }}>
-                          {fam.active ? 'Active' : 'Pending'}
+                          {fam.active ? 'Approved' : 'Pending'}
                         </Box>
-                        <Typography variant="caption" color="#94A3B8" fontWeight={700}>
-                          ID: {fam.family_id}
-                        </Typography>
-                      </Stack>
-                    </Box>
-                    <ChevronRightRoundedIcon sx={{ color: '#E2E8F0', ml: 1 }} />
-                  </Box>
+                     </Stack>
+                   </Box>
+
+                   <Stack spacing={1.5}>
+                     <Box display="flex" alignItems="center" gap={1.5}>
+                        <Avatar sx={{ width: 32, height: 32, bgcolor: '#EFF6FF', color: '#3B82F6', borderRadius: 2 }}>
+                          <LocationOnRoundedIcon sx={{ fontSize: 16 }} />
+                        </Avatar>
+                        <Box>
+                          <Typography variant="caption" color="textSecondary" fontWeight={700} sx={{ display: 'block', lineHeight: 1 }}>Location</Typography>
+                          <Typography variant="body2" fontWeight={700} color="#475569" noWrap sx={{ maxWidth: 180 }}>
+                            {fam.anbiyam} • {fam.city}
+                          </Typography>
+                        </Box>
+                     </Box>
+                     <Box display="flex" alignItems="center" gap={1.5}>
+                        <Avatar sx={{ width: 32, height: 32, bgcolor: '#F5F3FF', color: '#8B5CF6', borderRadius: 2 }}>
+                          <PhoneRoundedIcon sx={{ fontSize: 16 }} />
+                        </Avatar>
+                        <Box>
+                          <Typography variant="caption" color="textSecondary" fontWeight={700} sx={{ display: 'block', lineHeight: 1 }}>Contact</Typography>
+                          <Typography variant="body2" fontWeight={700} color="#475569">{fam.mobile_number || 'N/A'}</Typography>
+                        </Box>
+                     </Box>
+                   </Stack>
+
+                   <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="caption" color="#94A3B8" fontWeight={800}>TAP TO VIEW PROFILE</Typography>
+                      <ChevronRightRoundedIcon sx={{ color: '#CBD5E1' }} />
+                   </Box>
                 </CardActionArea>
               </Card>
             </Fade>
-          ))}
-        </Stack>
-      ) : (
-        <TableContainer component={Paper} sx={{ borderRadius: 4, boxShadow: '0 10px 30px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-          <Table>
-            <TableHead sx={{ bgcolor: '#F8FAFC' }}>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 900 }}>Family ID</TableCell>
-                <TableCell sx={{ fontWeight: 900 }}>Head Name</TableCell>
-                <TableCell sx={{ fontWeight: 900 }}>Anbiyam</TableCell>
-                <TableCell sx={{ fontWeight: 900 }}>Status</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 900 }}>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredFamilies.map((fam) => (
-                <TableRow key={fam.family_id} hover>
-                  <TableCell sx={{ fontWeight: 700 }}>{fam.family_id}</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>{fam.head_name}</TableCell>
-                  <TableCell>{fam.anbiyam}</TableCell>
-                  <TableCell>
-                    <Chip 
-                      label={fam.active ? 'Active' : 'Pending'} 
-                      size="small" 
-                      color={fam.active ? 'success' : 'warning'}
-                      sx={{ fontWeight: 800, borderRadius: 1.5 }}
-                    />
-                  </TableCell>
-                  <TableCell align="right">
-                    <IconButton onClick={() => handleView(fam.family_id)} color="primary" size="small"><SearchIcon /></IconButton>
-                    <IconButton onClick={() => handleEdit(fam.family_id)} color="secondary" size="small"><EditIcon /></IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+          </Grid>
+        ))}
+      </Grid>
 
       {filteredFamilies.length === 0 && (
         <Box textAlign="center" py={10}>
           <Typography color="textSecondary" fontWeight={600}>No families found matching your criteria.</Typography>
         </Box>
       )}
-
-      <Dialog open={imageOpen} onClose={() => setImageOpen(false)} maxWidth="md">
-        <DialogContent>
-          <Typography>No Image Available</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setImageOpen(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 };

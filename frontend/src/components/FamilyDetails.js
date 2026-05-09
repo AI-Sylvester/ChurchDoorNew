@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
   Box,
@@ -43,6 +43,7 @@ const FamilyDetailsView = () => {
   const [updatingMember, setUpdatingMember] = useState(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const navigate = useNavigate();
 
   const token = localStorage.getItem('token');
   const role = (localStorage.getItem('role') || 'family').toLowerCase();
@@ -432,6 +433,19 @@ const toBase64 = (url) =>
       </Typography>
     </Box>
 
+    {(role === 'admin' || role === 'incharge') && (
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+        <Button 
+          variant="outlined" 
+          startIcon={<SearchIcon />} 
+          onClick={() => navigate(`/edit-family/${familyDetails.family_id}`)}
+          sx={{ borderRadius: 3, fontWeight: 800, textTransform: 'none' }}
+        >
+          Edit Registration
+        </Button>
+      </Box>
+    )}
+
     {/* Quick Stat Badges */}
     <Stack direction="row" spacing={2} justifyContent={{ xs: 'center', md: 'flex-start' }} flexWrap="wrap" useFlexGap sx={{ mb: 5, ml: { xs: 0, md: 5 } }}>
       <Box sx={{ px: 2.5, py: 0.8, borderRadius: 50, bgcolor: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6', fontWeight: 700, fontSize: '0.875rem' }}>
@@ -693,25 +707,24 @@ const toBase64 = (url) =>
   </>
 )}
       <Box display="flex" justifyContent={{ xs: 'center', md: 'flex-end' }} mt={2}>
-  <button
-    onClick={() => exportPDF()}
-    disabled={!familyDetails || members.length === 0}
-    style={{
-      backgroundColor: '#0B3D91',
-      color: 'white',
-      border: 'none',
-      padding: '8px 16px',
-      borderRadius: 4,
-      cursor: familyDetails && members.length ? 'pointer' : 'not-allowed',
-      width: 'fit-content',
-    }}
-  >
-    Export to PDF
-  </button>
-</Box>
+        <Button
+          variant="contained"
+          onClick={() => exportPDF()}
+          disabled={!familyDetails || members.length === 0}
+          sx={{
+            bgcolor: '#0B3D91',
+            color: 'white',
+            borderRadius: 2,
+            px: 3,
+            fontWeight: 700,
+            '&:hover': { bgcolor: '#082d6b' }
+          }}
+        >
+          Export to PDF
+        </Button>
+      </Box>
       </Container>
     </Box>
-    
   );
 };
 

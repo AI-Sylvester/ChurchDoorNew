@@ -85,7 +85,7 @@ exports.recommendMemberApproval = async (req, res, next) => {
 
     // Verify the member belongs to a family in the incharge's anbiyam
     const check = await db.query(
-      "SELECT f.anbiyam FROM members m JOIN families f ON (f.family_id = SPLIT_PART(m.member_id, '-', 1)) WHERE m.member_id = $1",
+      "SELECT f.anbiyam FROM members m JOIN families f ON f.id = m.family_id WHERE m.member_id = $1",
       [memberId]
     );
     if (check.rows.length === 0 || check.rows[0].anbiyam !== anbiyam) {
@@ -108,7 +108,20 @@ exports.getPendingMemberVerifications = async (req, res, next) => {
   try {
     const { anbiyam } = req.user;
     const result = await db.query(
-      "SELECT m.*, f.head_name as family_head, f.address_line1, f.address_line2, f.city FROM members m JOIN families f ON (f.family_id = SPLIT_PART(m.member_id, '-', 1)) WHERE f.anbiyam = $1 AND m.verification_status = 'pending_incharge' ORDER BY m.name ASC",
+      `SELECT m.*, 
+              COALESCE(f.head_name, u.username, 'NO_HEAD') as family_head, 
+              COALESCE(f.address_line1, 'NO_ADDR') as address_line1, 
+              COALESCE(f.address_line2, '') as address_line2, 
+              COALESCE(f.city, 'NO_CITY') as city 
+       FROM members m 
+       JOIN families f ON f.id = m.family_id 
+       LEFT JOIN LATERAL (
+         SELECT username FROM users 
+         WHERE family_id = SPLIT_PART(m.member_id, '-', 1) 
+         LIMIT 1
+       ) u ON TRUE
+       WHERE f.anbiyam = $1 AND m.verification_status = 'pending_incharge' 
+       ORDER BY m.name ASC`,
       [anbiyam]
     );
     res.status(200).json(result.rows);

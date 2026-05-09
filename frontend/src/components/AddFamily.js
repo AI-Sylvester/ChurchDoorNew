@@ -18,8 +18,10 @@ import ContactPhoneRoundedIcon from '@mui/icons-material/ContactPhoneRounded';
 import MapRoundedIcon from '@mui/icons-material/MapRounded';
 import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
 import PhotoCameraRoundedIcon from '@mui/icons-material/PhotoCameraRounded';
+import { useParams } from 'react-router-dom';
 
-const AddFamily = () => {
+const AddFamily = ({ isEdit = false }) => {
+  const { familyId: editFamilyId } = useParams();
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
   const role = (localStorage.getItem('role') || 'family').toLowerCase();
@@ -67,8 +69,57 @@ const AddFamily = () => {
         console.error('Failed to fetch anbiyam list', err);
       }
     };
-    if (token) fetchAnbiyamList();
-  }, [token]);
+
+    const fetchExistingData = async () => {
+      if (!isEdit || !editFamilyId) return;
+      try {
+        setLoading(true);
+        const res = await axios.get(`${API_BASE_URL}/family/${editFamilyId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const d = res.data;
+        
+        // If already approved and user is not admin, block edit
+        if (d.active && role !== 'admin') {
+          setError('This record is approved and locked. Please request an update from your profile.');
+          return;
+        }
+
+        setForm({
+          head_name: d.head_name || '',
+          address_line1: d.address_line1 || '',
+          address_line2: d.address_line2 || '',
+          city: d.city || '',
+          pincode: d.pincode || '',
+          mobile_number: d.mobile_number || '',
+          mobile_number2: d.mobile_number2 || '',
+          cemetery: d.cemetery || 'no',
+          native: d.native || '',
+          resident_from: d.resident_from || '',
+          house_type: d.house_type || 'Own',
+          subscription: d.subscription || '',
+          anbiyam: d.anbiyam || '',
+          family_pic: d.family_pic || '',
+          cemetery_number: d.cemetery_number || '',
+          old_card_number: d.old_card_number || '',
+          active: d.active || false,
+          location: d.location || ''
+        });
+        if (d.family_pic) setPreviewUrl(d.family_pic);
+      } catch (err) {
+        setError('Failed to load family data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (token) {
+      fetchAnbiyamList();
+      fetchExistingData();
+    }
+  }, [token, isEdit, editFamilyId, role]);
+
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -102,16 +153,27 @@ const AddFamily = () => {
     }
 
     try {
-      const res = await axios.post(`${API_BASE_URL}/family/create`, formData, {
+      const url = isEdit ? `${API_BASE_URL}/family/${editFamilyId}` : `${API_BASE_URL}/family/create`;
+      const method = isEdit ? 'put' : 'post';
+      
+      const res = await axios({
+        method,
+        url,
+        data: formData,
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
       });
-      setFamily(res.data);
+      
+      if (isEdit) {
+        navigate('/home'); // Or back to family list
+      } else {
+        setFamily(res.data);
+      }
       setError('');
     } catch (err) {
-      setError('Failed to create family. Please check all fields.');
+      setError(isEdit ? 'Failed to update family.' : 'Failed to create family. Please check all fields.');
     } finally {
       setSubmitting(false);
     }
@@ -318,59 +380,66 @@ const AddFamily = () => {
             <HomeWorkRoundedIcon />
           </Avatar>
           <Typography variant="h4" fontWeight={900} color="#1E293B" sx={{ letterSpacing: '-1.5px', mb: 0.5 }}>
-            New Registration
+            {isEdit ? 'Update Registration' : 'New Registration'}
           </Typography>
           <Typography variant="subtitle2" color="#64748B" fontWeight={600}>
-            Complete the steps below to register
+            {isEdit ? 'Modify your family details' : 'Complete the steps below to register'}
           </Typography>
         </Box>
 
-        {error && <Alert severity="error" variant="filled" sx={{ mb: 3, borderRadius: 4, fontWeight: 700 }}>{error}</Alert>}
-
-        <Paper elevation={0} sx={{ p: { xs: 2, sm: 4 }, borderRadius: 6, boxShadow: '0 20px 40px rgba(0,0,0,0.04)', border: '1px solid #E2E8F0' }}>
-          <Stepper activeStep={activeStep} orientation="vertical" sx={{ 
-            '& .MuiStepIcon-root': { width: 32, height: 32 },
-            '& .MuiStepIcon-root.Mui-active': { color: '#1E3A8A' },
-            '& .MuiStepIcon-root.Mui-completed': { color: '#10B981' }
-          }}>
-            {steps.map((step, index) => (
-              <Step key={step.label}>
-                <StepLabel icon={index < activeStep ? <CheckCircleRoundedIcon /> : undefined}>
-                  <Typography variant="subtitle1" fontWeight={900} color={activeStep === index ? '#1E293B' : '#94A3B8'}>
-                    {step.label}
-                  </Typography>
-                </StepLabel>
-                <StepContent>
-                  <Box sx={{ mt: 2, mb: 3 }}>
-                    {step.content}
-                  </Box>
-                  <Box sx={{ mb: 2 }}>
-                    <Stack direction="row" spacing={2}>
-                      <Button
-                        variant="contained"
-                        onClick={index === steps.length - 1 ? createFamily : handleNext}
-                        disabled={submitting}
-                        sx={{ 
-                          borderRadius: 3, px: 4, py: 1.5, fontWeight: 900, textTransform: 'none',
-                          bgcolor: '#1E3A8A', '&:hover': { bgcolor: '#1e3a8a' }
-                        }}
-                      >
-                        {submitting ? <CircularProgress size={24} color="inherit" /> : index === steps.length - 1 ? 'Finish Registration' : 'Continue'}
-                      </Button>
-                      <Button
-                        disabled={index === 0}
-                        onClick={handleBack}
-                        sx={{ borderRadius: 3, fontWeight: 700, textTransform: 'none', color: '#64748B' }}
-                      >
-                        Back
-                      </Button>
-                    </Stack>
-                  </Box>
-                </StepContent>
-              </Step>
-            ))}
-          </Stepper>
-        </Paper>
+        {loading ? (
+          <Box display="flex" justifyContent="center" my={5}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <>
+            {error && <Alert severity="error" variant="filled" sx={{ mb: 3, borderRadius: 4, fontWeight: 700 }}>{error}</Alert>}
+            <Paper elevation={0} sx={{ p: { xs: 2, sm: 4 }, borderRadius: 6, boxShadow: '0 20px 40px rgba(0,0,0,0.04)', border: '1px solid #E2E8F0', opacity: (error && isEdit) ? 0.5 : 1, pointerEvents: (error && isEdit) ? 'none' : 'auto' }}>
+              <Stepper activeStep={activeStep} orientation="vertical" sx={{ 
+                '& .MuiStepIcon-root': { width: 32, height: 32 },
+                '& .MuiStepIcon-root.Mui-active': { color: '#1E3A8A' },
+                '& .MuiStepIcon-root.Mui-completed': { color: '#10B981' }
+              }}>
+                {steps.map((step, index) => (
+                  <Step key={step.label}>
+                    <StepLabel icon={index < activeStep ? <CheckCircleRoundedIcon /> : undefined}>
+                      <Typography variant="subtitle1" fontWeight={900} color={activeStep === index ? '#1E293B' : '#94A3B8'}>
+                        {step.label}
+                      </Typography>
+                    </StepLabel>
+                    <StepContent>
+                      <Box sx={{ mt: 2, mb: 3 }}>
+                        {step.content}
+                      </Box>
+                      <Box sx={{ mb: 2 }}>
+                        <Stack direction="row" spacing={2}>
+                          <Button
+                            variant="contained"
+                            onClick={index === steps.length - 1 ? createFamily : handleNext}
+                            disabled={submitting}
+                            sx={{ 
+                              borderRadius: 3, px: 4, py: 1.5, fontWeight: 900, textTransform: 'none',
+                              bgcolor: '#1E3A8A', '&:hover': { bgcolor: '#1e3a8a' }
+                            }}
+                          >
+                            {submitting ? <CircularProgress size={24} color="inherit" /> : index === steps.length - 1 ? (isEdit ? 'Update Record' : 'Finish Registration') : 'Continue'}
+                          </Button>
+                          <Button
+                            disabled={index === 0}
+                            onClick={handleBack}
+                            sx={{ borderRadius: 3, fontWeight: 700, textTransform: 'none', color: '#64748B' }}
+                          >
+                            Back
+                          </Button>
+                        </Stack>
+                      </Box>
+                    </StepContent>
+                  </Step>
+                ))}
+              </Stepper>
+            </Paper>
+          </>
+        )}
       </Box>
 
       <Dialog open={mapDialogOpen} onClose={() => setMapDialogOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 5 } }}>

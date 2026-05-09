@@ -4,7 +4,15 @@ const AppError = require('../utils/AppError');
 exports.getPendingUsers = async (req, res, next) => {
   try {
     const result = await db.query(
-      "SELECT u.id, u.username, u.email, u.mobile, u.anbiyam, u.role, u.family_id, u.verification_status, f.head_name as family_head, f.address_line1, f.address_line2, f.city FROM users u LEFT JOIN families f ON u.family_id = f.family_id WHERE u.is_approved = false AND u.role != 'admin' ORDER BY u.id DESC"
+      `SELECT u.id, u.username, u.email, u.mobile, u.anbiyam, u.role, u.family_id, u.verification_status, 
+              COALESCE(f.head_name, u.username) as family_head, 
+              COALESCE(f.address_line1, 'NO_ADDR') as address_line1, 
+              COALESCE(f.address_line2, '') as address_line2, 
+              COALESCE(f.city, 'NO_CITY') as city 
+       FROM users u 
+       LEFT JOIN families f ON u.family_id = f.family_id 
+       WHERE u.is_approved = false AND u.role != 'admin' 
+       ORDER BY u.id DESC`
     );
     res.status(200).json(result.rows);
   } catch (error) {
@@ -78,14 +86,20 @@ exports.getPendingMembers = async (req, res, next) => {
   try {
     const result = await db.query(
       `SELECT m.*, 
-              COALESCE(f.family_id, 'NO_ID') as family_string_id, 
-              COALESCE(f.head_name, 'NO_HEAD') as family_head_name, 
-              COALESCE(f.anbiyam, 'NO_ANB') as family_anbiyam, 
+              COALESCE(f.family_id, SPLIT_PART(m.member_id, '-', 1)) as family_string_id, 
+              COALESCE(f.head_name, u.username, 'NO_HEAD') as family_head_name, 
+              COALESCE(f.anbiyam, u.anbiyam, 'NO_ANB') as family_anbiyam, 
               COALESCE(f.address_line1, 'NO_ADDR') as family_address1, 
               COALESCE(f.address_line2, '') as family_address2, 
-              COALESCE(f.city, 'NO_CITY') as family_city 
+              COALESCE(f.city, 'NO_CITY') as family_city,
+              COALESCE(f.mobile_number, u.mobile, 'NO_MOBILE') as family_mobile
        FROM members m 
-       LEFT JOIN families f ON (f.family_id = SPLIT_PART(m.member_id, '-', 1))
+       LEFT JOIN families f ON f.id = m.family_id
+       LEFT JOIN LATERAL (
+         SELECT username, anbiyam, mobile FROM users 
+         WHERE family_id = SPLIT_PART(m.member_id, '-', 1) 
+         LIMIT 1
+       ) u ON TRUE
        WHERE m.verification_status != 'approved' 
        ORDER BY m.verification_status DESC, m.name ASC`
     );

@@ -106,6 +106,16 @@ function App() {
           }
         />
         <Route
+          path="/edit-family/:familyId"
+          element={
+            <PrivateRoute>
+              <Layout>
+                <AddFamily isEdit={true} />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+        <Route
           path="/anbiyam"
           element={
             <PrivateRoute>

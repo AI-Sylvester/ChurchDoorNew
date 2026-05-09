@@ -84,9 +84,11 @@ class MemberService {
     const offset = (page - 1) * limit;
     const values = [user.isAdmin || false, user.role || '', user.userId || null];
     let queryStr = `
-       SELECT m.*, f.head_name as family_head_name, f.address_line2
+       SELECT m.*, 
+              COALESCE(f.head_name, 'NO_HEAD') as family_head_name, 
+              f.address_line2
        FROM members m
-       JOIN families f ON (f.family_id = SPLIT_PART(m.member_id, '-', 1))
+       JOIN families f ON f.id = m.family_id
        WHERE (f.active = true OR $1 = true OR $2 = 'incharge')
          AND (m.verification_status = 'approved' OR $1 = true OR $2 = 'incharge' OR f.created_by = $3)`;
 
@@ -135,7 +137,7 @@ class MemberService {
     let queryStr = `
        SELECT m.*
        FROM members m
-       JOIN families f ON (f.family_id = SPLIT_PART(m.member_id, '-', 1))
+       JOIN families f ON f.id = m.family_id
        WHERE f.family_id = $1 
          AND (f.active = true OR $2 = true OR $3 = 'incharge' OR $3 = 'admin' OR f.created_by = $4)
          AND (m.verification_status = 'approved' OR $2 = true OR $3 = 'incharge' OR $3 = 'admin' OR f.created_by = $4)`;
