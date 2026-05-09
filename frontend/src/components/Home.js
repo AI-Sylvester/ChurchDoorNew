@@ -126,8 +126,10 @@ const Home = () => {
   const actions = [];
   if (role === 'admin') {
     actions.push(
-      { title: 'User Approvals', subtitle: 'Manage registrations', path: '/approvals', icon: <ManageAccountsIcon />, color: '#BE123C' },
-      { title: 'Update Requests', subtitle: 'Review family edits', path: '/updates', icon: <InfoOutlinedIcon />, color: '#4F46E5' },
+      { title: 'User Approvals', subtitle: 'Manage registrations', path: '/approvals?tab=0', icon: <ManageAccountsIcon />, color: '#BE123C' },
+      { title: 'Family Approvals', subtitle: 'Vet families', path: '/approvals?tab=1', icon: <HomeWorkIcon />, color: '#10B981' },
+      { title: 'Member Approvals', subtitle: 'Vet individuals', path: '/approvals?tab=2', icon: <GroupRoundedIcon />, color: '#3B82F6' },
+      { title: 'Update Requests', subtitle: 'Review family edits', path: '/approvals?tab=3', icon: <InfoOutlinedIcon />, color: '#4F46E5' },
       { title: 'Event Reports', subtitle: 'View group activities', path: '/reports', icon: <BarChartIcon />, color: '#0EA5E9' },
       { title: 'Family List', subtitle: 'Manage all families', path: '/familylist', icon: <Diversity3RoundedIcon />, color: '#1E3A8A' },
       { title: 'Member List', subtitle: 'Manage all members', path: '/memlist', icon: <GroupRoundedIcon />, color: '#64748B' },
@@ -141,8 +143,10 @@ const Home = () => {
   } else if (role === 'incharge') {
     actions.push(
       { title: 'My Anbiyam', subtitle: `Manage ${anbiyamName}`, path: '/anbiyamfam', icon: <MapRoundedIcon />, color: '#7C3AED' },
-      { title: 'Verify Registrations', subtitle: 'Vet new families', path: '/verify-registrations', icon: <VerifiedUserIcon />, color: '#10B981' },
-      { title: 'Group Updates', subtitle: 'Verify change requests', path: '/group-updates', icon: <HistoryIcon />, color: '#F59E0B' },
+      { title: 'Verify Families', subtitle: 'Vet new families', path: '/verify-registrations?tab=0', icon: <HomeWorkIcon />, color: '#10B981' },
+      { title: 'Verify Members', subtitle: 'Vet individuals', path: '/verify-registrations?tab=1', icon: <Diversity3RoundedIcon />, color: '#3B82F6' },
+      { title: 'Verify Accounts', subtitle: 'Vet users', path: '/verify-registrations?tab=2', icon: <VerifiedUserIcon />, color: '#8B5CF6' },
+      { title: 'Group Updates', subtitle: 'Verify change requests', path: '/verify-registrations?tab=3', icon: <HistoryIcon />, color: '#F59E0B' },
       { title: 'Submit Report', subtitle: 'Group event report', path: '/submit-report', icon: <BarChartIcon />, color: '#0EA5E9' },
       { title: 'Family Cards', subtitle: 'View group cards', path: '/familycard', icon: <Diversity3RoundedIcon />, color: '#1E3A8A' },
       { title: 'Reminders', subtitle: 'Birthdays & More', path: '/birthdays', icon: <CakeRoundedIcon />, color: '#E11D48' },

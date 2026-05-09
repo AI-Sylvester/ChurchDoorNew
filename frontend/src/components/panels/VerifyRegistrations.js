@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useLocation } from 'react-router-dom';
 import { Box, Typography, CircularProgress, Alert, Paper, Button, List, ListItem, ListItemText } from '@mui/material';
 import API_BASE_URL from '../../config';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
@@ -16,26 +17,36 @@ const VerifyRegistrations = () => {
   const [families, setFamilies] = useState([]);
   const [pendingMembers, setPendingMembers] = useState([]);
   const [pendingUsers, setPendingUsers] = useState([]);
+  const [updateRequests, setUpdateRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [tab, setTab] = useState(0);
-  
+  const location = useLocation();
+
   const [selectedFamily, setSelectedFamily] = useState(null);
   const [openReview, setOpenReview] = useState(false);
   const [members, setMembers] = useState([]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const t = params.get('tab');
+    if (t !== null) setTab(parseInt(t));
+  }, [location]);
   const anbiyam = localStorage.getItem('anbiyam');
 
   const fetchData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const [famRes, memRes, userRes] = await Promise.all([
+      const [famRes, memRes, userRes, updateRes] = await Promise.all([
         axios.get(`${API_BASE_URL}/incharge/pending-verifications`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API_BASE_URL}/incharge/pending-member-verifications`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${API_BASE_URL}/incharge/pending-user-verifications`, { headers: { Authorization: `Bearer ${token}` } })
+        axios.get(`${API_BASE_URL}/incharge/pending-user-verifications`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_BASE_URL}/incharge/update-requests`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
       setFamilies(famRes.data);
       setPendingMembers(memRes.data);
       setPendingUsers(userRes.data);
+      setUpdateRequests(updateRes.data);
     } catch (err) {
       setError('Failed to load pending verifications');
     } finally {
@@ -81,6 +92,18 @@ const VerifyRegistrations = () => {
       setPendingUsers(pendingUsers.filter(u => u.id !== userId));
     } catch (err) {
       alert('Failed to verify user');
+    }
+  };
+
+  const handleVerifyUpdate = async (id) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API_BASE_URL}/incharge/verify-update/${id}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUpdateRequests(updateRequests.filter(r => r.id !== id));
+    } catch (err) {
+      alert('Failed to verify update request');
     }
   };
 
@@ -130,6 +153,7 @@ const VerifyRegistrations = () => {
         <Tab label={`Families (${families.length})`} />
         <Tab label={`Members (${pendingMembers.length})`} />
         <Tab label={`Users (${pendingUsers.length})`} />
+        <Tab label={`Updates (${updateRequests.length})`} />
       </Tabs>
 
       {tab === 0 && (
@@ -246,6 +270,48 @@ const VerifyRegistrations = () => {
                     sx={{ borderRadius: 3, fontWeight: 800, py: 1.2, bgcolor: '#8B5CF6', '&:hover': { bgcolor: '#7C3AED' } }}
                   >
                     Verify User Account
+                  </Button>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </Box>
+      )}
+
+      {tab === 3 && (
+        <Box sx={{ display: 'grid', gap: 2 }}>
+          {updateRequests.length === 0 ? (
+            <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4, bgcolor: 'transparent', border: '2px dashed #E2E8F0' }} elevation={0}>
+              <Typography variant="h6" fontWeight={800} color="textSecondary">No pending update requests</Typography>
+            </Paper>
+          ) : (
+            updateRequests.map((req) => (
+              <Card key={req.id} sx={{ borderRadius: 4, boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid #F1F5F9' }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                    <Box>
+                      <Typography variant="h6" fontWeight={900}>{req.head_name} ({req.family_id})</Typography>
+                      <Typography variant="caption" color="textSecondary" fontWeight={700}>
+                        SUBMITTED ON: {new Date(req.created_at).toLocaleDateString()}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box sx={{ bgcolor: '#F8FAFC', p: 2, borderRadius: 3, mb: 3, border: '1px solid #F1F5F9' }}>
+                    <Typography variant="subtitle2" fontWeight={800} mb={1}>Changes to Verify:</Typography>
+                    {Object.entries(req.requested_data).map(([key, val]) => (
+                      <Typography key={key} variant="body2" color="textSecondary">
+                        <strong>{key.replace('_', ' ').toUpperCase()}:</strong> {String(val)}
+                      </Typography>
+                    ))}
+                  </Box>
+                  <Button 
+                    fullWidth 
+                    variant="contained" 
+                    color="success" 
+                    onClick={() => handleVerifyUpdate(req.id)}
+                    sx={{ borderRadius: 3, fontWeight: 800, py: 1.2 }}
+                  >
+                    Verify & Forward to Admin
                   </Button>
                 </CardContent>
               </Card>
