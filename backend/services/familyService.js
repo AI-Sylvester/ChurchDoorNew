@@ -161,10 +161,11 @@ class FamilyService {
     
     let queryStr = `
       SELECT f.*, 
-             COALESCE(f.head_name, u.username, 'NO_NAME') as head_name,
-             COALESCE(f.mobile_number, u.mobile, 'NO_MOBILE') as mobile_number,
+             f.head_name,
+             f.mobile_number,
              COALESCE(f.address_line1, 'NO_ADDR') as address_line1,
-             COALESCE(f.city, 'NO_CITY') as city
+             COALESCE(f.city, 'NO_CITY') as city,
+             u.username as registered_by
       FROM families f
       LEFT JOIN users u ON f.created_by = u.id
       WHERE f.family_id = $1`;

@@ -109,19 +109,20 @@ exports.getPendingMemberVerifications = async (req, res, next) => {
     const { anbiyam } = req.user;
     const result = await db.query(
       `SELECT m.*, 
-              COALESCE(f.head_name, u.username, 'NO_HEAD') as family_head, 
-              COALESCE(f.address_line1, 'NO_ADDR') as address_line1, 
-              COALESCE(f.address_line2, '') as address_line2, 
-              COALESCE(f.city, 'NO_CITY') as city 
-       FROM members m 
-       JOIN families f ON f.id = m.family_id 
-       LEFT JOIN LATERAL (
-         SELECT username FROM users 
-         WHERE family_id = SPLIT_PART(m.member_id, '-', 1) 
-         LIMIT 1
-       ) u ON TRUE
-       WHERE f.anbiyam = $1 AND m.verification_status = 'pending_incharge' 
-       ORDER BY m.name ASC`,
+               f.head_name as family_head, 
+               COALESCE(f.address_line1, 'NO_ADDR') as address_line1, 
+               COALESCE(f.address_line2, '') as address_line2, 
+               COALESCE(f.city, 'NO_CITY') as city,
+               u.username as creator_username
+        FROM members m 
+        JOIN families f ON f.id = m.family_id 
+        LEFT JOIN LATERAL (
+          SELECT username FROM users 
+          WHERE family_id = SPLIT_PART(m.member_id, '-', 1) 
+          LIMIT 1
+        ) u ON TRUE
+        WHERE f.anbiyam = $1 AND m.verification_status = 'pending_incharge' 
+        ORDER BY m.name ASC`,
       [anbiyam]
     );
     res.status(200).json(result.rows);

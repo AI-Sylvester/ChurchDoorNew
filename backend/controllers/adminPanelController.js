@@ -5,7 +5,7 @@ exports.getPendingUsers = async (req, res, next) => {
   try {
     const result = await db.query(
       `SELECT u.id, u.username, u.email, u.mobile, u.anbiyam, u.role, u.family_id, u.verification_status, 
-              COALESCE(f.head_name, u.username) as family_head, 
+              f.head_name as family_head_name, 
               COALESCE(f.address_line1, 'NO_ADDR') as address_line1, 
               COALESCE(f.address_line2, '') as address_line2, 
               COALESCE(f.city, 'NO_CITY') as city 
@@ -87,12 +87,13 @@ exports.getPendingMembers = async (req, res, next) => {
     const result = await db.query(
       `SELECT m.*, 
               COALESCE(f.family_id, SPLIT_PART(m.member_id, '-', 1)) as family_string_id, 
-              COALESCE(f.head_name, u.username, 'NO_HEAD') as family_head_name, 
+              f.head_name as family_head_name, 
               COALESCE(f.anbiyam, u.anbiyam, 'NO_ANB') as family_anbiyam, 
               COALESCE(f.address_line1, 'NO_ADDR') as family_address1, 
               COALESCE(f.address_line2, '') as family_address2, 
               COALESCE(f.city, 'NO_CITY') as family_city,
-              COALESCE(f.mobile_number, u.mobile, 'NO_MOBILE') as family_mobile
+              COALESCE(f.mobile_number, u.mobile, 'NO_MOBILE') as family_mobile,
+              u.username as creator_username
        FROM members m 
        LEFT JOIN families f ON f.id = m.family_id
        LEFT JOIN LATERAL (
@@ -100,8 +101,8 @@ exports.getPendingMembers = async (req, res, next) => {
          WHERE family_id = SPLIT_PART(m.member_id, '-', 1) 
          LIMIT 1
        ) u ON TRUE
-       WHERE m.verification_status != 'approved' 
-       ORDER BY m.verification_status DESC, m.name ASC`
+       WHERE m.verification_status = 'pending_incharge' OR m.verification_status = 'recommended' 
+       ORDER BY m.id DESC`
     );
     res.status(200).json(result.rows);
   } catch (error) {
