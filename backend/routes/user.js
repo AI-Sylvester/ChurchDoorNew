@@ -10,9 +10,14 @@ router.get('/', authMiddleware, adminMiddleware, async (req, res) => {
     const result = await query(`
       SELECT 
         u.id, u.username, u.email, u.mobile, u.anbiyam, u.role, u.is_approved, u.is_admin, u.family_id,
-        f.head_name, f.card_number
+        f.head_name, f.card_number,
+        v.username as verified_by_name,
+        a.username as approved_by_name,
+        u.verified_at, u.approved_at
       FROM users u
       LEFT JOIN families f ON u.family_id = f.family_id
+      LEFT JOIN users v ON u.verified_by = v.id
+      LEFT JOIN users a ON u.approved_by = a.id
       ORDER BY u.id DESC
     `);
     res.json(result.rows);
@@ -25,7 +30,7 @@ router.get('/', authMiddleware, adminMiddleware, async (req, res) => {
 router.put('/approve/:id', authMiddleware, adminMiddleware, async (req, res) => {
   const { id } = req.params;
   try {
-    await query("UPDATE users SET is_approved = TRUE, verification_status = 'approved' WHERE id = $1", [id]);
+    await query("UPDATE users SET is_approved = TRUE, verification_status = 'approved', approved_by = $2, approved_at = CURRENT_TIMESTAMP WHERE id = $1", [id, req.user.userId]);
     res.json({ message: 'User approved successfully' });
   } catch (err) {
     res.status(500).json({ message: 'Error approving user' });

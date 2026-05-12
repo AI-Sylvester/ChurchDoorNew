@@ -130,7 +130,7 @@ const VerifyRegistrations = () => {
   return (
     <Box sx={{ maxWidth: 1000, mx: 'auto', mt: 4, pb: 10, px: { xs: 2, sm: 3 } }}>
       <Typography variant="h4" fontWeight={900} color="#1E3A8A" gutterBottom sx={{ letterSpacing: '-1px' }}>
-        Verify Registrations
+        {tab === 0 ? 'Family Verifications' : tab === 1 ? 'Member Verifications' : tab === 2 ? 'Account Verifications' : 'Update Verifications'}
       </Typography>
       <Typography variant="subtitle1" color="textSecondary" mb={4} fontWeight={600}>
         New registrations in <strong>{anbiyam}</strong> awaiting your verification.
@@ -216,9 +216,17 @@ const VerifyRegistrations = () => {
                 <CardContent sx={{ p: 2.5 }}>
                   <Box mb={2}>
                     <Typography variant="h6" fontWeight={900} color="#1E293B">{m.name}</Typography>
-                    <Typography variant="caption" color="primary" fontWeight={900} sx={{ textTransform: 'uppercase', display: 'block', mb: 1.5, letterSpacing: '0.5px' }}>
+                    <Typography variant="caption" color="primary" fontWeight={900} sx={{ textTransform: 'uppercase', display: 'block', mb: 1, letterSpacing: '0.5px' }}>
                       {m.relationship} • Family: {m.family_head}
                     </Typography>
+                    <Box sx={{ mb: 1.5, p: 1, bgcolor: '#F0F9FF', borderRadius: 2, border: '1px solid #E0F2FE' }}>
+                      <Typography variant="caption" display="block" color="textSecondary" fontWeight={800}>
+                        REGISTERED BY: <span style={{ color: '#0369A1' }}>{m.creator_name || 'System'}</span>
+                      </Typography>
+                      <Typography variant="caption" display="block" color="textSecondary" fontWeight={800}>
+                        ON: <span style={{ color: '#0369A1' }}>{m.entry_date ? new Date(m.entry_date).toLocaleString() : 'N/A'}</span>
+                      </Typography>
+                    </Box>
                     <Typography variant="body2" color="textSecondary" sx={{ bgcolor: '#F8FAFC', p: 1.5, borderRadius: 3, border: '1px solid #F1F5F9', fontSize: '0.85rem', fontWeight: 600 }}>
                       {m.address_line1}{m.address_line2 ? `, ${m.address_line2}` : ''}, {m.city}
                     </Typography>

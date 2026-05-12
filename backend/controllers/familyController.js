@@ -86,7 +86,10 @@ exports.updateFamily = async (req, res, next) => {
       return next(new AppError('Unauthorized or Family not found', 403));
     }
 
-    const updateData = req.body;
+    const updateData = { ...req.body };
+    if (updateData.active === true && updateData.verification_status === 'approved') {
+        updateData.approved_by = req.user.userId;
+    }
     let hasNewPic = false;
 
     if (req.file) {

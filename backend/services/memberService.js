@@ -156,12 +156,18 @@ class MemberService {
   static async updateMember(memberId, updateData) {
     // Permission check usually happens in controller
     const fields = [
-      'name', 'age', 'dob', 'marital_status', 'relationship',
-      'qualification', 'profession', 'residing_here', 'church_group', 'active',
-      'baptism_date', 'baptism_place', 'holy_communion_date', 'holy_communion_place',
-      'confirmation_date', 'confirmation_place', 'marriage_date', 'marriage_place',
-      'sex', 'mobile', 'verification_status'
+      'name', 'age', 'dob', 'marital_status', 'relationship', 'sex',
+      'mobile', 'baptism_date', 'baptism_place', 'holy_communion_date',
+      'holy_communion_place', 'confirmation_date', 'confirmation_place',
+      'marriage_date', 'marriage_place', 'profession', 'qualification',
+      'residing_here', 'church_group', 'active', 'verification_status',
+      'verified_by', 'verified_at', 'approved_by', 'approved_at'
     ];
+
+    if (updateData.verification_status === 'approved') {
+        updateData.approved_at = new Date();
+        // approved_by should be passed from controller
+    }
 
     const filteredFields = fields.filter(field => updateData[field] !== undefined);
     

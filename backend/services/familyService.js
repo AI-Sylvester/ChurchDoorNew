@@ -195,11 +195,15 @@ class FamilyService {
       'head_name', 'address_line1', 'address_line2', 'city', 'pincode',
       'mobile_number', 'mobile_number2', 'cemetery', 'native',
       'resident_from', 'house_type', 'subscription', 'active', 'location',
-      'anbiyam', 'cemetery_number', 'old_card_number', 'verification_status', 'card_number'
+      'anbiyam', 'cemetery_number', 'old_card_number', 'verification_status', 'card_number',
+      'approved_by', 'approved_at'
     ];
 
-    // Card Number Generation Logic on Approval
+    // Approval Audit & Card Number Generation
     if (updateData.active === true && updateData.verification_status === 'approved') {
+      updateData.approved_at = new Date();
+      // approved_by should be passed from the controller in updateData
+      
       const currentFamilyRes = await db.query('SELECT anbiyam, card_number FROM families WHERE family_id = $1', [familyId]);
       const currentFamily = currentFamilyRes.rows[0];
 

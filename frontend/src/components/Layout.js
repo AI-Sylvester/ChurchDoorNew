@@ -100,12 +100,12 @@ const Layout = ({ children }) => {
           bottom: 20,
           left: 20,
           right: 20,
-          backgroundColor: 'rgba(30, 41, 59, 0.95)',
-          backdropFilter: 'blur(10px)',
+          background: 'linear-gradient(90deg, #FFE000 50%, #FFFFFF 50%)',
           zIndex: 1000,
           borderRadius: 6,
-          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.2)',
-          overflow: 'hidden'
+          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
+          overflow: 'hidden',
+          border: '1px solid rgba(0,0,0,0.05)'
         }}
         elevation={0}
       >
@@ -119,11 +119,11 @@ const Layout = ({ children }) => {
             backgroundColor: 'transparent',
             height: 70,
             '& .MuiBottomNavigationAction-root': {
-              color: 'rgba(255, 255, 255, 0.5)',
+              color: 'rgba(0, 0, 0, 0.4)',
               minWidth: 'auto',
               padding: '6px 0',
               '&.Mui-selected': {
-                color: '#fff',
+                color: '#1E293B',
                 '& .MuiSvgIcon-root': {
                   transform: 'scale(1.2) translateY(-2px)',
                   transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'

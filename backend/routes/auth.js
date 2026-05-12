@@ -8,10 +8,12 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
 // Login route
 router.post('/login', async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password } = req.body; // username here can be mobile or actual username
   console.log('Login attempt:', username);
   try {
-    const userRes = await query('SELECT * FROM users WHERE username = $1', [username]);
+    // Search by username OR mobile
+    const userRes = await query('SELECT * FROM users WHERE username = $1 OR mobile = $1', [username]);
+    
     if (userRes.rows.length === 0) {
       console.log('User not found');
       return res.status(400).json({ message: 'Invalid credentials' });
@@ -19,14 +21,6 @@ router.post('/login', async (req, res) => {
 
     const user = userRes.rows[0];
     
-    // Allow login but ensure status is returned
-    // The frontend handles redirection based on is_approved status
-    /*
-    if (!user.is_approved) {
-      return res.status(403).json({ message: 'Your account is pending admin approval' });
-    }
-    */
-
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
       console.log('Password mismatch');
@@ -45,7 +39,7 @@ router.post('/login', async (req, res) => {
       JWT_SECRET, 
       { expiresIn: '24h' }
     );
-    console.log('Login successful for:', username);
+    console.log('Login successful for:', user.username);
     res.json({ 
       token, 
       role: user.role,
@@ -67,10 +61,13 @@ router.post('/register', async (req, res) => {
     // Basic validation for role to prevent arbitrary 'admin' registration
     const targetRole = (role === 'incharge' || role === 'family') ? role : 'family';
 
-    // Check if user already exists
-    const userCheck = await query('SELECT * FROM users WHERE username = $1 OR email = $2', [username, email]);
+    // Check if user already exists (Username, Mobile, or Email)
+    const userCheck = await query('SELECT * FROM users WHERE username = $1 OR mobile = $2 OR email = $3', [username, mobile, email]);
     if (userCheck.rows.length > 0) {
-      return res.status(400).json({ message: 'Username or email already exists' });
+      const existing = userCheck.rows[0];
+      if (existing.mobile === mobile) return res.status(400).json({ message: 'Mobile number already registered' });
+      if (existing.username === username) return res.status(400).json({ message: 'Username already exists' });
+      return res.status(400).json({ message: 'Email already exists' });
     }
 
     // Hash password

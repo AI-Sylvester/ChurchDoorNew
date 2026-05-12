@@ -43,7 +43,12 @@ exports.updateMember = async (req, res, next) => {
       return next(new AppError('Unauthorized or Member not found', 403));
     }
 
-    const updatedMember = await MemberService.updateMember(memberId, req.body);
+    const updateData = { ...req.body };
+    if (updateData.verification_status === 'approved') {
+        updateData.approved_by = req.user.userId;
+    }
+
+    const updatedMember = await MemberService.updateMember(memberId, updateData);
     if (!updatedMember) {
         return next(new AppError('Member not found', 404));
     }

@@ -1,22 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import {
-  Box,
-  Typography,
-  Chip,
-  IconButton,
-  CircularProgress,
-  Alert,
-  Stack,
-  Card,
-  Avatar,
-  Divider,
-  Button,
-  Tabs,
-  Tab,
-  Paper,
-  Fade,
-  Collapse,
+  Box, Typography, Chip, IconButton, CircularProgress, Alert, Stack, 
+  Card, Avatar, Divider, Button, Tabs, Tab, Paper, Fade, Collapse, 
+  Dialog, DialogTitle, DialogContent, DialogActions
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import BlockIcon from '@mui/icons-material/Block';
@@ -26,6 +13,7 @@ import PhoneIphoneIcon from '@mui/icons-material/PhoneIphone';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import PersonIcon from '@mui/icons-material/Person';
+import VerifiedIcon from '@mui/icons-material/Verified';
 import API_BASE_URL from '../config';
 
 const UserManagement = () => {
@@ -216,6 +204,20 @@ const UserManagement = () => {
                       <InfoBlock icon={<PhoneIphoneIcon sx={{ fontSize: 18, color: '#10B981' }} />} label="Mobile" value={user.mobile || 'N/A'} />
                       <InfoBlock icon={<PersonIcon sx={{ fontSize: 18, color: '#F59E0B' }} />} label="Family Head" value={user.head_name || 'Not Linked'} primary />
                       <InfoBlock icon={<FingerprintIcon sx={{ fontSize: 18, color: '#3B82F6' }} />} label={user.card_number ? "Official ID" : "Family ID"} value={user.card_number || user.family_id || 'N/A'} primary />
+                      {user.verified_by_name && (
+                        <InfoBlock 
+                          icon={<CheckCircleIcon sx={{ fontSize: 16, color: '#10B981' }} />} 
+                          label="Verified By" 
+                          value={`${user.verified_by_name} (${new Date(user.verified_at).toLocaleDateString()})`} 
+                        />
+                      )}
+                      {user.approved_by_name && (
+                        <InfoBlock 
+                          icon={<VerifiedIcon sx={{ fontSize: 16, color: '#4F46E5' }} />} 
+                          label="Approved By" 
+                          value={`${user.approved_by_name} (${new Date(user.approved_at).toLocaleDateString()})`} 
+                        />
+                      )}
                     </Box>
 
                     <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} onClick={(e) => e.stopPropagation()}>

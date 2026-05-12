@@ -74,9 +74,10 @@ exports.getEventReports = async (req, res, next) => {
 exports.getPendingFamilies = async (req, res, next) => {
   try {
     const result = await db.query(`
-      SELECT f.*, u.username as creator_name 
+      SELECT f.*, u.username as creator_name, v.username as verified_by_name 
       FROM families f 
       LEFT JOIN users u ON f.created_by = u.id 
+      LEFT JOIN users v ON f.verified_by = v.id 
       WHERE f.active = false AND (f.verification_status = 'recommended' OR f.verification_status = 'pending_incharge') 
       ORDER BY f.verification_status DESC, f.head_name ASC`
     );
@@ -98,10 +99,13 @@ exports.getPendingMembers = async (req, res, next) => {
               COALESCE(f.city, 'NO_CITY') as family_city,
               COALESCE(f.mobile_number, u_fam.mobile, 'NO_MOBILE') as family_mobile,
               u_creator.username as creator_username,
-              m.created_at as entry_date
+              u_vettor.username as verified_by_name,
+              m.created_at as entry_date,
+              m.verified_at as verification_date
        FROM members m 
        LEFT JOIN families f ON f.id = m.family_id
        LEFT JOIN users u_creator ON m.created_by = u_creator.id
+       LEFT JOIN users u_vettor ON m.verified_by = u_vettor.id
        LEFT JOIN LATERAL (
          SELECT username, anbiyam, mobile FROM users 
          WHERE family_id = SPLIT_PART(m.member_id, '-', 1) 

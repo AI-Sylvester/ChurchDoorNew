@@ -55,8 +55,8 @@ exports.recommendApproval = async (req, res, next) => {
 
     // Mark as "recommended" for Admin approval
     await db.query(
-      'UPDATE families SET verification_status = \'recommended\' WHERE family_id = $1',
-      [familyId]
+      'UPDATE families SET verification_status = \'recommended\', verified_by = $2, verified_at = CURRENT_TIMESTAMP WHERE family_id = $1',
+      [familyId, req.user.userId]
     );
 
     res.status(200).json({ message: 'Family details verified and recommended to Admin for approval' });
@@ -69,7 +69,11 @@ exports.getPendingVerifications = async (req, res, next) => {
   try {
     const { anbiyam } = req.user;
     const result = await db.query(
-      'SELECT * FROM families WHERE anbiyam = $1 AND verification_status = \'pending_incharge\' AND active = false ORDER BY head_name ASC',
+      `SELECT f.*, u.username as creator_name, f.created_at as entry_date
+       FROM families f 
+       LEFT JOIN users u ON f.created_by = u.id
+       WHERE f.anbiyam = $1 AND f.verification_status = 'pending_incharge' AND f.active = false 
+       ORDER BY f.head_name ASC`,
       [anbiyam]
     );
     res.status(200).json(result.rows);
@@ -81,7 +85,7 @@ exports.getPendingVerifications = async (req, res, next) => {
 exports.recommendMemberApproval = async (req, res, next) => {
   try {
     const { memberId } = req.params;
-    const { anbiyam } = req.user;
+    const { anbiyam, userId } = req.user;
 
     // Verify the member belongs to a family in the incharge's anbiyam
     const check = await db.query(
@@ -94,8 +98,8 @@ exports.recommendMemberApproval = async (req, res, next) => {
 
     // Mark as "recommended" for Admin approval
     await db.query(
-      "UPDATE members SET verification_status = 'recommended' WHERE member_id = $1",
-      [memberId]
+      "UPDATE members SET verification_status = 'recommended', verified_by = $2, verified_at = CURRENT_TIMESTAMP WHERE member_id = $1",
+      [memberId, userId]
     );
 
     res.status(200).json({ message: 'Member verified and recommended to Admin for approval' });
@@ -113,14 +117,11 @@ exports.getPendingMemberVerifications = async (req, res, next) => {
                COALESCE(f.address_line1, 'NO_ADDR') as address_line1, 
                COALESCE(f.address_line2, '') as address_line2, 
                COALESCE(f.city, 'NO_CITY') as city,
-               u.username as creator_username
+               u.username as creator_name,
+               m.created_at as entry_date
         FROM members m 
         JOIN families f ON f.id = m.family_id 
-        LEFT JOIN LATERAL (
-          SELECT username FROM users 
-          WHERE family_id = SPLIT_PART(m.member_id, '-', 1) 
-          LIMIT 1
-        ) u ON TRUE
+        LEFT JOIN users u ON m.created_by = u.id
         WHERE f.anbiyam = $1 AND m.verification_status = 'pending_incharge' 
         ORDER BY m.name ASC`,
       [anbiyam]
@@ -147,7 +148,7 @@ exports.getGroupUpdateRequests = async (req, res, next) => {
 exports.verifyUpdateRequest = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { anbiyam } = req.user;
+    const { anbiyam, userId } = req.user;
 
     // Check if the request belongs to a family in this incharge's group
     const check = await db.query(
@@ -159,7 +160,7 @@ exports.verifyUpdateRequest = async (req, res, next) => {
       return next(new AppError('Unauthorized: Request not in your group', 403));
     }
 
-    await db.query("UPDATE update_requests SET verified_by_incharge = true WHERE id = $1", [id]);
+    await db.query("UPDATE update_requests SET verified_by_incharge = true, verified_by = $2, verified_at = CURRENT_TIMESTAMP WHERE id = $1", [id, userId]);
     res.status(200).json({ message: 'Update request verified and forwarded to Admin' });
   } catch (error) {
     next(new AppError('Failed to verify update request', 500));
@@ -191,8 +192,8 @@ exports.recommendUserApproval = async (req, res, next) => {
     }
 
     await db.query(
-      "UPDATE users SET verification_status = 'recommended' WHERE id = $1",
-      [userId]
+      "UPDATE users SET verification_status = 'recommended', verified_by = $2, verified_at = CURRENT_TIMESTAMP WHERE id = $1",
+      [userId, req.user.userId]
     );
 
     res.status(200).json({ message: 'User registration verified and recommended to Admin' });

@@ -218,7 +218,7 @@ const Login = () => {
 
           <Box component="form" onSubmit={handleSubmit} noValidate>
             <TextField
-              placeholder="Username"
+              placeholder={mode === 'login' ? "Username or Mobile Number" : "Username"}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
@@ -239,7 +239,7 @@ const Login = () => {
               <Fade in>
                 <Box>
                   <TextField
-                    placeholder="Mobile Number"
+                    placeholder="Mobile Number (Login ID for Families)"
                     value={mobile}
                     onChange={(e) => setMobile(e.target.value)}
                     required
@@ -253,9 +253,10 @@ const Login = () => {
                     }}
                   />
                   <TextField
-                    placeholder="Family ID (Optional for Family, Required for Incharge)"
+                    placeholder={role === 'incharge' ? "Family ID (MANDATORY)" : "Family ID (Optional)"}
                     value={familyId}
                     onChange={(e) => setFamilyId(e.target.value)}
+                    required={role === 'incharge'}
                     fullWidth
                     sx={{ 
                       mb: 2,

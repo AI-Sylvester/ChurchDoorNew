@@ -131,7 +131,7 @@ const AdminApprovals = () => {
   return (
     <Box sx={{ maxWidth: 1000, mx: 'auto', mt: 4, pb: 10, px: { xs: 2, sm: 3 } }}>
       <Typography variant="h4" fontWeight={900} color="#1E3A8A" gutterBottom sx={{ letterSpacing: '-1px', mb: 3 }}>
-        Approvals Center
+        {tab === 0 ? 'User Account Approvals' : tab === 1 ? 'Family Approvals' : tab === 2 ? 'Member Approvals' : 'Update Request Approvals'}
       </Typography>
       
       <Tabs 
@@ -254,6 +254,11 @@ const AdminApprovals = () => {
                         <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: '#64748B', fontWeight: 700 }}>
                           ENTRY BY: {fam.creator_name || 'System'} • {fam.created_at ? new Date(fam.created_at).toLocaleDateString() : 'N/A'}
                         </Typography>
+                        {fam.verified_by_name && (
+                          <Typography variant="caption" sx={{ display: 'block', mt: 0.3, color: '#10B981', fontWeight: 800 }}>
+                            VETTED BY: {fam.verified_by_name} • {fam.verified_at ? new Date(fam.verified_at).toLocaleDateString() : 'N/A'}
+                          </Typography>
+                        )}
                       </Box>
                     </Box>
                     <Stack direction="row" spacing={1.5} width={{ xs: '100%', sm: 'auto' }}>
@@ -327,6 +332,12 @@ const AdminApprovals = () => {
                       <Typography variant="caption" color="textSecondary" fontWeight={800} display="block" sx={{ fontSize: '0.65rem' }}>REGISTERED BY & DATE</Typography>
                       <Typography variant="body2" fontWeight={700} color="#334155">{m.creator_username || 'N/A'} • {m.entry_date ? new Date(m.entry_date).toLocaleDateString() : 'N/A'}</Typography>
                     </Box>
+                    {m.verified_by_name && (
+                      <Box>
+                        <Typography variant="caption" color="success.main" fontWeight={800} display="block" sx={{ fontSize: '0.65rem' }}>VETTED BY & DATE</Typography>
+                        <Typography variant="body2" fontWeight={700} color="success.dark">{m.verified_by_name} • {m.verification_date ? new Date(m.verification_date).toLocaleDateString() : 'N/A'}</Typography>
+                      </Box>
+                    )}
                     <Box>
                       <Typography variant="caption" color="textSecondary" fontWeight={800} display="block" sx={{ fontSize: '0.65rem' }}>ADDRESS & ANBIYAM</Typography>
                       <Typography variant="body2" fontWeight={700} color="#334155" sx={{ fontSize: '0.8rem' }}>
@@ -427,7 +438,6 @@ const AdminApprovals = () => {
           {selectedFamily && (
             <Box>
               <Typography variant="caption" color="primary" fontWeight={900} sx={{ letterSpacing: 1 }}>FAMILY DATA</Typography>
-              <Typography variant="caption" color="primary" fontWeight={900} sx={{ letterSpacing: 1 }}>FAMILY DATA</Typography>
               <Stack spacing={2} sx={{ mt: 1.5, mb: 4 }}>
                 <Box>
                   <Typography variant="caption" color="textSecondary" display="block" fontWeight={700}>HEAD NAME & ID</Typography>
@@ -437,6 +447,14 @@ const AdminApprovals = () => {
                   <Typography variant="caption" color="textSecondary" display="block" fontWeight={700}>ADDRESS</Typography>
                   <Typography variant="body1" fontWeight={700}>{selectedFamily.address_line1}, {selectedFamily.city}</Typography>
                 </Box>
+                {selectedFamily.verified_by_name && (
+                  <Box sx={{ p: 1.5, bgcolor: '#F0FDF4', borderRadius: 3, border: '1px solid #DCFCE7' }}>
+                    <Typography variant="caption" color="success.main" display="block" fontWeight={800}>VETTED BY INCHARGE</Typography>
+                    <Typography variant="body2" fontWeight={800} color="success.dark">
+                      {selectedFamily.verified_by_name} • {selectedFamily.verified_at ? new Date(selectedFamily.verified_at).toLocaleDateString() : 'N/A'}
+                    </Typography>
+                  </Box>
+                )}
               </Stack>
               
               <Typography variant="caption" color="primary" fontWeight={900} sx={{ letterSpacing: 1 }}>MEMBERS ({members.length})</Typography>
