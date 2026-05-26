@@ -29,6 +29,7 @@ import MaleIcon from '@mui/icons-material/Male';
 import FemaleIcon from '@mui/icons-material/Female';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import PersonAddAltRoundedIcon from '@mui/icons-material/PersonAddAltRounded';
 import VerifiedIcon from '@mui/icons-material/Verified';
 
 import API_BASE_URL from '../config';
@@ -142,6 +143,7 @@ const Home = () => {
   } else if (role === 'incharge') {
     actions.push(
       { title: 'My Anbiyam', subtitle: `Manage ${anbiyamName}`, path: '/anbiyamfam', icon: <MapRoundedIcon />, color: '#7C3AED' },
+      { title: 'Add Member', subtitle: 'Register new individual', path: '/add-member', icon: <PersonAddAltRoundedIcon />, color: '#3B82F6' },
       { title: 'Verify Families', subtitle: 'Vet new families', path: '/verify-registrations?tab=0', icon: <HomeWorkIcon />, color: '#10B981' },
       { title: 'Verify Members', subtitle: 'Vet individuals', path: '/verify-registrations?tab=1', icon: <Diversity3RoundedIcon />, color: '#3B82F6' },
       { title: 'Verify Accounts', subtitle: 'Vet users', path: '/verify-registrations?tab=2', icon: <VerifiedUserIcon />, color: '#8B5CF6' },

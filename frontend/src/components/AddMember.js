@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box, TextField, Checkbox, FormControlLabel, FormControl,
   InputLabel, Select, MenuItem, Typography, Button, Stepper, Step, 
-  StepLabel, Paper, Fade, Avatar, Stack, Divider, Alert, CircularProgress
+  StepLabel, Paper, Fade, Avatar, Stack, Divider, Alert, CircularProgress,
+  Chip
 } from '@mui/material';
 import API_BASE_URL from '../config';
 import PersonAddRoundedIcon from '@mui/icons-material/PersonAddRounded';
@@ -22,7 +23,7 @@ const AddMember = () => {
 
   const [activeStep, setActiveStep] = useState(0);
   const [familyId, setFamilyId] = useState(params.get('family_id') || '');
-  const [familyHead, setFamilyHead] = useState('');
+  const [familyData, setFamilyData] = useState(null);
   
   const [name, setName] = useState('');
   const [dob, setDob] = useState('');
@@ -50,6 +51,13 @@ const AddMember = () => {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const relationships = [
+    'Spouse', 'Son', 'Daughter', 'Mother', 'Father', 
+    'Brother', 'Sister', 'Grandson', 'Granddaughter', 
+    'Son-in-law', 'Daughter-in-law', 'Grandfather', 
+    'Grandmother', 'Other'
+  ];
+
   useEffect(() => {
     if (!dob) { setAge(''); return; }
     const birthDate = new Date(dob);
@@ -62,7 +70,7 @@ const AddMember = () => {
 
   useEffect(() => {
     if (!familyId) {
-      setFamilyHead('');
+      setFamilyData(null);
       return;
     }
     const fetchFamilyDetails = async () => {
@@ -70,10 +78,10 @@ const AddMember = () => {
         const res = await axios.get(`${API_BASE_URL}/family/${familyId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setFamilyHead(res.data.head_name || '');
+        setFamilyData(res.data);
         setError('');
       } catch {
-        setFamilyHead('');
+        setFamilyData(null);
         setError('Family ID not found. Please verify.');
       }
     };
@@ -82,12 +90,14 @@ const AddMember = () => {
 
   const handleToggleHeadAsMember = (checked) => {
     setHeadAsMember(checked);
-    if (checked) {
-      setName(familyHead);
+    if (checked && familyData) {
+      setName(familyData.head_name || '');
       setRelationship('Head');
+      if (familyData.mobile_number) setMobile(familyData.mobile_number);
     } else {
       setName('');
       setRelationship('');
+      setMobile('');
     }
   };
 
@@ -204,30 +214,86 @@ const AddMember = () => {
               <Box>
                 <Typography variant="subtitle2" color="primary" fontWeight={800} sx={{ mb: 3, textTransform: 'uppercase', letterSpacing: '1px' }}>Basic Details</Typography>
                 <Stack spacing={2.5}>
-                  <TextField label="Family ID*" value={familyId} onChange={(e) => setFamilyId(e.target.value.toUpperCase())} fullWidth placeholder="FAM0000000" />
-                  {familyHead && (
-                    <Paper variant="outlined" sx={{ p: 2, bgcolor: '#F8FAFC', borderStyle: 'dashed', borderRadius: 3 }}>
-                       <Typography variant="caption" color="textSecondary" fontWeight={800}>REGISTERING FOR FAMILY HEAD</Typography>
-                       <Typography variant="h6" fontWeight={900} color="#1E3A8A">{familyHead}</Typography>
+                  <TextField 
+                    label="Family ID*" 
+                    value={familyId} 
+                    onChange={(e) => setFamilyId(e.target.value.toUpperCase())} 
+                    fullWidth 
+                    placeholder="FAM0000000" 
+                    variant="outlined"
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
+                  />
+                  {familyData && (
+                    <Paper variant="outlined" sx={{ p: 2, bgcolor: '#F8FAFC', borderStyle: 'dashed', borderRadius: 3, border: '2px dashed #CBD5E1' }}>
+                       <Typography variant="caption" color="textSecondary" fontWeight={800}>VERIFIED FAMILY HEAD</Typography>
+                       <Typography variant="h6" fontWeight={900} color="#1E3A8A">{familyData.head_name}</Typography>
+                       <Typography variant="caption" color="textSecondary" fontWeight={700}>{familyData.anbiyam} • {familyData.mobile_number}</Typography>
                     </Paper>
                   )}
                   <FormControlLabel 
-                    control={<Checkbox checked={headAsMember} onChange={(e) => handleToggleHeadAsMember(e.target.checked)} disabled={!familyHead} />} 
+                    control={<Checkbox checked={headAsMember} onChange={(e) => handleToggleHeadAsMember(e.target.checked)} disabled={!familyData} />} 
                     label={<Typography fontWeight={800} variant="body2">This member is the Family Head</Typography>} 
                   />
-                  <TextField label="Full Name*" value={name} onChange={(e) => setName(e.target.value)} disabled={headAsMember} fullWidth />
-                  <Stack direction="row" spacing={2}>
+                  <TextField 
+                    label="Full Name*" 
+                    value={name} 
+                    onChange={(e) => setName(e.target.value)} 
+                    disabled={headAsMember} 
+                    fullWidth 
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
+                  />
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                     <FormControl sx={{ flex: 1 }}>
                       <InputLabel>Sex*</InputLabel>
-                      <Select value={sex} onChange={(e) => setSex(e.target.value)} label="Sex*">
+                      <Select 
+                        value={sex} 
+                        onChange={(e) => setSex(e.target.value)} 
+                        label="Sex*"
+                        sx={{ borderRadius: 3 }}
+                      >
                         <MenuItem value="Male">Male</MenuItem>
                         <MenuItem value="Female">Female</MenuItem>
                         <MenuItem value="Transgender">Transgender</MenuItem>
                       </Select>
                     </FormControl>
-                    <TextField label="Relationship" value={relationship} onChange={(e) => setRelationship(e.target.value)} sx={{ flex: 1 }} disabled={headAsMember} placeholder="e.g. Spouse" />
+                    <FormControl sx={{ flex: 1 }}>
+                      <InputLabel>Relationship</InputLabel>
+                      <Select 
+                        value={relationship} 
+                        onChange={(e) => setRelationship(e.target.value)} 
+                        label="Relationship"
+                        disabled={headAsMember}
+                        sx={{ borderRadius: 3 }}
+                      >
+                        {headAsMember ? (
+                          <MenuItem value="Head">Head</MenuItem>
+                        ) : (
+                          relationships.map(rel => (
+                            <MenuItem key={rel} value={rel}>{rel}</MenuItem>
+                          ))
+                        )}
+                      </Select>
+                    </FormControl>
                   </Stack>
-                  <TextField label="Date of Birth*" type="date" value={dob} onChange={(e) => setDob(e.target.value)} InputLabelProps={{ shrink: true }} fullWidth />
+                  <Box sx={{ position: 'relative' }}>
+                    <TextField 
+                      label="Date of Birth*" 
+                      type="date" 
+                      value={dob} 
+                      onChange={(e) => setDob(e.target.value)} 
+                      InputLabelProps={{ shrink: true }} 
+                      fullWidth 
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
+                    />
+                    {age && (
+                      <Chip 
+                        label={`${age} Years Old`} 
+                        color="primary" 
+                        size="small" 
+                        sx={{ position: 'absolute', right: 12, top: 12, fontWeight: 900, borderRadius: 1.5 }} 
+                      />
+                    )}
+                  </Box>
                 </Stack>
               </Box>
             </Fade>

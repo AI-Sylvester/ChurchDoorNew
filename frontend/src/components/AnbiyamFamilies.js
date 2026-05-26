@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Paper, Typography, CircularProgress, Alert,
   Box, Table, TableHead, TableRow,
@@ -11,8 +12,10 @@ import autoTable from 'jspdf-autotable';
 import API_BASE_URL from '../config';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
 
 const AnbiyamFamilyView = () => {
+  const navigate = useNavigate();
   const [anbiyams, setAnbiyams] = useState([]);
   const [selectedAnbiyam, setSelectedAnbiyam] = useState('');
   const [families, setFamilies] = useState([]);
@@ -364,6 +367,18 @@ const AnbiyamFamilyView = () => {
                             <Typography variant="body2" color="#475569" sx={{ mt: 0.5 }}>
                               {[fam.address_line1, fam.address_line2, fam.city].filter(Boolean).join(', ')}
                             </Typography>
+                            {(role === 'admin' || role === 'incharge') && (
+                              <Button 
+                                fullWidth 
+                                variant="outlined" 
+                                size="small" 
+                                startIcon={<PersonAddIcon />} 
+                                onClick={() => navigate(`/add-member?family_id=${fam.family_id}`)}
+                                sx={{ mt: 2, borderRadius: 2, fontWeight: 800, textTransform: 'none' }}
+                              >
+                                Add Member
+                              </Button>
+                            )}
                           </Card>
                         ))}
                       </Stack>
@@ -377,6 +392,7 @@ const AnbiyamFamilyView = () => {
                               <TableCell sx={{ fontWeight: 900, color: '#475569' }}>Head Name</TableCell>
                               <TableCell sx={{ fontWeight: 900, color: '#475569' }}>Mobile</TableCell>
                               <TableCell sx={{ fontWeight: 900, color: '#475569' }}>Address</TableCell>
+                              {(role === 'admin' || role === 'incharge') && <TableCell sx={{ fontWeight: 900, color: '#475569' }}>Action</TableCell>}
                             </TableRow>
                           </TableHead>
                           <TableBody>
@@ -387,6 +403,19 @@ const AnbiyamFamilyView = () => {
                                 <TableCell fontWeight={700}>{fam.head_name}</TableCell>
                                 <TableCell fontWeight={600}>{fam.mobile_number}</TableCell>
                                 <TableCell sx={{ color: '#64748B' }}>{[fam.address_line1, fam.address_line2, fam.city].filter(Boolean).join(', ')}</TableCell>
+                                {(role === 'admin' || role === 'incharge') && (
+                                  <TableCell>
+                                    <Button 
+                                      variant="outlined" 
+                                      size="small" 
+                                      startIcon={<PersonAddIcon />} 
+                                      onClick={() => navigate(`/add-member?family_id=${fam.family_id}`)}
+                                      sx={{ borderRadius: 2, fontWeight: 800, textTransform: 'none' }}
+                                    >
+                                      Add Member
+                                    </Button>
+                                  </TableCell>
+                                )}
                               </TableRow>
                             ))}
                           </TableBody>

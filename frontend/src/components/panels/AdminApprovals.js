@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
-import { 
-  Box, Typography, CircularProgress, Alert, Paper, Button, List, ListItem, 
-  ListItemText, Avatar, Chip, Tabs, Tab, 
-  Card, CardContent, Dialog, DialogTitle, DialogContent, 
+import {
+  Box, Typography, CircularProgress, Alert, Paper, Button, List, ListItem,
+  ListItemText, Avatar, Chip, Tabs, Tab,
+  Card, CardContent, Dialog, DialogTitle, DialogContent,
   DialogActions, IconButton, Stack
 } from '@mui/material';
 import API_BASE_URL from '../../config';
@@ -13,6 +13,47 @@ import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from '@mui/icons-material/Close';
+
+const FAMILY_LABELS = {
+  head_name: 'Head Name',
+  address_line1: 'Address Line 1',
+  address_line2: 'Address Line 2',
+  city: 'City',
+  pincode: 'Pincode',
+  mobile_number: 'Mobile Number',
+  mobile_number2: 'Alternate Mobile',
+  cemetery: 'Cemetery Registered',
+  cemetery_number: 'Cemetery Number',
+  old_card_number: 'Old Card Number',
+  native: 'Native Place',
+  resident_from: 'Resident From (Year)',
+  house_type: 'House Type',
+  subscription: 'Subscription Details',
+  anbiyam: 'Anbiyam Group',
+  location: 'Geo Location Pin'
+};
+
+const MEMBER_LABELS = {
+  name: 'Full Name',
+  sex: 'Sex',
+  dob: 'Date of Birth',
+  relationship: 'Relationship',
+  marital_status: 'Marital Status',
+  mobile: 'Mobile Number',
+  qualification: 'Qualification',
+  profession: 'Profession',
+  church_group: 'Church Group',
+  residing_here: 'Residing Here',
+  active: 'Active Record',
+  baptism_date: 'Baptism Date',
+  baptism_place: 'Baptism Place',
+  holy_communion_date: 'Holy Communion Date',
+  holy_communion_place: 'Holy Communion Place',
+  confirmation_date: 'Confirmation Date',
+  confirmation_place: 'Confirmation Place',
+  marriage_date: 'Marriage Date',
+  marriage_place: 'Marriage Place'
+};
 
 const AdminApprovals = () => {
   const location = useLocation();
@@ -23,7 +64,7 @@ const AdminApprovals = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [tab, setTab] = useState(0);
-  
+
   const [selectedFamily, setSelectedFamily] = useState(null);
   const [openReview, setOpenReview] = useState(false);
   const [members, setMembers] = useState([]);
@@ -133,16 +174,16 @@ const AdminApprovals = () => {
       <Typography variant="h4" fontWeight={900} color="#1E3A8A" gutterBottom sx={{ letterSpacing: '-1px', mb: 3 }}>
         {tab === 0 ? 'User Account Approvals' : tab === 1 ? 'Family Approvals' : tab === 2 ? 'Member Approvals' : 'Update Request Approvals'}
       </Typography>
-      
-      <Tabs 
-        value={tab} 
-        onChange={(e, v) => setTab(v)} 
+
+      <Tabs
+        value={tab}
+        onChange={(e, v) => setTab(v)}
         variant="scrollable"
         scrollButtons="auto"
-        sx={{ 
-          mb: 4, 
-          bgcolor: '#fff', 
-          borderRadius: 4, 
+        sx={{
+          mb: 4,
+          bgcolor: '#fff',
+          borderRadius: 4,
           p: 0.5,
           boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
           '& .MuiTabs-indicator': { height: '100%', borderRadius: 3, bgcolor: '#4F46E510', zIndex: 0 },
@@ -177,12 +218,12 @@ const AdminApprovals = () => {
                       <Typography variant="caption" color="textSecondary" fontWeight={700} sx={{ textTransform: 'uppercase', letterSpacing: '0.5px' }}>{user.role} • {user.anbiyam}</Typography>
                     </Box>
                   </Box>
-                  
+
                   <Stack spacing={1.5} sx={{ bgcolor: '#F8FAFC', p: 2, borderRadius: 4, mb: 2.5, border: '1px solid #F1F5F9' }}>
                     <Box>
                       <Typography variant="caption" color="textSecondary" fontWeight={800} display="block" sx={{ fontSize: '0.65rem' }}>FAMILY HEAD / ID</Typography>
                       <Typography variant="body2" fontWeight={700} color="#334155">
-                        {user.family_head_name && user.family_head_name !== 'null' ? user.family_head_name : 'Pending Registration'} 
+                        {user.family_head_name && user.family_head_name !== 'null' ? user.family_head_name : 'Pending Registration'}
                         <Typography component="span" variant="caption" sx={{ ml: 1, opacity: 0.7 }}>({user.family_id || 'N/A'})</Typography>
                       </Typography>
                     </Box>
@@ -198,14 +239,14 @@ const AdminApprovals = () => {
                     </Box>
                   </Stack>
 
-                  <Button 
-                    fullWidth 
-                    variant="contained" 
-                    color="success" 
-                    onClick={() => handleApproveUser(user.id)} 
-                    sx={{ 
-                      borderRadius: 3.5, 
-                      fontWeight: 900, 
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    color="success"
+                    onClick={() => handleApproveUser(user.id)}
+                    sx={{
+                      borderRadius: 3.5,
+                      fontWeight: 900,
                       py: 1.5,
                       textTransform: 'none',
                       boxShadow: user.verification_status === 'recommended' ? '0 10px 25px rgba(16, 185, 129, 0.25)' : 'none'
@@ -228,9 +269,9 @@ const AdminApprovals = () => {
             </Paper>
           ) : (
             families.map((fam) => (
-              <Card key={fam.family_id} sx={{ 
-                borderRadius: 4, 
-                boxShadow: '0 4px 20px rgba(0,0,0,0.03)', 
+              <Card key={fam.family_id} sx={{
+                borderRadius: 4,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
                 border: fam.verification_status === 'recommended' ? '2px solid #10B981' : '1px solid #F1F5F9',
                 overflow: 'visible',
                 position: 'relative'
@@ -262,20 +303,20 @@ const AdminApprovals = () => {
                       </Box>
                     </Box>
                     <Stack direction="row" spacing={1.5} width={{ xs: '100%', sm: 'auto' }}>
-                      <Button 
+                      <Button
                         fullWidth={false}
-                        variant="outlined" 
-                        startIcon={<VisibilityIcon />} 
-                        onClick={() => handleReview(fam)} 
+                        variant="outlined"
+                        startIcon={<VisibilityIcon />}
+                        onClick={() => handleReview(fam)}
                         sx={{ flex: 1, borderRadius: 3, fontWeight: 800, textTransform: 'none', px: 3 }}
                       >
                         Review
                       </Button>
-                      <Button 
+                      <Button
                         fullWidth={false}
-                        variant="contained" 
-                        color="success" 
-                        onClick={() => handleApproveFamily(fam.family_id)} 
+                        variant="contained"
+                        color="success"
+                        onClick={() => handleApproveFamily(fam.family_id)}
                         sx={{ flex: 1, borderRadius: 3, fontWeight: 800, textTransform: 'none', px: 3 }}
                       >
                         Approve
@@ -297,10 +338,10 @@ const AdminApprovals = () => {
             </Paper>
           ) : (
             pendingMembers.map((m) => (
-              <Card key={m.member_id} sx={{ 
-                borderRadius: 5, 
-                boxShadow: '0 4px 12px rgba(0,0,0,0.03)', 
-                border: m.verification_status === 'recommended' ? '2.5px solid #10B981' : '1px solid #F1F5F9' 
+              <Card key={m.member_id} sx={{
+                borderRadius: 5,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+                border: m.verification_status === 'recommended' ? '2.5px solid #10B981' : '1px solid #F1F5F9'
               }}>
                 <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
                   <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2.5}>
@@ -311,11 +352,11 @@ const AdminApprovals = () => {
                       </Typography>
                     </Box>
                     <Stack direction="row" spacing={1} alignItems="center">
-                      <Chip 
-                        label={m.verification_status === 'recommended' ? 'Vetted' : 'New Add'} 
-                        size="small" 
+                      <Chip
+                        label={m.verification_status === 'recommended' ? 'Vetted' : 'New Add'}
+                        size="small"
                         color={m.verification_status === 'recommended' ? 'success' : 'warning'}
-                        sx={{ fontWeight: 900, fontSize: '0.6rem', height: 20 }} 
+                        sx={{ fontWeight: 900, fontSize: '0.6rem', height: 20 }}
                       />
                     </Stack>
                   </Box>
@@ -346,14 +387,14 @@ const AdminApprovals = () => {
                     </Box>
                   </Stack>
 
-                  <Button 
-                    fullWidth 
-                    variant="contained" 
-                    color="success" 
-                    onClick={() => handleApproveMember(m.member_id)} 
-                    sx={{ 
-                      borderRadius: 3.5, 
-                      fontWeight: 900, 
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    color="success"
+                    onClick={() => handleApproveMember(m.member_id)}
+                    sx={{
+                      borderRadius: 3.5,
+                      fontWeight: 900,
                       py: 1.5,
                       textTransform: 'none',
                       boxShadow: m.verification_status === 'recommended' ? '0 10px 25px rgba(16, 185, 129, 0.25)' : 'none'
@@ -369,65 +410,129 @@ const AdminApprovals = () => {
       )}
 
       {tab === 3 && (
-        <Box sx={{ display: 'grid', gap: 2 }}>
+        <Box sx={{ display: 'grid', gap: 2.5 }}>
           {updateRequests.length === 0 ? (
             <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4, bgcolor: 'transparent', border: '2px dashed #E2E8F0' }} elevation={0}>
               <Typography variant="h6" fontWeight={800} color="textSecondary">No pending update requests</Typography>
             </Paper>
           ) : (
-            updateRequests.map((req) => (
-              <Card key={req.id} sx={{ borderRadius: 4, boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid #F1F5F9' }}>
-                <CardContent sx={{ p: 3 }}>
-                  <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                    <Box>
-                      <Typography variant="h6" fontWeight={900}>{req.head_name} ({req.family_id})</Typography>
-                      <Typography variant="caption" color="textSecondary" fontWeight={700}>
-                        SUBMITTED ON: {new Date(req.created_at).toLocaleDateString()}
-                      </Typography>
+            updateRequests.map((req) => {
+              let data = req.requested_data;
+              if (typeof data === 'string') {
+                try {
+                  data = JSON.parse(data);
+                } catch (e) {}
+              }
+
+              const isMember = data && data.edit_type === 'member';
+              const fieldLabel = data && data.field_name 
+                ? (isMember ? MEMBER_LABELS[data.field_name] : FAMILY_LABELS[data.field_name]) || data.field_name
+                : '';
+
+              const formatVal = (val) => {
+                if (val === 'true' || val === true) return 'Yes';
+                if (val === 'false' || val === false) return 'No';
+                if (val === null || val === undefined || val === '') return '[Empty / Unspecified]';
+                return String(val);
+              };
+
+              return (
+                <Card key={req.id} sx={{ borderRadius: 4, boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #E2E8F0' }}>
+                  <CardContent sx={{ p: 3 }}>
+                    <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                      <Box>
+                        <Typography variant="h6" fontWeight={900} color="#1E293B">{req.head_name} ({req.family_id})</Typography>
+                        <Typography variant="caption" color="textSecondary" fontWeight={700}>
+                          SUBMITTED ON: {new Date(req.created_at).toLocaleDateString()}
+                        </Typography>
+                      </Box>
+                      <Chip icon={<VerifiedIcon />} label="Vetted by Incharge" size="small" color="success" sx={{ fontWeight: 800 }} />
                     </Box>
-                    <Chip icon={<VerifiedIcon />} label="Vetted by Incharge" size="small" color="success" sx={{ fontWeight: 800 }} />
-                  </Box>
-                  <Box sx={{ bgcolor: '#F8FAFC', p: 2, borderRadius: 3, mb: 3, border: '1px solid #F1F5F9' }}>
-                    <Typography variant="subtitle2" fontWeight={800} mb={1}>Requested Changes:</Typography>
-                    {Object.entries(req.requested_data).map(([key, val]) => (
-                      <Typography key={key} variant="body2" color="textSecondary">
-                        <strong>{key.replace('_', ' ').toUpperCase()}:</strong> {String(val)}
-                      </Typography>
-                    ))}
-                  </Box>
-                  <Stack direction="row" spacing={2}>
-                    <Button 
-                      fullWidth 
-                      variant="contained" 
-                      color="success" 
-                      onClick={() => handleUpdateAction(req.id, 'approved')}
-                      sx={{ borderRadius: 3, fontWeight: 800, py: 1.2 }}
-                    >
-                      Approve Changes
-                    </Button>
-                    <Button 
-                      fullWidth 
-                      variant="outlined" 
-                      color="error" 
-                      onClick={() => handleUpdateAction(req.id, 'rejected')}
-                      sx={{ borderRadius: 3, fontWeight: 800, py: 1.2 }}
-                    >
-                      Reject
-                    </Button>
-                  </Stack>
-                </CardContent>
-              </Card>
-            ))
+
+                    {data && data.edit_type ? (
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 3 }}>
+                        <Typography variant="body2">
+                          <strong>Target:</strong> {isMember ? <span>Member: <span style={{ color: '#1E3A8A', fontWeight: 800 }}>{data.member_name}</span> ({data.member_id})</span> : <span style={{ color: '#0F766E', fontWeight: 800 }}>Family Registration</span>}
+                        </Typography>
+                        
+                        {data.field_name && (
+                          <Typography variant="body2">
+                            <strong>Field:</strong> <span style={{ fontWeight: 700, color: '#475569' }}>{fieldLabel}</span>
+                          </Typography>
+                        )}
+
+                        {data.field_name && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 0.5, bgcolor: '#F8FAFC', p: 1.5, borderRadius: 2, border: '1px solid #E2E8F0', maxWidth: 500 }}>
+                            <Box sx={{ flex: 1 }}>
+                              <Typography variant="caption" color="textSecondary" display="block" sx={{ fontWeight: 700 }}>CURRENT VALUE</Typography>
+                              <Typography variant="body2" sx={{ color: '#DC2626', textDecoration: 'line-through', fontWeight: 600 }}>
+                                {formatVal(data.old_value)}
+                              </Typography>
+                            </Box>
+                            <Box sx={{ display: 'flex', alignItems: 'center', color: '#94A3B8', fontWeight: 900 }}>→</Box>
+                            <Box sx={{ flex: 1 }}>
+                              <Typography variant="caption" color="textSecondary" display="block" sx={{ fontWeight: 700 }}>PROPOSED VALUE</Typography>
+                              <Typography variant="body2" sx={{ color: '#16A34A', fontWeight: 800 }}>
+                                {formatVal(data.new_value)}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        )}
+
+                        {data.additional_changes && (
+                          <Box sx={{ mt: 1, borderTop: '1px dashed #E2E8F0', pt: 1.5 }}>
+                            <Typography variant="caption" color="textSecondary" display="block" sx={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Additional Notes & Requests</Typography>
+                            <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#475569', mt: 0.5, bgcolor: '#FEF3C7', p: 1.5, borderRadius: 2, borderLeft: '4px solid #F59E0B', maxWidth: 600 }}>
+                              {data.additional_changes}
+                            </Typography>
+                          </Box>
+                        )}
+                      </Box>
+                    ) : (
+                      <Box sx={{ bgcolor: '#F8FAFC', p: 2, borderRadius: 3, mb: 3, border: '1px solid #E2E8F0' }}>
+                        <Typography variant="subtitle2" fontWeight={800} mb={1}>Changes to Verify:</Typography>
+                        {Object.entries(data || {}).map(([key, val]) => (
+                          <Typography key={key} variant="body2" color="textSecondary">
+                            <strong>{key.replace('_', ' ').toUpperCase()}:</strong> {String(val)}
+                          </Typography>
+                        ))}
+                      </Box>
+                    )}
+
+                    <Stack direction="row" spacing={2}>
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        color="success"
+                        onClick={() => handleUpdateAction(req.id, 'approved')}
+                        sx={{ borderRadius: 2.5, fontWeight: 900, py: 1.4, textTransform: 'none', boxShadow: '0 8px 20px rgba(16, 185, 129, 0.15)' }}
+                      >
+                        Approve Changes
+                      </Button>
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        color="error"
+                        onClick={() => handleUpdateAction(req.id, 'rejected')}
+                        sx={{ borderRadius: 2.5, fontWeight: 900, py: 1.4, textTransform: 'none' }}
+                      >
+                        Reject
+                      </Button>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              );
+            })
           )}
         </Box>
       )}
 
       {/* Family Review Dialog */}
-      <Dialog 
-        open={openReview} 
-        onClose={() => setOpenReview(false)} 
-        maxWidth="sm" 
-        fullWidth 
+      <Dialog
+        open={openReview}
+        onClose={() => setOpenReview(false)}
+        maxWidth="sm"
+        fullWidth
         PaperProps={{ sx: { borderRadius: 5, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' } }}
       >
         <DialogTitle sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -456,14 +561,14 @@ const AdminApprovals = () => {
                   </Box>
                 )}
               </Stack>
-              
+
               <Typography variant="caption" color="primary" fontWeight={900} sx={{ letterSpacing: 1 }}>MEMBERS ({members.length})</Typography>
               <List sx={{ mt: 1, bgcolor: '#F8FAFC', borderRadius: 4, overflow: 'hidden' }}>
                 {members.map((m, idx) => (
                   <ListItem key={idx} divider={idx < members.length - 1} sx={{ py: 1.5 }}>
-                    <ListItemText 
-                      primary={<Typography variant="body2" fontWeight={800}>{m.name}</Typography>} 
-                      secondary={<Typography variant="caption" fontWeight={600} color="textSecondary">{m.relationship} • {m.age} years</Typography>} 
+                    <ListItemText
+                      primary={<Typography variant="body2" fontWeight={800}>{m.name}</Typography>}
+                      secondary={<Typography variant="caption" fontWeight={600} color="textSecondary">{m.relationship} • {m.age} years</Typography>}
                     />
                   </ListItem>
                 ))}
@@ -481,11 +586,11 @@ const AdminApprovals = () => {
         </DialogContent>
         <DialogActions sx={{ p: 3, gap: 1.5 }}>
           <Button onClick={() => setOpenReview(false)} sx={{ fontWeight: 800, color: '#64748B' }}>Cancel</Button>
-          <Button 
-            variant="contained" 
-            color="success" 
-            fullWidth 
-            onClick={() => handleApproveFamily(selectedFamily.family_id)} 
+          <Button
+            variant="contained"
+            color="success"
+            fullWidth
+            onClick={() => handleApproveFamily(selectedFamily.family_id)}
             sx={{ borderRadius: 3, py: 1.5, fontWeight: 900, fontSize: '0.95rem', boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.2)' }}
           >
             Approve & Activate

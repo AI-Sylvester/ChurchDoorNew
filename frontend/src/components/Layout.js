@@ -93,19 +93,23 @@ const Layout = ({ children }) => {
       {/* Main content */}
       <Box sx={{ mt: 8, px: 2 }}>{children}</Box>
 
-      {/* Bottom Fixed Footer with Scrollable Nav */}
+      {/* Fixed Bottom Navigation */}
       <Paper
         sx={{
           position: 'fixed',
-          bottom: 20,
-          left: 20,
-          right: 20,
-          background: 'linear-gradient(90deg, #FFE000 50%, #FFFFFF 50%)',
+          bottom: 24,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: { xs: '90%', sm: 'auto' },
+          minWidth: { sm: 400 },
+          background: 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(20px)',
           zIndex: 1000,
-          borderRadius: 6,
-          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
+          borderRadius: 8,
+          boxShadow: '0 15px 35px rgba(0, 0, 0, 0.1)',
           overflow: 'hidden',
-          border: '1px solid rgba(0,0,0,0.05)'
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          transition: 'all 0.3s ease'
         }}
         elevation={0}
       >
@@ -117,21 +121,22 @@ const Layout = ({ children }) => {
           }}
           sx={{ 
             backgroundColor: 'transparent',
-            height: 70,
+            height: 72,
+            px: 2,
             '& .MuiBottomNavigationAction-root': {
-              color: 'rgba(0, 0, 0, 0.4)',
+              color: '#94A3B8',
               minWidth: 'auto',
-              padding: '6px 0',
+              transition: 'all 0.2s ease',
               '&.Mui-selected': {
-                color: '#1E293B',
+                color: '#1E3A8A',
                 '& .MuiSvgIcon-root': {
-                  transform: 'scale(1.2) translateY(-2px)',
-                  transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                  transform: 'translateY(-4px)',
+                  filter: 'drop-shadow(0 4px 8px rgba(30, 58, 138, 0.3))'
                 },
                 '& .MuiBottomNavigationAction-label': {
                   fontWeight: 900,
                   fontSize: '0.65rem',
-                  opacity: 1
+                  marginTop: '4px'
                 }
               }
             }
@@ -142,33 +147,21 @@ const Layout = ({ children }) => {
             value="/home"
             icon={<SpaceDashboardRoundedIcon />}
           />
-          {(role === 'admin' || role === 'incharge') && (
-            <BottomNavigationAction
-              label="Families"
-              value="/familylist"
-              icon={<GroupsRoundedIcon />}
-            />
-          )}
+
+          {role === 'admin' && [
+            <BottomNavigationAction key="f" label="Families" value="/familylist" icon={<GroupsRoundedIcon />} />,
+            <BottomNavigationAction key="n" label="New" value="/add-family" icon={<PersonAddAltRoundedIcon />} />,
+            <BottomNavigationAction key="m" label="Members" value="/memlist" icon={<GroupRoundedIcon />} />
+          ]}
+
+          {role === 'incharge' && [
+            <BottomNavigationAction key="a" label="Families" value="/anbiyamfam" icon={<GroupsRoundedIcon />} />,
+            <BottomNavigationAction key="m" label="Add Member" value="/add-member" icon={<PersonAddAltRoundedIcon />} />,
+            <BottomNavigationAction key="v" label="Verify" value="/verify-registrations" icon={<GroupRoundedIcon />} />
+          ]}
+
           {role === 'family' && (
-            <BottomNavigationAction
-              label="My Family"
-              value="/my-family"
-              icon={<GroupsRoundedIcon />}
-            />
-          )}
-          {(role === 'admin' || role === 'incharge') && (
-            <BottomNavigationAction
-              label="New"
-              value="/add-family"
-              icon={<PersonAddAltRoundedIcon />}
-            />
-          )}
-          {role === 'admin' && (
-            <BottomNavigationAction
-              label="Members"
-              value="/memlist"
-              icon={<GroupRoundedIcon />}
-            />
+            <BottomNavigationAction label="My Family" value="/my-family" icon={<GroupsRoundedIcon />} />
           )}
         </BottomNavigation>
       </Paper>

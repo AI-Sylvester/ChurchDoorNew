@@ -41,16 +41,42 @@ exports.handleUpdateRequest = async (req, res, next) => {
       if (requestRes.rows.length === 0) return next(new AppError('Request not found', 404));
       
       const { family_id, requested_data } = requestRes.rows[0];
-      const data = requested_data;
+      let data = requested_data;
+      if (typeof data === 'string') {
+        try {
+          data = JSON.parse(data);
+        } catch (e) {
+          console.error('Failed to parse requested_data:', e);
+        }
+      }
 
-      // Update family table with new data
-      // This part is complex because we need to map JSON keys to columns.
-      // For simplicity, let's assume requested_data contains valid columns.
-      const keys = Object.keys(data);
-      const values = Object.values(data);
-      const setClause = keys.map((key, i) => `${key} = $${i + 1}`).join(', ');
-      
-      await db.query(`UPDATE families SET ${setClause} WHERE family_id = $${keys.length + 1}`, [...values, family_id]);
+      if (data && data.edit_type === 'member') {
+        const { member_id, field_name, new_value } = data;
+        if (member_id && field_name) {
+          let dbValue = new_value;
+          if (new_value === 'true') dbValue = true;
+          else if (new_value === 'false') dbValue = false;
+          else if (new_value === '') dbValue = null;
+          await db.query(`UPDATE members SET ${field_name} = $1 WHERE member_id = $2`, [dbValue, member_id]);
+        }
+      } else if (data && data.edit_type === 'family') {
+        const { field_name, new_value } = data;
+        if (field_name) {
+          let dbValue = new_value;
+          if (new_value === 'true') dbValue = true;
+          else if (new_value === 'false') dbValue = false;
+          else if (new_value === '') dbValue = null;
+          await db.query(`UPDATE families SET ${field_name} = $1 WHERE family_id = $2`, [dbValue, family_id]);
+        }
+      } else if (data) {
+        // Fallback for legacy updates
+        const keys = Object.keys(data).filter(k => k !== 'edit_type' && k !== 'field_name' && k !== 'old_value' && k !== 'new_value' && k !== 'member_id' && k !== 'member_name' && k !== 'additional_changes');
+        if (keys.length > 0) {
+          const values = keys.map(k => data[k]);
+          const setClause = keys.map((key, i) => `${key} = $${i + 1}`).join(', ');
+          await db.query(`UPDATE families SET ${setClause} WHERE family_id = $${keys.length + 1}`, [...values, family_id]);
+        }
+      }
     }
 
     await db.query('UPDATE update_requests SET status = $1 WHERE id = $2', [status, id]);
