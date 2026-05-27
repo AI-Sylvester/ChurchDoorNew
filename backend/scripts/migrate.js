@@ -25,6 +25,9 @@ async function migrate() {
         family_id VARCHAR(20) NOT NULL,
         requested_data JSONB NOT NULL,
         status VARCHAR(20) DEFAULT 'pending',
+        verified_by_incharge BOOLEAN DEFAULT false,
+        verified_by INT REFERENCES users(id),
+        verified_at TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
