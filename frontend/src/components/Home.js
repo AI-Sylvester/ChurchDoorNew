@@ -36,21 +36,14 @@ import API_BASE_URL from '../config';
 
 const Home = () => {
   const navigate = useNavigate();
-  
-  const [counts, setCounts] = useState({
-    families: 0,
-    members: 0,
-    male: 0,
-    female: 0,
-  });
 
+  const [counts, setCounts] = useState({ families: 0, members: 0, male: 0, female: 0 });
   const [hasFamily, setHasFamily] = useState(true);
   const [familyStatus, setFamilyStatus] = useState(null);
-
   const [todayReminders, setTodayReminders] = useState({ birthdays: 0, weddings: 0 });
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  
+
   const token = localStorage.getItem('token');
   const role = localStorage.getItem('role') || 'family';
   const userName = localStorage.getItem('username') || 'User';
@@ -66,7 +59,7 @@ const Home = () => {
           fetch(`${API_BASE_URL}/member/stats/gender`, { headers }),
           fetch(`${API_BASE_URL}/member/birthdays`, { headers }),
           fetch(`${API_BASE_URL}/member/weddings`, { headers }),
-          fetch(`${API_BASE_URL}/family-user/check-registration`, { headers })
+          fetch(`${API_BASE_URL}/family-user/check-registration`, { headers }),
         ]);
 
         const [familyData, memberData, genderData, bdayData, weddingData, statusData] = await Promise.all([
@@ -75,7 +68,7 @@ const Home = () => {
           genderRes.json(),
           bdayRes ? bdayRes.json() : { today: [] },
           weddingRes ? weddingRes.json() : { today: [] },
-          statusRes.json()
+          statusRes.json(),
         ]);
 
         setCounts({
@@ -84,42 +77,35 @@ const Home = () => {
           male: genderData.male_count || 0,
           female: genderData.female_count || 0,
         });
-
         setTodayReminders({
           birthdays: bdayData.today?.length || 0,
           weddings: weddingData.today?.length || 0,
         });
-
-        if (bdayData.today?.length > 0 || weddingData.today?.length > 0) {
-          setNotificationOpen(true);
-        }
-
+        if (bdayData.today?.length > 0 || weddingData.today?.length > 0) setNotificationOpen(true);
         setHasFamily(statusData.hasFamily);
         setFamilyStatus(statusData.family?.verification_status);
-
       } catch (err) {
         console.error('Error fetching data:', err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
   }, [token]);
 
   const statsList = [];
   if (role === 'admin') {
     statsList.push(
-      { label: 'Families', value: counts.families, icon: <HomeWorkIcon />, color: '#F59E0B' },
-      { label: 'Members', value: counts.members, icon: <GroupIcon />, color: '#3B82F6' },
-      { label: 'Male', value: counts.male, icon: <MaleIcon />, color: '#0EA5E9' },
-      { label: 'Female', value: counts.female, icon: <FemaleIcon />, color: '#EC4899' }
+      { label: 'Families', value: counts.families, icon: <HomeWorkIcon sx={{ fontSize: 22 }} />, color: '#F59E0B' },
+      { label: 'Members', value: counts.members, icon: <GroupIcon sx={{ fontSize: 22 }} />, color: '#3B82F6' },
+      { label: 'Male', value: counts.male, icon: <MaleIcon sx={{ fontSize: 22 }} />, color: '#0EA5E9' },
+      { label: 'Female', value: counts.female, icon: <FemaleIcon sx={{ fontSize: 22 }} />, color: '#EC4899' }
     );
   } else {
     statsList.push(
-      { label: 'Families', value: counts.families, icon: <HomeWorkIcon />, color: '#F59E0B' },
-      { label: 'Members', value: counts.members, icon: <GroupIcon />, color: '#3B82F6' },
-      { label: 'Today B-Day', value: todayReminders.birthdays, icon: <CakeRoundedIcon />, color: '#E11D48' }
+      { label: 'Families', value: counts.families, icon: <HomeWorkIcon sx={{ fontSize: 22 }} />, color: '#F59E0B' },
+      { label: 'Members', value: counts.members, icon: <GroupIcon sx={{ fontSize: 22 }} />, color: '#3B82F6' },
+      { label: "B-Day Today", value: todayReminders.birthdays, icon: <CakeRoundedIcon sx={{ fontSize: 22 }} />, color: '#E11D48' }
     );
   }
 
@@ -156,9 +142,7 @@ const Home = () => {
     );
   } else {
     if (!hasFamily) {
-      actions.push(
-        { title: 'Submit Registration', subtitle: 'ACTION REQUIRED', path: '/add-family', icon: <VerifiedUserIcon />, color: '#BE123C' }
-      );
+      actions.push({ title: 'Submit Registration', subtitle: 'ACTION REQUIRED', path: '/add-family', icon: <VerifiedUserIcon />, color: '#BE123C' });
     }
     actions.push(
       { title: 'My Family', subtitle: 'View your profile', path: '/my-family', icon: <Diversity3RoundedIcon />, color: '#4F46E5' },
@@ -169,7 +153,7 @@ const Home = () => {
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" height="100vh" bgcolor="#F8FAFC">
-        <CircularProgress thickness={5} size={60} sx={{ color: '#1E3A8A' }} />
+        <CircularProgress thickness={5} size={48} sx={{ color: '#1E3A8A' }} />
       </Box>
     );
   }
@@ -179,130 +163,146 @@ const Home = () => {
   return (
     <>
       <Box sx={{ backgroundColor: '#F8FAFC', minHeight: '100vh', pb: 12 }}>
-        {/* Dynamic Header */}
-        <Box 
-          sx={{ 
-            background: 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)', 
-            pt: 5, 
-            pb: 10, 
-            px: 3, 
-            borderBottomLeftRadius: { xs: 40, md: 60 }, 
-            borderBottomRightRadius: { xs: 40, md: 60 },
-            boxShadow: '0 20px 40px rgba(30, 58, 138, 0.15)',
+        {/* Hero Header */}
+        <Box
+          sx={{
+            background: 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)',
+            pt: 3,
+            pb: 7,
+            px: 3,
+            borderBottomLeftRadius: 32,
+            borderBottomRightRadius: 32,
+            boxShadow: '0 12px 32px rgba(30, 58, 138, 0.2)',
             position: 'relative',
-            overflow: 'hidden'
+            overflow: 'hidden',
           }}
         >
-          <Box sx={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
-          <Box sx={{ position: 'absolute', bottom: -30, left: -20, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
+          {/* Decoration circles */}
+          <Box sx={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.07)' }} />
+          <Box sx={{ position: 'absolute', bottom: -20, left: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
 
-          <Box display="flex" justifyContent="space-between" alignItems="flex-start" sx={{ position: 'relative', zIndex: 1 }}>
+          <Box display="flex" justifyContent="space-between" alignItems="flex-start" sx={{ position: 'relative', zIndex: 1, mb: 3 }}>
             <Box>
-              <Typography variant="h4" fontWeight={900} color="#fff" sx={{ letterSpacing: '-1.5px', mb: 0.5 }}>
-                Hello, {userName}
+              <Typography variant="h5" fontWeight={900} color="#fff" sx={{ letterSpacing: '-0.5px', mb: 0.3, lineHeight: 1.1 }}>
+                Hello, {userName} 👋
               </Typography>
-              <Typography variant="subtitle2" color="rgba(255,255,255,0.8)" fontWeight={600}>
-                {todayStr} • {anbiyamName || 'Main Parish'}
+              <Typography variant="caption" color="rgba(255,255,255,0.75)" fontWeight={600} sx={{ lineHeight: 1.2, display: 'block' }}>
+                {todayStr}
               </Typography>
+              {anbiyamName && (
+                <Typography variant="caption" color="rgba(255,255,255,0.6)" fontWeight={500}>
+                  {anbiyamName}
+                </Typography>
+              )}
             </Box>
-            <Chip 
-              label={role.toUpperCase()} 
-              sx={{ 
-                bgcolor: 'rgba(255,255,255,0.2)', 
-                color: '#fff', 
-                fontWeight: 900, 
+            <Chip
+              label={role === 'admin' ? 'Admin' : role === 'incharge' ? 'Incharge' : 'Family'}
+              sx={{
+                bgcolor: 'rgba(255,255,255,0.18)',
+                color: '#fff',
+                fontWeight: 800,
                 backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255,255,255,0.3)',
-                fontSize: '0.65rem'
-              }} 
+                border: '1px solid rgba(255,255,255,0.25)',
+                fontSize: '0.7rem',
+                height: 26,
+              }}
             />
           </Box>
 
-          <Box 
-            sx={{ 
-              mt: 4, 
-              position: 'relative', 
+          {/* Stats Grid */}
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: `repeat(${statsList.length <= 3 ? statsList.length : 2}, 1fr)`,
+              gap: 1.5,
+              position: 'relative',
               zIndex: 1,
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 1.5
             }}
           >
             {statsList.map((stat, idx) => (
-              <Box 
+              <Box
                 key={idx}
-                sx={{ 
-                  flex: '1 1 calc(50% - 12px)',
-                  minWidth: { xs: 'calc(50% - 12px)', sm: '120px' },
-                  bgcolor: 'rgba(255,255,255,0.15)', 
-                  backdropFilter: 'blur(15px)',
-                  p: 2, 
-                  borderRadius: 4, 
-                  border: '1px solid rgba(255,255,255,0.2)',
+                sx={{
+                  bgcolor: 'rgba(255,255,255,0.14)',
+                  backdropFilter: 'blur(10px)',
+                  p: 1.8,
+                  borderRadius: 3,
+                  border: '1px solid rgba(255,255,255,0.18)',
                   textAlign: 'center',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  gap: 0.5,
                 }}
               >
-                <Box sx={{ color: '#fff', mb: 0.5 }}>{stat.icon}</Box>
-                <Typography variant="h6" fontWeight={900} color="#fff">{stat.value}</Typography>
-                <Typography variant="caption" color="rgba(255,255,255,0.7)" fontWeight={700}>{stat.label}</Typography>
+                <Box sx={{ color: 'rgba(255,255,255,0.85)' }}>{stat.icon}</Box>
+                <Typography variant="h5" fontWeight={900} color="#fff" sx={{ lineHeight: 1 }}>
+                  {stat.value}
+                </Typography>
+                <Typography variant="caption" color="rgba(255,255,255,0.7)" fontWeight={700} sx={{ fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.3px' }}>
+                  {stat.label}
+                </Typography>
               </Box>
             ))}
           </Box>
         </Box>
 
+        {/* Registration Roadmap (family role pending) */}
         {role?.toLowerCase() === 'family' && familyStatus && familyStatus !== 'approved' && (
-          <Box sx={{ px: 2, mt: -4, position: 'relative', zIndex: 2 }}>
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                p: 3, 
-                borderRadius: 5, 
-                boxShadow: '0 20px 40px rgba(0,0,0,0.06)',
-                border: '1px solid rgba(0,0,0,0.02)'
+          <Box sx={{ px: 2, mt: -3, position: 'relative', zIndex: 2, mb: 1 }}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                borderRadius: 4,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+                border: '1px solid #F1F5F9',
               }}
             >
-              <Typography variant="subtitle1" fontWeight={900} color="#1E293B" mb={3} textAlign="center">
-                Registration Roadmap
+              <Typography variant="subtitle2" fontWeight={800} color="#1E293B" mb={2.5} textAlign="center">
+                Registration Status
               </Typography>
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center',
-                  gap: 1
-                }}
-              >
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
                 {[
-                  { label: 'Register', active: true, icon: <CheckCircleOutlineIcon />, color: '#10B981' },
-                  { 
-                    label: 'Vetting', 
-                    active: familyStatus === 'recommended' || familyStatus === 'approved', 
-                    icon: (familyStatus === 'recommended' || familyStatus === 'approved') ? <CheckCircleOutlineIcon /> : <HourglassEmptyIcon />, 
-                    color: (familyStatus === 'recommended' || familyStatus === 'approved') ? '#10B981' : '#F59E0B' 
+                  { label: 'Registered', active: true, icon: <CheckCircleOutlineIcon sx={{ fontSize: 20 }} />, color: '#10B981' },
+                  {
+                    label: 'Vetted',
+                    active: familyStatus === 'recommended' || familyStatus === 'approved',
+                    icon: (familyStatus === 'recommended' || familyStatus === 'approved') ? <CheckCircleOutlineIcon sx={{ fontSize: 20 }} /> : <HourglassEmptyIcon sx={{ fontSize: 20 }} />,
+                    color: (familyStatus === 'recommended' || familyStatus === 'approved') ? '#10B981' : '#F59E0B',
                   },
-                  { 
-                    label: 'Approved', 
-                    active: familyStatus === 'approved', 
-                    icon: familyStatus === 'approved' ? <VerifiedIcon /> : <VerifiedIcon sx={{ opacity: 0.3 }} />, 
-                    color: familyStatus === 'approved' ? '#10B981' : '#94A3B8' 
-                  }
+                  {
+                    label: 'Approved',
+                    active: familyStatus === 'approved',
+                    icon: familyStatus === 'approved' ? <VerifiedIcon sx={{ fontSize: 20 }} /> : <VerifiedIcon sx={{ fontSize: 20, opacity: 0.3 }} />,
+                    color: familyStatus === 'approved' ? '#10B981' : '#CBD5E1',
+                  },
                 ].map((step, idx) => (
                   <Box key={idx} sx={{ textAlign: 'center', flex: 1 }}>
-                    <Box sx={{ 
-                      width: 44, height: 44, borderRadius: '50%', 
-                      bgcolor: `${step.color}15`, color: step.color, 
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                      mx: 'auto', mb: 1, 
-                      border: step.active ? `2.5px solid ${step.color}` : '2px dashed #E2E8F0',
-                      boxShadow: step.active ? `0 0 15px ${step.color}30` : 'none'
-                    }}>
+                    <Box
+                      sx={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: '50%',
+                        bgcolor: `${step.color}12`,
+                        color: step.color,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        mx: 'auto',
+                        mb: 1,
+                        border: step.active ? `2px solid ${step.color}` : '2px dashed #E2E8F0',
+                        boxShadow: step.active ? `0 0 12px ${step.color}30` : 'none',
+                      }}
+                    >
                       {step.icon}
                     </Box>
-                    <Typography variant="caption" fontWeight={900} color={step.active ? '#1E293B' : '#94A3B8'} sx={{ display: 'block', textTransform: 'uppercase', fontSize: '0.6rem', letterSpacing: '0.5px' }}>
+                    <Typography
+                      variant="caption"
+                      fontWeight={800}
+                      color={step.active ? '#1E293B' : '#CBD5E1'}
+                      sx={{ display: 'block', textTransform: 'uppercase', fontSize: '0.6rem', letterSpacing: '0.5px' }}
+                    >
                       {step.label}
                     </Typography>
                   </Box>
@@ -312,72 +312,87 @@ const Home = () => {
           </Box>
         )}
 
-        <Box sx={{ px: 3, mt: 4, position: 'relative', zIndex: 2 }}>
-          <Typography variant="overline" color="textSecondary" fontWeight={900} sx={{ letterSpacing: 1, ml: 1, mb: 1.5, display: 'block' }}>
-            Quick Services
-          </Typography>
-          
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {actions.map((action, idx) => (
-              <Card 
-                key={idx} 
-                sx={{ 
-                  borderRadius: 5, 
-                  boxShadow: '0 8px 30px rgba(0,0,0,0.04)', 
-                  border: '1px solid #F1F5F9',
-                  overflow: 'hidden',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  '&:active': { transform: 'scale(0.97)', bgcolor: '#F8FAFC' }
-                }}
-              >
-                <CardActionArea onClick={() => navigate(action.path)} sx={{ p: 2.5 }}>
-                  <Box display="flex" alignItems="center" justifyContent="space-between">
-                    <Box display="flex" alignItems="center">
-                      <Avatar 
-                        sx={{ 
-                          bgcolor: `${action.color}15`, 
-                          color: action.color, 
-                          mr: 2.5, 
-                          width: 52, 
-                          height: 52,
-                          boxShadow: `0 8px 20px ${action.color}15`
-                        }}
-                      >
-                        {action.icon}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="subtitle1" fontWeight={900} color="#1E293B" sx={{ lineHeight: 1.2 }}>
-                          {action.title}
-                        </Typography>
-                        <Typography variant="caption" color="textSecondary" fontWeight={600}>
-                          {action.subtitle}
-                        </Typography>
+        {/* Quick Services */}
+        <Box sx={{ px: 2, mt: role?.toLowerCase() === 'family' && familyStatus && familyStatus !== 'approved' ? 2 : -1, position: 'relative', zIndex: 2 }}>
+          <Box sx={{ mt: role?.toLowerCase() === 'family' && familyStatus && familyStatus !== 'approved' ? 0 : 4 }}>
+            <Typography
+              variant="caption"
+              color="textSecondary"
+              fontWeight={800}
+              sx={{
+                letterSpacing: '1px',
+                textTransform: 'uppercase',
+                display: 'block',
+                mb: 1.5,
+                px: 0.5,
+                fontSize: '0.7rem',
+              }}
+            >
+              Quick Services
+            </Typography>
+
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+              {actions.map((action, idx) => (
+                <Card
+                  key={idx}
+                  sx={{
+                    borderRadius: 4,
+                    boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+                    border: '1px solid #F1F5F9',
+                    overflow: 'hidden',
+                    transition: 'all 0.2s ease',
+                    '&:active': { transform: 'scale(0.98)', bgcolor: '#F8FAFC' },
+                  }}
+                >
+                  <CardActionArea onClick={() => navigate(action.path)} sx={{ px: 2, py: 1.5 }}>
+                    <Box display="flex" alignItems="center" justifyContent="space-between">
+                      <Box display="flex" alignItems="center" gap={2}>
+                        <Avatar
+                          sx={{
+                            bgcolor: `${action.color}12`,
+                            color: action.color,
+                            width: 46,
+                            height: 46,
+                            borderRadius: 3,
+                          }}
+                        >
+                          {action.icon}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="subtitle2" fontWeight={800} color="#1E293B" sx={{ lineHeight: 1.2 }}>
+                            {action.title}
+                          </Typography>
+                          <Typography variant="caption" color="textSecondary" fontWeight={500}>
+                            {action.subtitle}
+                          </Typography>
+                        </Box>
                       </Box>
+                      <ChevronRightRoundedIcon sx={{ color: '#CBD5E1', fontSize: 20 }} />
                     </Box>
-                    <ChevronRightRoundedIcon sx={{ color: '#CBD5E1' }} />
-                  </Box>
-                </CardActionArea>
-              </Card>
-            ))}
+                  </CardActionArea>
+                </Card>
+              ))}
+            </Box>
           </Box>
         </Box>
 
-        <Snackbar 
-          open={notificationOpen} 
-          autoHideDuration={6000} 
+        {/* Birthday/Anniversary Snackbar */}
+        <Snackbar
+          open={notificationOpen}
+          autoHideDuration={6000}
           onClose={() => setNotificationOpen(false)}
           anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
         >
-          <Alert 
-            onClose={() => setNotificationOpen(false)} 
-            severity="info" 
+          <Alert
+            onClose={() => setNotificationOpen(false)}
+            severity="info"
             variant="filled"
-            sx={{ 
-              width: '100%', 
-              boxShadow: '0 10px 30px rgba(0,0,0,0.1)', 
+            sx={{
+              width: '100%',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
               borderRadius: 3,
               fontWeight: 700,
-              bgcolor: '#1E3A8A'
+              bgcolor: '#1E3A8A',
             }}
           >
             {`Today: ${todayReminders.birthdays} Birthdays & ${todayReminders.weddings} Anniversaries!`}

@@ -5,58 +5,48 @@ import {
   Box, Typography, CircularProgress, Alert, Paper, Button, List, ListItem,
   ListItemText, Avatar, Chip, Tabs, Tab,
   Card, CardContent, Dialog, DialogTitle, DialogContent,
-  DialogActions, IconButton, Stack
+  DialogActions, IconButton, Stack, Divider, useTheme, useMediaQuery
 } from '@mui/material';
 import API_BASE_URL from '../../config';
 import PersonIcon from '@mui/icons-material/Person';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import VerifiedIcon from '@mui/icons-material/Verified';
-import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import CloseIcon from '@mui/icons-material/Close';
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 
 const FAMILY_LABELS = {
-  head_name: 'Head Name',
-  address_line1: 'Address Line 1',
-  address_line2: 'Address Line 2',
-  city: 'City',
-  pincode: 'Pincode',
-  mobile_number: 'Mobile Number',
-  mobile_number2: 'Alternate Mobile',
-  cemetery: 'Cemetery Registered',
-  cemetery_number: 'Cemetery Number',
-  old_card_number: 'Old Card Number',
-  native: 'Native Place',
-  resident_from: 'Resident From (Year)',
-  house_type: 'House Type',
-  subscription: 'Subscription Details',
-  anbiyam: 'Anbiyam Group',
-  location: 'Geo Location Pin'
+  head_name: 'Head Name', address_line1: 'Address Line 1', address_line2: 'Address Line 2',
+  city: 'City', pincode: 'Pincode', mobile_number: 'Mobile Number', mobile_number2: 'Alternate Mobile',
+  cemetery: 'Cemetery Registered', cemetery_number: 'Cemetery Number', old_card_number: 'Old Card Number',
+  native: 'Native Place', resident_from: 'Resident From (Year)', house_type: 'House Type',
+  subscription: 'Subscription Details', anbiyam: 'Anbiyam Group', location: 'Geo Location Pin'
 };
 
 const MEMBER_LABELS = {
-  name: 'Full Name',
-  sex: 'Sex',
-  dob: 'Date of Birth',
-  relationship: 'Relationship',
-  marital_status: 'Marital Status',
-  mobile: 'Mobile Number',
-  qualification: 'Qualification',
-  profession: 'Profession',
-  church_group: 'Church Group',
-  residing_here: 'Residing Here',
-  active: 'Active Record',
-  baptism_date: 'Baptism Date',
-  baptism_place: 'Baptism Place',
-  holy_communion_date: 'Holy Communion Date',
-  holy_communion_place: 'Holy Communion Place',
-  confirmation_date: 'Confirmation Date',
-  confirmation_place: 'Confirmation Place',
-  marriage_date: 'Marriage Date',
-  marriage_place: 'Marriage Place'
+  name: 'Full Name', sex: 'Sex', dob: 'Date of Birth', relationship: 'Relationship',
+  marital_status: 'Marital Status', mobile: 'Mobile Number', qualification: 'Qualification',
+  profession: 'Profession', church_group: 'Church Group', residing_here: 'Residing Here',
+  active: 'Active Record', baptism_date: 'Baptism Date', baptism_place: 'Baptism Place',
+  holy_communion_date: 'Holy Communion Date', holy_communion_place: 'Holy Communion Place',
+  confirmation_date: 'Confirmation Date', confirmation_place: 'Confirmation Place',
+  marriage_date: 'Marriage Date', marriage_place: 'Marriage Place'
 };
+
+const EmptyState = ({ text }) => (
+  <Paper
+    elevation={0}
+    sx={{ p: 5, textAlign: 'center', borderRadius: 4, bgcolor: 'transparent', border: '2px dashed #E2E8F0' }}
+  >
+    <Typography variant="subtitle1" fontWeight={700} color="textSecondary">{text}</Typography>
+  </Paper>
+);
 
 const AdminApprovals = () => {
   const location = useLocation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   const [users, setUsers] = useState([]);
   const [families, setFamilies] = useState([]);
   const [pendingMembers, setPendingMembers] = useState([]);
@@ -82,7 +72,7 @@ const AdminApprovals = () => {
         axios.get(`${API_BASE_URL}/admin-panel/pending-users`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API_BASE_URL}/admin-panel/pending-families`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API_BASE_URL}/admin-panel/pending-members`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${API_BASE_URL}/admin-panel/update-requests`, { headers: { Authorization: `Bearer ${token}` } })
+        axios.get(`${API_BASE_URL}/admin-panel/update-requests`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       setUsers(userRes.data);
       setFamilies(famRes.data);
@@ -95,20 +85,14 @@ const AdminApprovals = () => {
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const handleApproveUser = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${API_BASE_URL}/user/approve/${id}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(`${API_BASE_URL}/user/approve/${id}`, {}, { headers: { Authorization: `Bearer ${token}` } });
       setUsers(users.filter(u => u.id !== id));
-    } catch (err) {
-      alert('Failed to approve user');
-    }
+    } catch (err) { alert('Failed to approve user'); }
   };
 
   const handleReview = async (family) => {
@@ -122,8 +106,7 @@ const AdminApprovals = () => {
       setMembers(res.data || []);
       setOpenReview(true);
     } catch (err) {
-      console.error('FETCH MEMBERS ERROR:', err.response?.data || err.message);
-      alert('Failed to load family members: ' + (err.response?.data?.error || err.message));
+      alert('Failed to load family members');
     } finally {
       setLoading(false);
     }
@@ -137,9 +120,7 @@ const AdminApprovals = () => {
       });
       setFamilies(families.filter(f => f.family_id !== familyId));
       setOpenReview(false);
-    } catch (err) {
-      alert('Failed to approve family');
-    }
+    } catch (err) { alert('Failed to approve family'); }
   };
 
   const handleApproveMember = async (memberId) => {
@@ -149,9 +130,7 @@ const AdminApprovals = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPendingMembers(pendingMembers.filter(m => m.member_id !== memberId));
-    } catch (err) {
-      alert('Failed to approve member');
-    }
+    } catch (err) { alert('Failed to approve member'); }
   };
 
   const handleUpdateAction = async (id, status) => {
@@ -161,96 +140,99 @@ const AdminApprovals = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUpdateRequests(updateRequests.filter(r => r.id !== id));
-    } catch (err) {
-      alert('Failed to process update request');
-    }
+    } catch (err) { alert('Failed to process update request'); }
   };
 
-  if (loading && !openReview) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress /></Box>;
-  if (error) return <Alert severity="error">{error}</Alert>;
+  if (loading && !openReview) return (
+    <Box display="flex" justifyContent="center" mt={10}>
+      <CircularProgress size={40} sx={{ color: '#1E3A8A' }} />
+    </Box>
+  );
+  if (error) return <Alert severity="error" sx={{ m: 2, borderRadius: 3 }}>{error}</Alert>;
 
   return (
-    <Box sx={{ maxWidth: 1000, mx: 'auto', mt: 4, pb: 10, px: { xs: 2, sm: 3 } }}>
-      <Typography variant="h4" fontWeight={900} color="#1E3A8A" gutterBottom sx={{ letterSpacing: '-1px', mb: 3 }}>
-        {tab === 0 ? 'User Account Approvals' : tab === 1 ? 'Family Approvals' : tab === 2 ? 'Member Approvals' : 'Update Request Approvals'}
+    <Box sx={{ pb: 12, pt: 2.5, px: { xs: 2, sm: 2.5 } }}>
+      {/* Page Title */}
+      <Typography variant="h5" fontWeight={900} color="#1E293B" sx={{ mb: 2.5, letterSpacing: '-0.3px' }}>
+        {tab === 0 ? 'User Approvals' : tab === 1 ? 'Family Approvals' : tab === 2 ? 'Member Approvals' : 'Update Requests'}
       </Typography>
 
+      {/* Tabs */}
       <Tabs
         value={tab}
         onChange={(e, v) => setTab(v)}
         variant="scrollable"
-        scrollButtons="auto"
+        scrollButtons={false}
         sx={{
-          mb: 4,
+          mb: 3,
           bgcolor: '#fff',
-          borderRadius: 4,
+          borderRadius: 3,
           p: 0.5,
-          boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
-          '& .MuiTabs-indicator': { height: '100%', borderRadius: 3, bgcolor: '#4F46E510', zIndex: 0 },
-          '& .MuiTab-root': { zIndex: 1, fontWeight: 800, minHeight: 48, textTransform: 'none', fontSize: '0.9rem' }
+          border: '1px solid #F1F5F9',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+          minHeight: 44,
+          '& .MuiTabs-indicator': { height: '100%', borderRadius: 2.5, bgcolor: '#EEF2FF', zIndex: 0 },
+          '& .MuiTab-root': { zIndex: 1, fontWeight: 700, minHeight: 40, fontSize: '0.8rem', px: 1.5 },
+          '& .Mui-selected': { color: '#1E3A8A', fontWeight: 800 },
         }}
       >
-        <Tab label={`Users (${users.length})`} />
-        <Tab label={`Families (${families.length})`} />
-        <Tab label={`Members (${pendingMembers.length})`} />
-        <Tab label={`Updates (${updateRequests.length})`} />
+        <Tab label={`Users ${users.length > 0 ? `(${users.length})` : ''}`} />
+        <Tab label={`Families ${families.length > 0 ? `(${families.length})` : ''}`} />
+        <Tab label={`Members ${pendingMembers.length > 0 ? `(${pendingMembers.length})` : ''}`} />
+        <Tab label={`Updates ${updateRequests.length > 0 ? `(${updateRequests.length})` : ''}`} />
       </Tabs>
 
+      {/* ─── Tab 0: Users ─── */}
       {tab === 0 && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Stack spacing={2}>
           {users.length === 0 ? (
-            <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4, bgcolor: 'transparent', border: '2px dashed #E2E8F0' }} elevation={0}>
-              <Typography variant="h6" fontWeight={800} color="textSecondary">No pending users</Typography>
-            </Paper>
+            <EmptyState text="No pending user approvals" />
           ) : (
             users.map((user) => (
-              <Card key={user.id} sx={{ borderRadius: 5, boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid #F1F5F9' }}>
-                <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-                  <Box display="flex" alignItems="center" mb={2.5}>
-                    <Avatar sx={{ bgcolor: '#4F46E515', color: '#4F46E5', mr: 2, width: 48, height: 48 }}><PersonIcon /></Avatar>
-                    <Box>
+              <Card key={user.id} sx={{ borderRadius: 4, border: '1px solid #F1F5F9' }}>
+                <CardContent sx={{ p: 2.5 }}>
+                  <Box display="flex" alignItems="center" gap={2} mb={2}>
+                    <Avatar sx={{ bgcolor: '#EEF2FF', color: '#4F46E5', width: 48, height: 48, borderRadius: 3 }}>
+                      <PersonIcon />
+                    </Avatar>
+                    <Box flex={1}>
                       <Stack direction="row" spacing={1} alignItems="center">
-                        <Typography variant="subtitle1" fontWeight={900} color="#1E293B">{user.username}</Typography>
+                        <Typography variant="subtitle2" fontWeight={800} color="#1E293B">{user.username}</Typography>
                         {user.verification_status === 'recommended' && (
-                          <Chip label="Vetted" size="small" color="success" variant="outlined" sx={{ fontWeight: 800, height: 18, fontSize: '0.6rem' }} />
+                          <Chip label="Vetted" size="small" color="success" variant="outlined" sx={{ height: 18, fontSize: '0.58rem', fontWeight: 800 }} />
                         )}
                       </Stack>
-                      <Typography variant="caption" color="textSecondary" fontWeight={700} sx={{ textTransform: 'uppercase', letterSpacing: '0.5px' }}>{user.role} • {user.anbiyam}</Typography>
+                      <Typography variant="caption" color="textSecondary" fontWeight={700} sx={{ textTransform: 'uppercase', letterSpacing: '0.3px' }}>
+                        {user.role} • {user.anbiyam}
+                      </Typography>
                     </Box>
                   </Box>
 
-                  <Stack spacing={1.5} sx={{ bgcolor: '#F8FAFC', p: 2, borderRadius: 4, mb: 2.5, border: '1px solid #F1F5F9' }}>
-                    <Box>
-                      <Typography variant="caption" color="textSecondary" fontWeight={800} display="block" sx={{ fontSize: '0.65rem' }}>FAMILY HEAD / ID</Typography>
-                      <Typography variant="body2" fontWeight={700} color="#334155">
-                        {user.family_head_name && user.family_head_name !== 'null' ? user.family_head_name : 'Pending Registration'}
-                        <Typography component="span" variant="caption" sx={{ ml: 1, opacity: 0.7 }}>({user.family_id || 'N/A'})</Typography>
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="caption" color="textSecondary" fontWeight={800} display="block" sx={{ fontSize: '0.65rem' }}>ADDRESS</Typography>
-                      <Typography variant="body2" fontWeight={700} color="#334155">
-                        {[user.address_line1, user.address_line2].filter(v => v && v !== 'null').join(', ') || 'No Address'}{user.city && user.city !== 'null' ? `, ${user.city}` : ''}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="caption" color="textSecondary" fontWeight={800} display="block" sx={{ fontSize: '0.65rem' }}>CONTACT</Typography>
-                      <Typography variant="body2" fontWeight={700} color="#334155">{user.mobile && user.mobile !== 'null' ? user.mobile : '-'}</Typography>
-                    </Box>
-                  </Stack>
+                  <Box sx={{ bgcolor: '#F8FAFC', borderRadius: 3, p: 2, mb: 2, border: '1px solid #F1F5F9' }}>
+                    <Stack spacing={1.5}>
+                      <Box>
+                        <Typography variant="caption" color="textSecondary" fontWeight={800} display="block" sx={{ fontSize: '0.6rem', textTransform: 'uppercase', mb: 0.3 }}>Family</Typography>
+                        <Typography variant="body2" fontWeight={700} color="#334155">
+                          {user.family_head_name && user.family_head_name !== 'null' ? user.family_head_name : 'Pending Registration'}
+                          {user.family_id && <Typography component="span" variant="caption" sx={{ ml: 1, color: '#94A3B8' }}>({user.family_id})</Typography>}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="caption" color="textSecondary" fontWeight={800} display="block" sx={{ fontSize: '0.6rem', textTransform: 'uppercase', mb: 0.3 }}>Contact</Typography>
+                        <Typography variant="body2" fontWeight={700} color="#334155">
+                          {user.mobile && user.mobile !== 'null' ? user.mobile : '—'}
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </Box>
 
                   <Button
                     fullWidth
                     variant="contained"
                     color="success"
                     onClick={() => handleApproveUser(user.id)}
-                    sx={{
-                      borderRadius: 3.5,
-                      fontWeight: 900,
-                      py: 1.5,
-                      textTransform: 'none',
-                      boxShadow: user.verification_status === 'recommended' ? '0 10px 25px rgba(16, 185, 129, 0.25)' : 'none'
-                    }}
+                    startIcon={<CheckCircleRoundedIcon sx={{ fontSize: 16 }} />}
+                    sx={{ borderRadius: 3, fontWeight: 800, py: 1.2, textTransform: 'none' }}
                   >
                     {user.verification_status === 'recommended' ? 'Verify & Approve Account' : 'Approve Account'}
                   </Button>
@@ -258,239 +240,245 @@ const AdminApprovals = () => {
               </Card>
             ))
           )}
-        </Box>
+        </Stack>
       )}
 
+      {/* ─── Tab 1: Families ─── */}
       {tab === 1 && (
-        <Box sx={{ display: 'grid', gap: 2 }}>
+        <Stack spacing={2}>
           {families.length === 0 ? (
-            <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4, bgcolor: 'transparent', border: '2px dashed #E2E8F0' }} elevation={0}>
-              <Typography variant="h6" fontWeight={800} color="textSecondary">No pending families</Typography>
-            </Paper>
+            <EmptyState text="No pending family approvals" />
           ) : (
             families.map((fam) => (
-              <Card key={fam.family_id} sx={{
-                borderRadius: 4,
-                boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
-                border: fam.verification_status === 'recommended' ? '2px solid #10B981' : '1px solid #F1F5F9',
-                overflow: 'visible',
-                position: 'relative'
-              }}>
-                <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-                  <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', gap: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Avatar sx={{ bgcolor: '#05966915', color: '#059669', mr: 2, width: 50, height: 50 }}>
-                        <HomeWorkIcon />
-                      </Avatar>
-                      <Box>
-                        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                          <Typography variant="h6" fontWeight={900}>{fam.head_name}</Typography>
-                          {fam.verification_status === 'recommended' && (
-                            <Chip icon={<VerifiedIcon />} label="Vetted" size="small" color="success" sx={{ fontWeight: 800, height: 20, fontSize: '0.65rem' }} />
-                          )}
-                        </Stack>
-                        <Typography variant="body2" color="textSecondary" fontWeight={600}>
-                          {fam.family_id} • {fam.anbiyam}
-                        </Typography>
-                        <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: '#64748B', fontWeight: 700 }}>
-                          ENTRY BY: {fam.creator_name || 'System'} • {fam.created_at ? new Date(fam.created_at).toLocaleDateString() : 'N/A'}
-                        </Typography>
-                        {fam.verified_by_name && (
-                          <Typography variant="caption" sx={{ display: 'block', mt: 0.3, color: '#10B981', fontWeight: 800 }}>
-                            VETTED BY: {fam.verified_by_name} • {fam.verified_at ? new Date(fam.verified_at).toLocaleDateString() : 'N/A'}
-                          </Typography>
+              <Card
+                key={fam.family_id}
+                sx={{
+                  borderRadius: 4,
+                  border: fam.verification_status === 'recommended'
+                    ? '2px solid #10B981'
+                    : '1px solid #F1F5F9',
+                }}
+              >
+                <CardContent sx={{ p: 2.5 }}>
+                  <Box display="flex" alignItems="center" gap={2} mb={1.5}>
+                    <Avatar sx={{ bgcolor: '#ECFDF5', color: '#059669', width: 48, height: 48, borderRadius: 3 }}>
+                      <HomeWorkIcon />
+                    </Avatar>
+                    <Box flex={1}>
+                      <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                        <Typography variant="subtitle2" fontWeight={800} color="#1E293B">{fam.head_name}</Typography>
+                        {fam.verification_status === 'recommended' && (
+                          <Chip icon={<VerifiedIcon sx={{ fontSize: '12px !important' }} />} label="Vetted" size="small" color="success" sx={{ height: 18, fontSize: '0.58rem', fontWeight: 800 }} />
                         )}
-                      </Box>
+                      </Stack>
+                      <Typography variant="caption" color="textSecondary" fontWeight={700}>
+                        {fam.family_id} • {fam.anbiyam}
+                      </Typography>
                     </Box>
-                    <Stack direction="row" spacing={1.5} width={{ xs: '100%', sm: 'auto' }}>
-                      <Button
-                        fullWidth={false}
-                        variant="outlined"
-                        startIcon={<VisibilityIcon />}
-                        onClick={() => handleReview(fam)}
-                        sx={{ flex: 1, borderRadius: 3, fontWeight: 800, textTransform: 'none', px: 3 }}
-                      >
-                        Review
-                      </Button>
-                      <Button
-                        fullWidth={false}
-                        variant="contained"
-                        color="success"
-                        onClick={() => handleApproveFamily(fam.family_id)}
-                        sx={{ flex: 1, borderRadius: 3, fontWeight: 800, textTransform: 'none', px: 3 }}
-                      >
-                        Approve
-                      </Button>
-                    </Stack>
                   </Box>
+
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="caption" color="textSecondary" display="block" sx={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', mb: 0.3 }}>
+                      Entry: {fam.creator_name || 'System'} • {fam.created_at ? new Date(fam.created_at).toLocaleDateString() : 'N/A'}
+                    </Typography>
+                    {fam.verified_by_name && (
+                      <Typography variant="caption" color="#10B981" fontWeight={800} display="block" sx={{ fontSize: '0.6rem' }}>
+                        Vetted by: {fam.verified_by_name}
+                      </Typography>
+                    )}
+                  </Box>
+
+                  <Stack direction="row" spacing={1.5}>
+                    <Button
+                      variant="outlined"
+                      startIcon={<VisibilityRoundedIcon sx={{ fontSize: 15 }} />}
+                      onClick={() => handleReview(fam)}
+                      sx={{ flex: 1, borderRadius: 3, fontWeight: 700, textTransform: 'none', borderColor: '#E2E8F0', color: '#475569' }}
+                    >
+                      Review
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="success"
+                      onClick={() => handleApproveFamily(fam.family_id)}
+                      startIcon={<CheckCircleRoundedIcon sx={{ fontSize: 15 }} />}
+                      sx={{ flex: 1, borderRadius: 3, fontWeight: 800, textTransform: 'none' }}
+                    >
+                      Approve
+                    </Button>
+                  </Stack>
                 </CardContent>
               </Card>
             ))
           )}
-        </Box>
+        </Stack>
       )}
 
+      {/* ─── Tab 2: Members ─── */}
       {tab === 2 && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Stack spacing={2}>
           {pendingMembers.length === 0 ? (
-            <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4, bgcolor: 'transparent', border: '2px dashed #E2E8F0' }} elevation={0}>
-              <Typography variant="h6" fontWeight={800} color="textSecondary">No pending member additions</Typography>
-            </Paper>
+            <EmptyState text="No pending member approvals" />
           ) : (
             pendingMembers.map((m) => (
-              <Card key={m.member_id} sx={{
-                borderRadius: 5,
-                boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
-                border: m.verification_status === 'recommended' ? '2.5px solid #10B981' : '1px solid #F1F5F9'
-              }}>
-                <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
-                  <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2.5}>
+              <Card
+                key={m.member_id}
+                sx={{
+                  borderRadius: 4,
+                  border: m.verification_status === 'recommended' ? '2px solid #10B981' : '1px solid #F1F5F9',
+                }}
+              >
+                <CardContent sx={{ p: 2.5 }}>
+                  <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
                     <Box>
-                      <Typography variant="h6" fontWeight={900} color="#1E293B" sx={{ mb: 0.5 }}>{m.name}</Typography>
-                      <Typography variant="caption" color="primary" fontWeight={900} sx={{ textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      <Typography variant="subtitle1" fontWeight={900} color="#1E293B">{m.name}</Typography>
+                      <Typography variant="caption" color="primary" fontWeight={700} sx={{ textTransform: 'uppercase', letterSpacing: '0.3px' }}>
                         {m.relationship} • {m.age} Years
                       </Typography>
                     </Box>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Chip
-                        label={m.verification_status === 'recommended' ? 'Vetted' : 'New Add'}
-                        size="small"
-                        color={m.verification_status === 'recommended' ? 'success' : 'warning'}
-                        sx={{ fontWeight: 900, fontSize: '0.6rem', height: 20 }}
-                      />
-                    </Stack>
+                    <Chip
+                      label={m.verification_status === 'recommended' ? 'Vetted' : 'New'}
+                      size="small"
+                      color={m.verification_status === 'recommended' ? 'success' : 'warning'}
+                      sx={{ fontWeight: 900, fontSize: '0.6rem', height: 20 }}
+                    />
                   </Box>
 
-                  <Stack spacing={1.5} sx={{ bgcolor: '#F8FAFC', p: 2, borderRadius: 4, mb: 3, border: '1px solid #F1F5F9' }}>
-                    <Box>
-                      <Typography variant="caption" color="textSecondary" fontWeight={800} display="block" sx={{ fontSize: '0.65rem' }}>FAMILY CONTEXT</Typography>
-                      <Typography variant="body2" fontWeight={700} color="#334155">
-                        {m.family_head_name && m.family_head_name !== 'null' ? m.family_head_name : 'No Family Name'}
-                        <Typography component="span" variant="caption" sx={{ ml: 1, opacity: 0.7 }}>({m.family_string_id})</Typography>
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="caption" color="textSecondary" fontWeight={800} display="block" sx={{ fontSize: '0.65rem' }}>REGISTERED BY & DATE</Typography>
-                      <Typography variant="body2" fontWeight={700} color="#334155">{m.creator_username || 'N/A'} • {m.entry_date ? new Date(m.entry_date).toLocaleDateString() : 'N/A'}</Typography>
-                    </Box>
-                    {m.verified_by_name && (
+                  <Box sx={{ bgcolor: '#F8FAFC', borderRadius: 3, p: 2, mb: 2.5, border: '1px solid #F1F5F9' }}>
+                    <Stack spacing={1.2}>
                       <Box>
-                        <Typography variant="caption" color="success.main" fontWeight={800} display="block" sx={{ fontSize: '0.65rem' }}>VETTED BY & DATE</Typography>
-                        <Typography variant="body2" fontWeight={700} color="success.dark">{m.verified_by_name} • {m.verification_date ? new Date(m.verification_date).toLocaleDateString() : 'N/A'}</Typography>
+                        <Typography variant="caption" color="textSecondary" fontWeight={800} display="block" sx={{ fontSize: '0.6rem', textTransform: 'uppercase', mb: 0.2 }}>Family</Typography>
+                        <Typography variant="body2" fontWeight={700} color="#334155">
+                          {m.family_head_name && m.family_head_name !== 'null' ? m.family_head_name : '—'}
+                          {m.family_string_id && <Typography component="span" variant="caption" sx={{ ml: 1, color: '#94A3B8' }}>({m.family_string_id})</Typography>}
+                        </Typography>
                       </Box>
-                    )}
-                    <Box>
-                      <Typography variant="caption" color="textSecondary" fontWeight={800} display="block" sx={{ fontSize: '0.65rem' }}>ADDRESS & ANBIYAM</Typography>
-                      <Typography variant="body2" fontWeight={700} color="#334155" sx={{ fontSize: '0.8rem' }}>
-                        {[m.family_address1, m.family_address2].filter(v => v && v !== 'null').join(', ')} | {m.family_anbiyam}
-                      </Typography>
-                    </Box>
-                  </Stack>
+                      <Box>
+                        <Typography variant="caption" color="textSecondary" fontWeight={800} display="block" sx={{ fontSize: '0.6rem', textTransform: 'uppercase', mb: 0.2 }}>Registered by</Typography>
+                        <Typography variant="body2" fontWeight={700} color="#334155">
+                          {m.creator_username || 'N/A'} • {m.entry_date ? new Date(m.entry_date).toLocaleDateString() : 'N/A'}
+                        </Typography>
+                      </Box>
+                      {m.verified_by_name && (
+                        <Box>
+                          <Typography variant="caption" color="#10B981" fontWeight={800} display="block" sx={{ fontSize: '0.6rem', textTransform: 'uppercase', mb: 0.2 }}>Vetted by</Typography>
+                          <Typography variant="body2" fontWeight={700} color="success.dark">{m.verified_by_name}</Typography>
+                        </Box>
+                      )}
+                    </Stack>
+                  </Box>
 
                   <Button
                     fullWidth
                     variant="contained"
                     color="success"
                     onClick={() => handleApproveMember(m.member_id)}
-                    sx={{
-                      borderRadius: 3.5,
-                      fontWeight: 900,
-                      py: 1.5,
-                      textTransform: 'none',
-                      boxShadow: m.verification_status === 'recommended' ? '0 10px 25px rgba(16, 185, 129, 0.25)' : 'none'
-                    }}
+                    startIcon={<CheckCircleRoundedIcon sx={{ fontSize: 16 }} />}
+                    sx={{ borderRadius: 3, fontWeight: 800, py: 1.2, textTransform: 'none' }}
                   >
-                    {m.verification_status === 'recommended' ? 'Final Approve Member' : 'Approve Addition'}
+                    {m.verification_status === 'recommended' ? 'Final Approve' : 'Approve Member'}
                   </Button>
                 </CardContent>
               </Card>
             ))
           )}
-        </Box>
+        </Stack>
       )}
 
+      {/* ─── Tab 3: Update Requests ─── */}
       {tab === 3 && (
-        <Box sx={{ display: 'grid', gap: 2.5 }}>
+        <Stack spacing={2}>
           {updateRequests.length === 0 ? (
-            <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4, bgcolor: 'transparent', border: '2px dashed #E2E8F0' }} elevation={0}>
-              <Typography variant="h6" fontWeight={800} color="textSecondary">No pending update requests</Typography>
-            </Paper>
+            <EmptyState text="No pending update requests" />
           ) : (
             updateRequests.map((req) => {
               let data = req.requested_data;
               if (typeof data === 'string') {
-                try {
-                  data = JSON.parse(data);
-                } catch (e) {}
+                try { data = JSON.parse(data); } catch (e) {}
               }
-
               const isMember = data && data.edit_type === 'member';
-              const fieldLabel = data && data.field_name 
+              const fieldLabel = data?.field_name
                 ? (isMember ? MEMBER_LABELS[data.field_name] : FAMILY_LABELS[data.field_name]) || data.field_name
                 : '';
-
               const formatVal = (val) => {
                 if (val === 'true' || val === true) return 'Yes';
                 if (val === 'false' || val === false) return 'No';
-                if (val === null || val === undefined || val === '') return '[Empty / Unspecified]';
+                if (val === null || val === undefined || val === '') return '—';
                 return String(val);
               };
 
               return (
-                <Card key={req.id} sx={{ borderRadius: 4, boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #E2E8F0' }}>
-                  <CardContent sx={{ p: 3 }}>
-                    <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                <Card key={req.id} sx={{ borderRadius: 4, border: '1px solid #F1F5F9' }}>
+                  <CardContent sx={{ p: 2.5 }}>
+                    <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1.5}>
                       <Box>
-                        <Typography variant="h6" fontWeight={900} color="#1E293B">{req.head_name} ({req.family_id})</Typography>
+                        <Typography variant="subtitle2" fontWeight={900} color="#1E293B">
+                          {req.head_name}
+                        </Typography>
                         <Typography variant="caption" color="textSecondary" fontWeight={700}>
-                          SUBMITTED ON: {new Date(req.created_at).toLocaleDateString()}
+                          {req.family_id} • {new Date(req.created_at).toLocaleDateString()}
                         </Typography>
                       </Box>
-                      <Chip icon={<VerifiedIcon />} label="Vetted by Incharge" size="small" color="success" sx={{ fontWeight: 800 }} />
+                      <Chip
+                        icon={<VerifiedIcon sx={{ fontSize: '12px !important' }} />}
+                        label="Vetted"
+                        size="small"
+                        color="success"
+                        sx={{ fontWeight: 800, height: 20, fontSize: '0.6rem' }}
+                      />
                     </Box>
 
-                    {data && data.edit_type ? (
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 3 }}>
-                        <Typography variant="body2">
-                          <strong>Target:</strong> {isMember ? <span>Member: <span style={{ color: '#1E3A8A', fontWeight: 800 }}>{data.member_name}</span> ({data.member_id})</span> : <span style={{ color: '#0F766E', fontWeight: 800 }}>Family Registration</span>}
+                    {data?.edit_type ? (
+                      <Box sx={{ mb: 2.5 }}>
+                        <Typography variant="caption" color="textSecondary" display="block" fontWeight={800} sx={{ fontSize: '0.6rem', textTransform: 'uppercase', mb: 0.5 }}>
+                          Target: {isMember ? `Member — ${data.member_name}` : 'Family Registration'}
                         </Typography>
-                        
                         {data.field_name && (
-                          <Typography variant="body2">
-                            <strong>Field:</strong> <span style={{ fontWeight: 700, color: '#475569' }}>{fieldLabel}</span>
-                          </Typography>
-                        )}
-
-                        {data.field_name && (
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 0.5, bgcolor: '#F8FAFC', p: 1.5, borderRadius: 2, border: '1px solid #E2E8F0', maxWidth: 500 }}>
-                            <Box sx={{ flex: 1 }}>
-                              <Typography variant="caption" color="textSecondary" display="block" sx={{ fontWeight: 700 }}>CURRENT VALUE</Typography>
-                              <Typography variant="body2" sx={{ color: '#DC2626', textDecoration: 'line-through', fontWeight: 600 }}>
-                                {formatVal(data.old_value)}
-                              </Typography>
+                          <>
+                            <Typography variant="caption" color="textSecondary" display="block" sx={{ fontWeight: 700, mb: 1 }}>
+                              Field: <span style={{ color: '#475569', fontWeight: 800 }}>{fieldLabel}</span>
+                            </Typography>
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                bgcolor: '#F8FAFC',
+                                p: 1.5,
+                                borderRadius: 3,
+                                border: '1px solid #E2E8F0',
+                              }}
+                            >
+                              <Box flex={1}>
+                                <Typography variant="caption" color="textSecondary" display="block" fontWeight={700} sx={{ fontSize: '0.6rem', textTransform: 'uppercase' }}>Was</Typography>
+                                <Typography variant="body2" sx={{ color: '#DC2626', textDecoration: 'line-through', fontWeight: 600, fontSize: '0.85rem' }}>
+                                  {formatVal(data.old_value)}
+                                </Typography>
+                              </Box>
+                              <Typography color="#94A3B8" fontWeight={900}>→</Typography>
+                              <Box flex={1}>
+                                <Typography variant="caption" color="textSecondary" display="block" fontWeight={700} sx={{ fontSize: '0.6rem', textTransform: 'uppercase' }}>Now</Typography>
+                                <Typography variant="body2" sx={{ color: '#16A34A', fontWeight: 800, fontSize: '0.85rem' }}>
+                                  {formatVal(data.new_value)}
+                                </Typography>
+                              </Box>
                             </Box>
-                            <Box sx={{ display: 'flex', alignItems: 'center', color: '#94A3B8', fontWeight: 900 }}>→</Box>
-                            <Box sx={{ flex: 1 }}>
-                              <Typography variant="caption" color="textSecondary" display="block" sx={{ fontWeight: 700 }}>PROPOSED VALUE</Typography>
-                              <Typography variant="body2" sx={{ color: '#16A34A', fontWeight: 800 }}>
-                                {formatVal(data.new_value)}
-                              </Typography>
-                            </Box>
-                          </Box>
+                          </>
                         )}
-
                         {data.additional_changes && (
-                          <Box sx={{ mt: 1, borderTop: '1px dashed #E2E8F0', pt: 1.5 }}>
-                            <Typography variant="caption" color="textSecondary" display="block" sx={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Additional Notes & Requests</Typography>
-                            <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#475569', mt: 0.5, bgcolor: '#FEF3C7', p: 1.5, borderRadius: 2, borderLeft: '4px solid #F59E0B', maxWidth: 600 }}>
+                          <Box sx={{ mt: 1.5, bgcolor: '#FFFBEB', p: 1.5, borderRadius: 2.5, borderLeft: '3px solid #F59E0B' }}>
+                            <Typography variant="caption" color="#92400E" fontWeight={700} sx={{ fontSize: '0.6rem', textTransform: 'uppercase', display: 'block', mb: 0.5 }}>
+                              Notes
+                            </Typography>
+                            <Typography variant="caption" sx={{ fontStyle: 'italic', color: '#78350F' }}>
                               {data.additional_changes}
                             </Typography>
                           </Box>
                         )}
                       </Box>
                     ) : (
-                      <Box sx={{ bgcolor: '#F8FAFC', p: 2, borderRadius: 3, mb: 3, border: '1px solid #E2E8F0' }}>
-                        <Typography variant="subtitle2" fontWeight={800} mb={1}>Changes to Verify:</Typography>
+                      <Box sx={{ bgcolor: '#F8FAFC', p: 2, borderRadius: 3, mb: 2.5, border: '1px solid #E2E8F0' }}>
+                        <Typography variant="subtitle2" fontWeight={800} mb={1}>Changes:</Typography>
                         {Object.entries(data || {}).map(([key, val]) => (
                           <Typography key={key} variant="body2" color="textSecondary">
                             <strong>{key.replace('_', ' ').toUpperCase()}:</strong> {String(val)}
@@ -499,24 +487,24 @@ const AdminApprovals = () => {
                       </Box>
                     )}
 
-                    <Stack direction="row" spacing={2}>
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        color="success"
-                        onClick={() => handleUpdateAction(req.id, 'approved')}
-                        sx={{ borderRadius: 2.5, fontWeight: 900, py: 1.4, textTransform: 'none', boxShadow: '0 8px 20px rgba(16, 185, 129, 0.15)' }}
-                      >
-                        Approve Changes
-                      </Button>
+                    <Stack direction="row" spacing={1.5}>
                       <Button
                         fullWidth
                         variant="outlined"
                         color="error"
                         onClick={() => handleUpdateAction(req.id, 'rejected')}
-                        sx={{ borderRadius: 2.5, fontWeight: 900, py: 1.4, textTransform: 'none' }}
+                        sx={{ borderRadius: 3, fontWeight: 800, py: 1.2, textTransform: 'none' }}
                       >
                         Reject
+                      </Button>
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        color="success"
+                        onClick={() => handleUpdateAction(req.id, 'approved')}
+                        sx={{ borderRadius: 3, fontWeight: 800, py: 1.2, textTransform: 'none' }}
+                      >
+                        Approve
                       </Button>
                     </Stack>
                   </CardContent>
@@ -524,7 +512,7 @@ const AdminApprovals = () => {
               );
             })
           )}
-        </Box>
+        </Stack>
       )}
 
       {/* Family Review Dialog */}
@@ -533,65 +521,115 @@ const AdminApprovals = () => {
         onClose={() => setOpenReview(false)}
         maxWidth="sm"
         fullWidth
-        PaperProps={{ sx: { borderRadius: 5, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' } }}
+        fullScreen={isMobile}
+        PaperProps={{ sx: { borderRadius: isMobile ? 0 : 5 } }}
       >
-        <DialogTitle sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h6" fontWeight={900}>Final Registration Review</Typography>
-          <IconButton onClick={() => setOpenReview(false)} sx={{ bgcolor: '#F1F5F9' }}><CloseIcon sx={{ fontSize: 20 }} /></IconButton>
+        <DialogTitle
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            p: 2.5,
+            fontWeight: 900,
+            fontSize: '1rem',
+          }}
+        >
+          Family Review
+          <IconButton
+            onClick={() => setOpenReview(false)}
+            size="small"
+            sx={{ bgcolor: '#F1F5F9', color: '#64748B' }}
+          >
+            <CloseIcon sx={{ fontSize: 18 }} />
+          </IconButton>
         </DialogTitle>
-        <DialogContent dividers sx={{ p: 3, borderTop: '1px solid #F1F5F9', borderBottom: '1px solid #F1F5F9' }}>
+        <DialogContent dividers sx={{ p: 2.5, borderColor: '#F1F5F9' }}>
           {selectedFamily && (
             <Box>
-              <Typography variant="caption" color="primary" fontWeight={900} sx={{ letterSpacing: 1 }}>FAMILY DATA</Typography>
-              <Stack spacing={2} sx={{ mt: 1.5, mb: 4 }}>
-                <Box>
-                  <Typography variant="caption" color="textSecondary" display="block" fontWeight={700}>HEAD NAME & ID</Typography>
-                  <Typography variant="body1" fontWeight={800}>{selectedFamily.head_name} ({selectedFamily.family_id})</Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="textSecondary" display="block" fontWeight={700}>ADDRESS</Typography>
-                  <Typography variant="body1" fontWeight={700}>{selectedFamily.address_line1}, {selectedFamily.city}</Typography>
-                </Box>
-                {selectedFamily.verified_by_name && (
-                  <Box sx={{ p: 1.5, bgcolor: '#F0FDF4', borderRadius: 3, border: '1px solid #DCFCE7' }}>
-                    <Typography variant="caption" color="success.main" display="block" fontWeight={800}>VETTED BY INCHARGE</Typography>
-                    <Typography variant="body2" fontWeight={800} color="success.dark">
-                      {selectedFamily.verified_by_name} • {selectedFamily.verified_at ? new Date(selectedFamily.verified_at).toLocaleDateString() : 'N/A'}
-                    </Typography>
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="caption" color="primary" fontWeight={900} sx={{ letterSpacing: '1px', fontSize: '0.65rem', textTransform: 'uppercase', display: 'block', mb: 1.5 }}>
+                  Family Data
+                </Typography>
+                <Stack spacing={1.5}>
+                  <Box>
+                    <Typography variant="caption" color="textSecondary" display="block" fontWeight={700} sx={{ fontSize: '0.6rem', textTransform: 'uppercase', mb: 0.2 }}>Head Name & ID</Typography>
+                    <Typography variant="body1" fontWeight={800}>{selectedFamily.head_name} ({selectedFamily.family_id})</Typography>
                   </Box>
-                )}
-              </Stack>
+                  <Box>
+                    <Typography variant="caption" color="textSecondary" display="block" fontWeight={700} sx={{ fontSize: '0.6rem', textTransform: 'uppercase', mb: 0.2 }}>Address</Typography>
+                    <Typography variant="body2" fontWeight={700}>{selectedFamily.address_line1}, {selectedFamily.city}</Typography>
+                  </Box>
+                  {selectedFamily.verified_by_name && (
+                    <Box sx={{ p: 1.5, bgcolor: '#F0FDF4', borderRadius: 3, border: '1px solid #DCFCE7' }}>
+                      <Typography variant="caption" color="success.main" display="block" fontWeight={800} sx={{ fontSize: '0.6rem', textTransform: 'uppercase', mb: 0.2 }}>Vetted by Incharge</Typography>
+                      <Typography variant="body2" fontWeight={800} color="success.dark">
+                        {selectedFamily.verified_by_name} • {selectedFamily.verified_at ? new Date(selectedFamily.verified_at).toLocaleDateString() : 'N/A'}
+                      </Typography>
+                    </Box>
+                  )}
+                </Stack>
+              </Box>
 
-              <Typography variant="caption" color="primary" fontWeight={900} sx={{ letterSpacing: 1 }}>MEMBERS ({members.length})</Typography>
-              <List sx={{ mt: 1, bgcolor: '#F8FAFC', borderRadius: 4, overflow: 'hidden' }}>
-                {members.map((m, idx) => (
-                  <ListItem key={idx} divider={idx < members.length - 1} sx={{ py: 1.5 }}>
-                    <ListItemText
-                      primary={<Typography variant="body2" fontWeight={800}>{m.name}</Typography>}
-                      secondary={<Typography variant="caption" fontWeight={600} color="textSecondary">{m.relationship} • {m.age} years</Typography>}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-              <Box sx={{ mt: 3, p: 2, bgcolor: '#EEF2FF', borderRadius: 3, border: '1px solid #E0E7FF' }}>
-                <Typography variant="caption" color="#4F46E5" fontWeight={900} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <VerifiedIcon sx={{ fontSize: 16 }} /> OFFICIAL IDENTITY WILL BE GENERATED
-                </Typography>
-                <Typography variant="body2" color="#4338CA" fontWeight={600} sx={{ mt: 0.5 }}>
-                  A unique card number will be assigned for {selectedFamily.anbiyam} starting from the next available sequence.
-                </Typography>
+              <Divider sx={{ mb: 2 }} />
+
+              <Typography variant="caption" color="primary" fontWeight={900} sx={{ letterSpacing: '1px', fontSize: '0.65rem', textTransform: 'uppercase', display: 'block', mb: 1.5 }}>
+                Members ({members.length})
+              </Typography>
+              <Box sx={{ bgcolor: '#F8FAFC', borderRadius: 3, overflow: 'hidden', border: '1px solid #F1F5F9' }}>
+                <List disablePadding>
+                  {members.map((m, idx) => (
+                    <React.Fragment key={idx}>
+                      <ListItem sx={{ py: 1.5, px: 2 }}>
+                        <Avatar
+                          sx={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: 2,
+                            bgcolor: m.sex === 'Male' ? '#EFF6FF' : '#FFF1F2',
+                            color: m.sex === 'Male' ? '#3B82F6' : '#F43F5E',
+                            fontWeight: 800,
+                            fontSize: '0.9rem',
+                            mr: 1.5,
+                          }}
+                        >
+                          {(m.name || '?').charAt(0)}
+                        </Avatar>
+                        <ListItemText
+                          primary={<Typography variant="body2" fontWeight={800}>{m.name}</Typography>}
+                          secondary={<Typography variant="caption" fontWeight={600} color="textSecondary">{m.relationship} • {m.age} years</Typography>}
+                        />
+                      </ListItem>
+                      {idx < members.length - 1 && <Divider sx={{ ml: 8 }} />}
+                    </React.Fragment>
+                  ))}
+                </List>
+              </Box>
+
+              <Box sx={{ mt: 2, p: 2, bgcolor: '#EEF2FF', borderRadius: 3, border: '1px solid #E0E7FF' }}>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <VerifiedIcon sx={{ color: '#4F46E5', fontSize: 16 }} />
+                  <Typography variant="caption" color="#4F46E5" fontWeight={800} sx={{ fontSize: '0.7rem' }}>
+                    A unique card number will be assigned upon approval
+                  </Typography>
+                </Box>
               </Box>
             </Box>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 3, gap: 1.5 }}>
-          <Button onClick={() => setOpenReview(false)} sx={{ fontWeight: 800, color: '#64748B' }}>Cancel</Button>
+        <DialogActions sx={{ p: 2.5, gap: 1.5 }}>
+          <Button
+            onClick={() => setOpenReview(false)}
+            sx={{ fontWeight: 700, color: '#64748B', borderRadius: 3 }}
+          >
+            Cancel
+          </Button>
           <Button
             variant="contained"
             color="success"
             fullWidth
             onClick={() => handleApproveFamily(selectedFamily.family_id)}
-            sx={{ borderRadius: 3, py: 1.5, fontWeight: 900, fontSize: '0.95rem', boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.2)' }}
+            startIcon={<CheckCircleRoundedIcon />}
+            sx={{ borderRadius: 3, py: 1.3, fontWeight: 900 }}
           >
             Approve & Activate
           </Button>

@@ -4,32 +4,62 @@ import axios from 'axios';
 import {
   Box,
   Container,
-   TextField,
-   Typography,
+  TextField,
+  Typography,
   Card,
   CircularProgress,
-  Table,Autocomplete ,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
+  Autocomplete,
   Paper,
   Alert,
   Avatar,
-  useTheme,
-  useMediaQuery,
   Stack,
   InputAdornment,
   Switch,
   FormControlLabel,
   Button,
-  Chip
+  Chip,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import API_BASE_URL from '../config';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import EditRoundedIcon from '@mui/icons-material/EditRounded';
+import PictureAsPdfRoundedIcon from '@mui/icons-material/PictureAsPdfRounded';
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
+
+// Consistent InfoRow used in all detail views
+const InfoRow = ({ label, value }) => (
+  <Box
+    display="flex"
+    justifyContent="space-between"
+    alignItems="flex-start"
+    py={1.2}
+    sx={{ borderBottom: '1px solid #F1F5F9' }}
+  >
+    <Typography variant="caption" fontWeight={700} color="textSecondary" sx={{ textTransform: 'uppercase', letterSpacing: '0.3px', fontSize: '0.65rem', flex: 1, pt: 0.2 }}>
+      {label}
+    </Typography>
+    <Typography variant="body2" fontWeight={700} color="#1E293B" sx={{ textAlign: 'right', flex: 1.5, pl: 1.5 }}>
+      {value || '—'}
+    </Typography>
+  </Box>
+);
+
+const StatusChip = ({ status }) => {
+  const config = {
+    approved: { label: 'Approved', bg: '#ECFDF5', color: '#10B981' },
+    recommended: { label: 'Vetted', bg: '#EFF6FF', color: '#3B82F6' },
+    pending_incharge: { label: 'Pending', bg: '#FFF7ED', color: '#F59E0B' },
+  };
+  const c = config[status] || { label: status || 'Unknown', bg: '#F1F5F9', color: '#64748B' };
+  return (
+    <Chip
+      label={c.label}
+      size="small"
+      sx={{ bgcolor: c.bg, color: c.color, fontWeight: 800, height: 22, fontSize: '0.68rem' }}
+    />
+  );
+};
 
 const FamilyDetailsView = () => {
   const { familyId: urlFamilyId } = useParams();
@@ -42,19 +72,14 @@ const FamilyDetailsView = () => {
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [detailedView, setDetailedView] = useState(false);
   const [updatingMember, setUpdatingMember] = useState(null);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
-
   const token = localStorage.getItem('token');
   const role = (localStorage.getItem('role') || 'family').toLowerCase();
 
   const handleToggleFamilyActive = async () => {
     try {
       const newStatus = !familyDetails.active;
-      await axios.put(`${API_BASE_URL}/family/${familyDetails.family_id}`, {
-        active: newStatus
-      }, {
+      await axios.put(`${API_BASE_URL}/family/${familyDetails.family_id}`, { active: newStatus }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       await fetchFamilyDetails(familyDetails.family_id);
@@ -66,13 +91,11 @@ const FamilyDetailsView = () => {
   const handleToggleMemberActive = async (memberId, currentStatus) => {
     try {
       setUpdatingMember(memberId);
-      await axios.put(`${API_BASE_URL}/member/${memberId}`, 
-        { active: !currentStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axios.put(`${API_BASE_URL}/member/${memberId}`, { active: !currentStatus }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       if (familyDetails) await fetchFamilyMembers(familyDetails.family_id);
     } catch (err) {
-      console.error('Error toggling member status:', err);
       setError('Failed to toggle member status');
     } finally {
       setUpdatingMember(null);
@@ -82,11 +105,8 @@ const FamilyDetailsView = () => {
   const handleStatusUpdate = async (newStatus) => {
     try {
       await axios.put(`${API_BASE_URL}/family/${familyDetails.family_id}`, {
-        verification_status: newStatus,
-        active: newStatus === 'approved'
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+        verification_status: newStatus, active: newStatus === 'approved'
+      }, { headers: { Authorization: `Bearer ${token}` } });
       await fetchFamilyDetails(familyDetails.family_id);
     } catch (err) {
       setError('Failed to update verification status');
@@ -96,15 +116,14 @@ const FamilyDetailsView = () => {
   const handleMemberStatusUpdate = async (memberId, newStatus) => {
     try {
       setUpdatingMember(memberId);
-      await axios.put(`${API_BASE_URL}/member/${memberId}`, 
-        { verification_status: newStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      // Refresh family and members to reflect changes
-      if (familyDetails) await fetchFamilyDetails(familyDetails.family_id);
-      if (familyDetails) await fetchFamilyMembers(familyDetails.family_id);
+      await axios.put(`${API_BASE_URL}/member/${memberId}`, { verification_status: newStatus }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (familyDetails) {
+        await fetchFamilyDetails(familyDetails.family_id);
+        await fetchFamilyMembers(familyDetails.family_id);
+      }
     } catch (err) {
-      console.error('Error updating member status:', err);
       setError('Failed to update member status');
     } finally {
       setUpdatingMember(null);
@@ -154,7 +173,6 @@ const FamilyDetailsView = () => {
         setError('Failed to load family IDs');
       }
     };
-
     if (token) fetchFamilyIds();
   }, [token]);
 
@@ -166,8 +184,7 @@ const FamilyDetailsView = () => {
     }
   }, [urlFamilyId, fetchFamilyDetails, fetchFamilyMembers]);
 
-  const handleIdChange = async (e) => {
-    const id = e.target.value;
+  const handleIdChange = async (id) => {
     setSelectedId(id);
     if (id) {
       await fetchFamilyDetails(id);
@@ -193,19 +210,8 @@ const FamilyDetailsView = () => {
     { label: 'Active', key: 'active' },
   ];
 
-  const InfoLine = ({ label, value }) => (
-    <Box display="flex" justifyContent="space-between" mb={1.5} pb={1} sx={{ borderBottom: '1px dashed rgba(0,0,0,0.05)' }}>
-      <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-        {label}
-      </Typography>
-      <Typography variant="body2" sx={{ fontWeight: 700, color: '#1E293B', textAlign: 'right', pl: 2 }}>
-        {value || '-'}
-      </Typography>
-    </Box>
-  );
-
   const formatValue = (key, value) => {
-    if (!value && value !== false) return '-';
+    if (!value && value !== false) return '—';
     if (['dob', 'baptism_date', 'holy_communion_date', 'confirmation_date', 'marriage_date'].includes(key)) {
       return new Date(value).toLocaleDateString();
     }
@@ -214,12 +220,7 @@ const FamilyDetailsView = () => {
   };
 
   const exportPDF = async () => {
-    const doc = new jsPDF({
-      orientation: 'landscape',
-      unit: 'pt',
-      format: 'a4',
-    });
-
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 40;
     const lineHeight = 22;
@@ -235,12 +236,7 @@ const FamilyDetailsView = () => {
       { label: 'Family ID', value: familyDetails?.family_id || '-' },
       { label: 'Address', value: `${familyDetails?.address_line1 || ''}, ${familyDetails?.address_line2 || ''}` },
       { label: 'City & Pincode', value: `${familyDetails?.city || ''} - ${familyDetails?.pincode || ''}` },
-      {
-        label: 'Contact',
-        value:
-          familyDetails?.mobile_number +
-          (familyDetails?.mobile_number2 ? `, ${familyDetails.mobile_number2}` : '') || '-',
-      },
+      { label: 'Contact', value: familyDetails?.mobile_number + (familyDetails?.mobile_number2 ? `, ${familyDetails.mobile_number2}` : '') || '-' },
       { label: 'Anbiyam', value: familyDetails?.anbiyam || '-' },
       { label: 'Total Members', value: members.length.toString() },
     ];
@@ -249,7 +245,6 @@ const FamilyDetailsView = () => {
     const totalWidth = pageWidth - margin * 2;
     const leftColumnWidth = (totalWidth * 3) / 4;
     const rightColumnWidth = totalWidth / 4;
-
     const leftX = margin;
     const rightX = margin + leftColumnWidth + 10;
     const imageWidth = rightColumnWidth - 20;
@@ -261,38 +256,29 @@ const FamilyDetailsView = () => {
       doc.setFont('helvetica', 'bold');
       doc.setTextColor('#0B3D91');
       doc.text(`${label}:`, leftX, currentY);
-
       doc.setFont('helvetica', 'normal');
       doc.setTextColor('#000');
-
       const wrappedValue = doc.splitTextToSize(value || '-', leftColumnWidth - 100);
       doc.text(wrappedValue, leftX + 100, currentY);
-
       currentY += lineHeight * wrappedValue.length;
     });
 
     const detailsHeight = currentY - topY;
-
     if (familyDetails?.family_pic) {
       try {
         const imgBase64 = await toBase64(familyDetails.family_pic);
-        const imageY = topY;
-        doc.addImage(imgBase64, 'JPEG', rightX, imageY, imageWidth, imageHeight);
+        doc.addImage(imgBase64, 'JPEG', rightX, topY, imageWidth, imageHeight);
       } catch (err) {
         console.error('Error loading image:', err);
       }
     }
 
     yPos = topY + Math.max(detailsHeight, imageHeight) + 30;
-
     const tableColumnHeaders = ['Name', 'Age', 'DOB', 'Sex', 'Relationship', 'Profession'];
     const tableRows = members.map(member => [
-      member.name || '-',
-      member.age || '-',
+      member.name || '-', member.age || '-',
       member.dob ? new Date(member.dob).toLocaleDateString() : '-',
-      member.sex || '-',
-      member.relationship || '-',
-      member.profession || '-'
+      member.sex || '-', member.relationship || '-', member.profession || '-'
     ]);
 
     autoTable(doc, {
@@ -307,64 +293,54 @@ const FamilyDetailsView = () => {
     });
 
     const now = new Date();
-    const filename = `Family_${familyDetails?.family_id || 'Export'}_${now.toISOString().slice(0, 16).replace(/[:T]/g, '-')}.pdf`;
-    doc.save(filename);
+    doc.save(`Family_${familyDetails?.family_id || 'Export'}_${now.toISOString().slice(0, 16).replace(/[:T]/g, '-')}.pdf`);
   };
 
-  const toBase64 = (url) =>
-    new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = 'Anonymous';
-      img.onload = function () {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        const dataURL = canvas.toDataURL('image/jpeg');
-        resolve(dataURL);
-      };
-      img.onerror = reject;
-      img.src = url;
-    });
+  const toBase64 = (url) => new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = function () {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      resolve(canvas.toDataURL('image/jpeg'));
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
 
   return (
-    <Box sx={{ backgroundColor: '#f8fafc', minHeight: '100vh', pt: 4, pb: 10 }}>
-      <Container maxWidth="lg">
-        <Box mb={5} display="flex" justifyContent="center">
+    <Box sx={{ backgroundColor: '#F8FAFC', minHeight: '100vh', pb: 12 }}>
+      <Container maxWidth="lg" sx={{ pt: 2.5, px: { xs: 2, sm: 3 } }}>
+
+        {/* Search */}
+        <Box mb={3}>
           <Autocomplete
             freeSolo
             disableClearable
             options={familyIds}
             value={selectedId}
-            onInputChange={(event, newValue) => {
-              setSelectedId(newValue);
-            }}
-            onChange={(event, newValue) => {
-              setSelectedId(newValue);
-              handleIdChange({ target: { value: newValue } });
-            }}
-            sx={{ width: { xs: '100%', md: 600 } }}
+            onInputChange={(event, newValue) => setSelectedId(newValue)}
+            onChange={(event, newValue) => { setSelectedId(newValue); handleIdChange(newValue); }}
             renderInput={(params) => (
               <TextField
                 {...params}
                 placeholder="Search by Family ID..."
+                size="small"
                 InputProps={{
                   ...params.InputProps,
-                  type: 'search',
                   startAdornment: (
                     <InputAdornment position="start">
-                      <SearchIcon sx={{ color: '#94A3B8' }} />
+                      <SearchIcon sx={{ color: '#94A3B8', fontSize: 18 }} />
                     </InputAdornment>
                   ),
-                  sx: { 
-                    borderRadius: 8, 
-                    backgroundColor: '#fff', 
-                    boxShadow: '0 8px 30px rgba(0,0,0,0.08)', 
+                  sx: {
+                    borderRadius: 3,
+                    backgroundColor: '#fff',
+                    boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
                     '& fieldset': { border: 'none' },
-                    px: 1,
-                    py: 0.5
-                  }
+                  },
                 }}
               />
             )}
@@ -373,394 +349,314 @@ const FamilyDetailsView = () => {
 
         {(loadingFamily || loadingMembers) && (
           <Box display="flex" justifyContent="center" my={4}>
-            <CircularProgress sx={{ color: '#0B3D91' }} />
+            <CircularProgress sx={{ color: '#1E3A8A' }} size={36} />
           </Box>
         )}
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {error}
-          </Alert>
-        )}
-        
+        {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 3 }}>{error}</Alert>}
+
         {familyDetails && (
-          <Box mb={5}>
-            <Box sx={{ position: 'relative', mb: { xs: 8, md: 6 } }}>
-              <Box 
-                sx={{ 
-                  height: 180, 
-                  background: 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)', 
-                  borderRadius: 4,
-                  boxShadow: '0 10px 30px rgba(30, 58, 138, 0.2)' 
-                }} 
-              />
-              <Box 
-                sx={{ 
-                  position: 'absolute', 
-                  bottom: -50, 
-                  left: { xs: '50%', md: 40 },
-                  transform: { xs: 'translateX(-50%)', md: 'none' },
-                  display: 'flex',
-                  alignItems: 'flex-end',
-                  gap: 3
+          <Box>
+            {/* Profile Card */}
+            <Card sx={{ mb: 2.5, borderRadius: 4, overflow: 'hidden' }}>
+              {/* Banner */}
+              <Box
+                sx={{
+                  height: 100,
+                  background: 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)',
+                  position: 'relative',
                 }}
-              >
-                <Avatar
-                  src={familyDetails.family_pic || ''}
-                  sx={{
-                    width: 140,
-                    height: 140,
-                    bgcolor: '#0B3D91',
-                    fontWeight: 700,
-                    fontSize: 40,
-                    border: '6px solid #f8fafc',
-                    boxShadow: '0 8px 20px rgba(0, 0, 0, 0.15)',
-                  }}
-                >
-                  {!familyDetails.family_pic && familyDetails.head_name?.charAt(0).toUpperCase()}
-                </Avatar>
-                <Box sx={{ display: { xs: 'none', md: 'block' }, pb: 2 }}>
-                  <Typography variant="h3" fontWeight={800} color="#1E293B">
-                    {familyDetails.head_name}
-                  </Typography>
-                  <Typography variant="h6" color="text.secondary" fontWeight={600}>
-                    ID: {familyDetails.family_id}
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
-
-            <Box sx={{ display: { xs: 'block', md: 'none' }, textAlign: 'center', mb: 4 }}>
-              <Typography variant="h4" fontWeight={800} color="#1E293B">
-                {familyDetails.head_name}
-              </Typography>
-              <Typography variant="subtitle1" color="text.secondary" fontWeight={600}>
-                ID: {familyDetails.family_id}
-              </Typography>
-            </Box>
-
-            {(role === 'admin' || role === 'incharge') && (
-              <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-                <Button 
-                  variant="outlined" 
-                  startIcon={<SearchIcon />} 
-                  onClick={() => navigate(`/edit-family/${familyDetails.family_id}`)}
-                  sx={{ borderRadius: 3, fontWeight: 800, textTransform: 'none' }}
-                >
-                  Edit Registration
-                </Button>
-              </Box>
-            )}
-
-            <Stack direction="row" spacing={2} justifyContent={{ xs: 'center', md: 'flex-start' }} flexWrap="wrap" useFlexGap sx={{ mb: 5, ml: { xs: 0, md: 5 } }}>
-              <Box sx={{ px: 2.5, py: 0.8, borderRadius: 50, bgcolor: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6', fontWeight: 700, fontSize: '0.875rem' }}>
-                {members.length} Members
-              </Box>
-              
-              {/* Family Status Toggle for Admin */}
-              <Box sx={{ 
-                px: 2, py: 0.8, borderRadius: 50, 
-                bgcolor: familyDetails.active ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
-                color: familyDetails.active ? '#10B981' : '#EF4444', 
-                fontWeight: 700, fontSize: '0.875rem',
-                display: 'flex', alignItems: 'center', gap: 1
-              }}>
-                {familyDetails.active ? 'Active' : 'Inactive'}
-                {role === 'admin' && (
-                  <Switch 
-                    size="small" 
-                    checked={familyDetails.active} 
-                    onChange={handleToggleFamilyActive}
-                    sx={{ '& .MuiSwitch-track': { bgcolor: familyDetails.active ? '#10B981' : '#EF4444' } }}
-                  />
-                )}
-              </Box>
-
-              {familyDetails.verification_status && (
-                <Box sx={{ 
-                  px: 2.5, py: 0.8, borderRadius: 50, 
-                  bgcolor: familyDetails.verification_status === 'approved' ? 'rgba(16, 185, 129, 0.1)' : 
-                           familyDetails.verification_status === 'recommended' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(245, 158, 11, 0.1)', 
-                  color: familyDetails.verification_status === 'approved' ? '#10B981' : 
-                         familyDetails.verification_status === 'recommended' ? '#3B82F6' : '#F59E0B', 
-                  fontWeight: 700, fontSize: '0.875rem', textTransform: 'uppercase' 
-                }}>
-                  Status: {familyDetails.verification_status.replace('_', ' ')}
-                </Box>
-              )}
-            </Stack>
-
-            {(role === 'admin' || role === 'incharge') && familyDetails.verification_status !== 'approved' && (
-              <Paper sx={{ p: 3, mb: 4, borderRadius: 4, bgcolor: '#FFFBEB', border: '1px solid #FEF3C7', ml: { xs: 0, md: 5 } }} elevation={0}>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center" justifyContent="space-between">
-                  <Box>
-                    <Typography variant="subtitle1" fontWeight={900} color="#92400E">Verification Action Required</Typography>
-                    <Typography variant="body2" color="#B45309">
-                      {familyDetails.verification_status === 'pending_incharge' 
-                        ? 'As Anbiyam Incharge, please verify the family details and recommend for approval.'
-                        : 'As Admin, please review the recommended family and grant final approval.'}
+              />
+              {/* Avatar overlay */}
+              <Box sx={{ px: 2.5, pb: 2.5, position: 'relative', mt: '-40px' }}>
+                <Box display="flex" alignItems="flex-end" gap={2} mb={1.5}>
+                  <Avatar
+                    src={familyDetails.family_pic || ''}
+                    sx={{
+                      width: 84,
+                      height: 84,
+                      border: '4px solid #fff',
+                      borderRadius: 4,
+                      bgcolor: '#1E3A8A',
+                      fontWeight: 800,
+                      fontSize: '2rem',
+                      boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {!familyDetails.family_pic && familyDetails.head_name?.charAt(0).toUpperCase()}
+                  </Avatar>
+                  <Box flex={1} pb={0.5}>
+                    <Typography variant="h6" fontWeight={900} color="#1E293B" sx={{ lineHeight: 1.1 }}>
+                      {familyDetails.head_name}
+                    </Typography>
+                    <Typography variant="caption" color="textSecondary" fontWeight={700}>
+                      ID: {familyDetails.family_id}
                     </Typography>
                   </Box>
-                  <Stack direction="row" spacing={2}>
-                    {role === 'incharge' && familyDetails.verification_status === 'pending_incharge' && (
-                      <Button 
-                        variant="contained" 
-                        color="primary" 
-                        onClick={() => handleStatusUpdate('recommended')}
-                        sx={{ borderRadius: 3, fontWeight: 900, px: 4, py: 1.5 }}
-                      >
-                        Verify & Recommend
-                      </Button>
+                </Box>
+
+                {/* Status badges + actions */}
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap mb={2}>
+                  <Box sx={{
+                    px: 1.5, py: 0.5, borderRadius: 6,
+                    bgcolor: familyDetails.active ? '#ECFDF5' : '#FFF7ED',
+                    color: familyDetails.active ? '#10B981' : '#F59E0B',
+                    display: 'flex', alignItems: 'center', gap: 0.5
+                  }}>
+                    <Typography variant="caption" fontWeight={800} sx={{ fontSize: '0.7rem' }}>
+                      {familyDetails.active ? 'Active' : 'Inactive'}
+                    </Typography>
+                    {role === 'admin' && (
+                      <Switch
+                        size="small"
+                        checked={familyDetails.active}
+                        onChange={handleToggleFamilyActive}
+                        sx={{ ml: 0.5 }}
+                      />
                     )}
-                    {role === 'admin' && (familyDetails.verification_status === 'recommended' || familyDetails.verification_status === 'pending_incharge') && (
-                      <Button 
-                        variant="contained" 
-                        color="success" 
-                        onClick={() => handleStatusUpdate('approved')}
-                        sx={{ borderRadius: 3, fontWeight: 900, px: 4, py: 1.5, bgcolor: '#10B981' }}
-                      >
-                        Approve & Activate
-                      </Button>
-                    )}
-                  </Stack>
+                  </Box>
+                  {familyDetails.verification_status && (
+                    <StatusChip status={familyDetails.verification_status} />
+                  )}
+                  <Chip
+                    label={`${members.length} Members`}
+                    size="small"
+                    sx={{ bgcolor: '#EFF6FF', color: '#3B82F6', fontWeight: 700 }}
+                  />
+                </Stack>
+
+                {/* Edit + Export buttons */}
+                <Stack direction="row" spacing={1.5}>
+                  {(role === 'admin' || role === 'incharge') && (
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<EditRoundedIcon sx={{ fontSize: 16 }} />}
+                      onClick={() => navigate(`/edit-family/${familyDetails.family_id}`)}
+                      sx={{ borderRadius: 2.5, fontWeight: 700, borderColor: '#E2E8F0', color: '#475569', flex: 1 }}
+                    >
+                      Edit
+                    </Button>
+                  )}
+                  <Button
+                    variant="contained"
+                    size="small"
+                    startIcon={<PictureAsPdfRoundedIcon sx={{ fontSize: 16 }} />}
+                    onClick={exportPDF}
+                    disabled={!familyDetails || members.length === 0}
+                    sx={{
+                      borderRadius: 2.5,
+                      fontWeight: 700,
+                      bgcolor: '#1E3A8A',
+                      flex: 1,
+                      '&:hover': { bgcolor: '#172554' },
+                    }}
+                  >
+                    Export PDF
+                  </Button>
+                </Stack>
+              </Box>
+            </Card>
+
+            {/* Verification Actions */}
+            {(role === 'admin' || role === 'incharge') && familyDetails.verification_status !== 'approved' && (
+              <Paper
+                elevation={0}
+                sx={{ p: 2.5, mb: 2.5, borderRadius: 4, bgcolor: '#FFFBEB', border: '1.5px solid #FEF3C7' }}
+              >
+                <Typography variant="subtitle2" fontWeight={800} color="#92400E" mb={0.5}>
+                  Verification Required
+                </Typography>
+                <Typography variant="caption" color="#B45309" display="block" mb={2}>
+                  {familyDetails.verification_status === 'pending_incharge'
+                    ? 'Please review and recommend this family for admin approval.'
+                    : 'Review the recommended family and grant final approval.'}
+                </Typography>
+                <Stack direction="row" spacing={1.5}>
+                  {role === 'incharge' && familyDetails.verification_status === 'pending_incharge' && (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      fullWidth
+                      size="small"
+                      onClick={() => handleStatusUpdate('recommended')}
+                      sx={{ borderRadius: 2.5, fontWeight: 800 }}
+                    >
+                      Verify & Recommend
+                    </Button>
+                  )}
+                  {role === 'admin' && (familyDetails.verification_status === 'recommended' || familyDetails.verification_status === 'pending_incharge') && (
+                    <Button
+                      variant="contained"
+                      fullWidth
+                      size="small"
+                      onClick={() => handleStatusUpdate('approved')}
+                      sx={{ borderRadius: 2.5, fontWeight: 800, bgcolor: '#10B981', '&:hover': { bgcolor: '#059669' } }}
+                    >
+                      Approve & Activate
+                    </Button>
+                  )}
                 </Stack>
               </Paper>
             )}
 
-            <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} gap={3}>
-              <Box flex={1}>
-                <Card sx={{ p: 3, borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.05)', height: '100%' }}>
-                  <Typography variant="h6" fontWeight={800} color="#0B3D91" mb={3}>
-                    Contact & Location
-                  </Typography>
-                  <InfoLine label="Address" value={[familyDetails.address_line1, familyDetails.address_line2].filter(v => v && v !== 'null').join(', ') || '-'} />
-                  <InfoLine label="City & Pincode" value={[familyDetails.city, familyDetails.pincode].filter(v => v && v !== 'null').join(' - ') || '-'} />
-                  <InfoLine label="Contact" value={[familyDetails.mobile_number, familyDetails.mobile_number2].filter(v => v && v !== 'null').join(', ') || '-'} />
-                  <InfoLine label="Location" value={familyDetails.location} />
-                  <InfoLine label="Native" value={familyDetails.native} />
-                  <InfoLine label="Resident From" value={familyDetails.resident_from ? new Date(familyDetails.resident_from).toLocaleDateString() : '-'} />
-                </Card>
-              </Box>
-
-              <Box flex={1}>
-                <Card sx={{ p: 3, borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.05)', height: '100%' }}>
-                  <Typography variant="h6" fontWeight={800} color="#0B3D91" mb={3}>
-                    Church Details
-                  </Typography>
-                  <InfoLine label="House Type" value={familyDetails.house_type} />
-                  <InfoLine label="Subscription" value={familyDetails.subscription} />
-                  <InfoLine label="Anbiyam" value={familyDetails.anbiyam} />
-                  <InfoLine label="Cemetery" value={familyDetails.cemetery} />
-                  <InfoLine label="Cemetery No." value={familyDetails.cemetery_number} />
-                </Card>
-              </Box>
+            {/* Info Panels */}
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, mb: 2.5 }}>
+              <Card sx={{ flex: 1, p: 2.5, borderRadius: 4 }}>
+                <Typography variant="subtitle2" fontWeight={800} color="#1E3A8A" mb={1.5}>
+                  Contact & Location
+                </Typography>
+                <InfoRow label="Address" value={[familyDetails.address_line1, familyDetails.address_line2].filter(v => v && v !== 'null').join(', ') || '—'} />
+                <InfoRow label="City" value={[familyDetails.city, familyDetails.pincode].filter(v => v && v !== 'null').join(' - ') || '—'} />
+                <InfoRow label="Contact" value={[familyDetails.mobile_number, familyDetails.mobile_number2].filter(v => v && v !== 'null').join(', ') || '—'} />
+                <InfoRow label="Native" value={familyDetails.native} />
+                <InfoRow label="Resident From" value={familyDetails.resident_from ? new Date(familyDetails.resident_from).toLocaleDateString() : '—'} />
+              </Card>
+              <Card sx={{ flex: 1, p: 2.5, borderRadius: 4 }}>
+                <Typography variant="subtitle2" fontWeight={800} color="#1E3A8A" mb={1.5}>
+                  Church Details
+                </Typography>
+                <InfoRow label="House Type" value={familyDetails.house_type} />
+                <InfoRow label="Subscription" value={familyDetails.subscription} />
+                <InfoRow label="Anbiyam" value={familyDetails.anbiyam} />
+                <InfoRow label="Cemetery" value={familyDetails.cemetery} />
+                <InfoRow label="Cemetery No." value={familyDetails.cemetery_number} />
+              </Card>
             </Box>
-          </Box>
-        )}
 
-        {members.length > 0 && (
-          <Box display="flex" justifyContent="space-between" alignItems="center" mt={4} mb={2} px={1}>
-            <Typography variant="h6" fontWeight={800} color="#1E293B">
-              Family Members
-            </Typography>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={detailedView}
-                  onChange={(e) => setDetailedView(e.target.checked)}
-                  color="primary"
-                />
-              }
-              label={<Typography variant="body2" fontWeight={600} color="text.secondary">Detailed View</Typography>}
-            />
-          </Box>
-        )}
+            {/* Members Section */}
+            {members.length > 0 && (
+              <Box>
+                <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5} px={0.5}>
+                  <Typography variant="subtitle1" fontWeight={800} color="#1E293B">
+                    Family Members
+                    <Chip label={members.length} size="small" sx={{ ml: 1.5, fontWeight: 900, bgcolor: '#1E3A8A', color: '#fff' }} />
+                  </Typography>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        size="small"
+                        checked={detailedView}
+                        onChange={(e) => setDetailedView(e.target.checked)}
+                        color="primary"
+                      />
+                    }
+                    label={<Typography variant="caption" fontWeight={700} color="textSecondary">Detailed</Typography>}
+                    sx={{ mr: 0 }}
+                  />
+                </Box>
 
-        {members.length > 0 && (
-          <>
-            {isMobile ? (
-              <Stack spacing={2} sx={{ mb: 2 }}>
-                {members.map((member) => (
-                  <Card key={member.member_id} sx={{ p: 2, borderRadius: 3, boxShadow: '0 4px 12px rgba(0,0,0,0.05)', borderLeft: '4px solid #0B3D91', opacity: member.active ? 1 : 0.7 }}>
-                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                      <Typography variant="h6" color="#0B3D91" fontWeight={700}>
-                        {member.name}
-                      </Typography>
-                      {role === 'admin' && (
-                        <Switch 
-                          size="small" 
-                          checked={member.active} 
-                          onChange={() => handleToggleMemberActive(member.member_id, member.active)}
-                        />
-                      )}
-                    </Box>
-                    <Typography variant="body2" color="text.secondary" mb={1}>
-                      ID: {member.member_id} | Status: <Chip label={member.active ? 'Active' : 'Inactive'} size="small" variant="outlined" color={member.active ? 'success' : 'error'} sx={{ height: 20, fontSize: '0.65rem' }} />
-                    </Typography>
-                    
-                    {member.verification_status && member.verification_status !== 'approved' && (
-                      <Box mb={2} display="flex" justifyContent="space-between" alignItems="center">
-                        <Chip 
-                          label={member.verification_status.replace('_', ' ')} 
-                          size="small" 
-                          color={member.verification_status === 'pending_incharge' ? 'warning' : 'info'}
-                          sx={{ fontWeight: 800, textTransform: 'uppercase', fontSize: '0.65rem' }}
-                        />
-                        {(role === 'incharge' && member.verification_status === 'pending_incharge') && (
-                          <Button 
-                            size="small" 
-                            variant="outlined" 
-                            color="primary" 
-                            onClick={() => handleMemberStatusUpdate(member.member_id, 'recommended')}
-                            disabled={updatingMember === member.member_id}
+                {/* Mobile member cards */}
+                <Stack spacing={1.5}>
+                  {members.map((member) => (
+                    <Card
+                      key={member.member_id}
+                      sx={{
+                        p: 2,
+                        borderRadius: 4,
+                        borderLeft: `3px solid ${member.active ? '#1E3A8A' : '#E2E8F0'}`,
+                        opacity: member.active ? 1 : 0.7,
+                      }}
+                    >
+                      {/* Member header */}
+                      <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
+                        <Box display="flex" alignItems="center" gap={1.5} flex={1}>
+                          <Avatar
+                            sx={{
+                              width: 44,
+                              height: 44,
+                              borderRadius: 3,
+                              bgcolor: member.sex === 'Male' ? '#EFF6FF' : '#FFF1F2',
+                              color: member.sex === 'Male' ? '#3B82F6' : '#F43F5E',
+                              fontWeight: 800,
+                              fontSize: '1rem',
+                              flexShrink: 0,
+                            }}
                           >
-                            {updatingMember === member.member_id ? '...' : 'Verify'}
-                          </Button>
-                        )}
-                        {(role === 'admin' && member.verification_status === 'recommended') && (
-                          <Button 
-                            size="small" 
-                            variant="outlined" 
-                            color="success" 
-                            onClick={() => handleMemberStatusUpdate(member.member_id, 'approved')}
-                            disabled={updatingMember === member.member_id}
-                          >
-                            {updatingMember === member.member_id ? '...' : 'Approve'}
-                          </Button>
-                        )}
-                      </Box>
-                    )}
-                    <Box display="flex" flexWrap="wrap" gap={1.5}>
-                      {memberAttributes.slice(2, -1).map((attr) => {
-                        if (!detailedView && !['age', 'relationship'].includes(attr.key)) return null;
-                        const val = formatValue(attr.key, member[attr.key]);
-                        if (val === '-') return null;
-                        return (
-                          <Box key={attr.key} sx={{ width: 'calc(50% - 6px)' }}>
-                            <Typography variant="caption" color="text.secondary" display="block">
-                              {attr.label}
+                            {(member.name || '?').charAt(0)}
+                          </Avatar>
+                          <Box flex={1}>
+                            <Typography variant="subtitle2" fontWeight={800} color="#1E293B">
+                              {member.name}
                             </Typography>
-                            <Typography variant="body2" fontWeight={600}>
-                              {val}
+                            <Typography variant="caption" color="textSecondary" fontWeight={600}>
+                              {member.relationship} • {member.age} Yrs
                             </Typography>
                           </Box>
-                        );
-                      })}
-                    </Box>
-                  </Card>
-                ))}
-              </Stack>
-            ) : (
-              <Box sx={{ overflowX: 'auto', width: '100%', mb: 2 }}>
-                <TableContainer
-                  component={Paper}
-                  sx={{
-                    borderRadius: 2,
-                    boxShadow: 2,
-                    minWidth: 800,
-                  }}
-                >
-                  <Table size="small">
-                    <TableHead sx={{ backgroundColor: '#0B3D91' }}>
-                      <TableRow>
-                        <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Member ID</TableCell>
-                        <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Verification</TableCell>
-                        <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Active Status</TableCell>
-                        {memberAttributes.slice(1, -1).map((attr) => {
-                          if (!detailedView && !['name', 'age', 'relationship'].includes(attr.key)) return null;
+                        </Box>
+                        <Stack direction="row" spacing={0.5} alignItems="center">
+                          <StatusChip status={member.verification_status || 'approved'} />
+                          {role === 'admin' && (
+                            <Switch
+                              size="small"
+                              checked={member.active}
+                              onChange={() => handleToggleMemberActive(member.member_id, member.active)}
+                              disabled={updatingMember === member.member_id}
+                            />
+                          )}
+                        </Stack>
+                      </Box>
+
+                      {/* Verification action buttons */}
+                      {member.verification_status && member.verification_status !== 'approved' && (
+                        <Box display="flex" gap={1} mb={1.5}>
+                          {(role === 'incharge' && member.verification_status === 'pending_incharge') && (
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="primary"
+                              fullWidth
+                              onClick={() => handleMemberStatusUpdate(member.member_id, 'recommended')}
+                              disabled={updatingMember === member.member_id}
+                              startIcon={<CheckCircleRoundedIcon sx={{ fontSize: 14 }} />}
+                              sx={{ borderRadius: 2, fontWeight: 700, fontSize: '0.75rem' }}
+                            >
+                              {updatingMember === member.member_id ? 'Verifying...' : 'Verify'}
+                            </Button>
+                          )}
+                          {(role === 'admin' && member.verification_status === 'recommended') && (
+                            <Button
+                              size="small"
+                              variant="contained"
+                              color="success"
+                              fullWidth
+                              onClick={() => handleMemberStatusUpdate(member.member_id, 'approved')}
+                              disabled={updatingMember === member.member_id}
+                              startIcon={<CheckCircleRoundedIcon sx={{ fontSize: 14 }} />}
+                              sx={{ borderRadius: 2, fontWeight: 700, fontSize: '0.75rem', bgcolor: '#10B981', '&:hover': { bgcolor: '#059669' } }}
+                            >
+                              {updatingMember === member.member_id ? 'Approving...' : 'Approve'}
+                            </Button>
+                          )}
+                        </Box>
+                      )}
+
+                      {/* Member detail fields */}
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0 }}>
+                        {memberAttributes.slice(2, -1).map((attr) => {
+                          if (!detailedView && !['age', 'relationship', 'sex'].includes(attr.key)) return null;
+                          const val = formatValue(attr.key, member[attr.key]);
+                          if (val === '—') return null;
                           return (
-                            <TableCell key={attr.key} sx={{ color: '#fff', fontWeight: 700 }}>
-                              {attr.label}
-                            </TableCell>
-                          );
-                        })}
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {members.map((member) => (
-                        <TableRow key={member.member_id} hover sx={{ opacity: member.active ? 1 : 0.6 }}>
-                          <TableCell sx={{ fontWeight: 500 }}>{member.member_id}</TableCell>
-                          <TableCell>
-                            <Box display="flex" alignItems="center" gap={1}>
-                              <Chip 
-                                label={member.verification_status || 'approved'} 
-                                size="small" 
-                                variant={member.verification_status === 'approved' ? 'filled' : 'outlined'}
-                                color={member.verification_status === 'approved' ? 'success' : 
-                                       member.verification_status === 'recommended' ? 'info' : 'warning'}
-                                sx={{ fontWeight: 700, fontSize: '0.7rem' }}
-                              />
-                              {(role === 'incharge' && member.verification_status === 'pending_incharge') && (
-                                <Button 
-                                  size="small" 
-                                  variant="contained" 
-                                  color="primary" 
-                                  sx={{ fontSize: '0.65rem', py: 0 }} 
-                                  onClick={() => handleMemberStatusUpdate(member.member_id, 'recommended')}
-                                  disabled={updatingMember === member.member_id}
-                                >
-                                  {updatingMember === member.member_id ? 'Verifying...' : 'Verify'}
-                                </Button>
-                              )}
-                              {(role === 'admin' && member.verification_status === 'recommended') && (
-                                <Button 
-                                  size="small" 
-                                  variant="contained" 
-                                  color="success" 
-                                  sx={{ fontSize: '0.65rem', py: 0 }} 
-                                  onClick={() => handleMemberStatusUpdate(member.member_id, 'approved')}
-                                  disabled={updatingMember === member.member_id}
-                                >
-                                  {updatingMember === member.member_id ? 'Approving...' : 'Approve'}
-                                </Button>
-                              )}
-                            </Box>
-                          </TableCell>
-                          <TableCell>
-                            <Box display="flex" alignItems="center" gap={1}>
-                              <Switch 
-                                size="small" 
-                                checked={member.active} 
-                                onChange={() => handleToggleMemberActive(member.member_id, member.active)}
-                                disabled={role !== 'admin'}
-                              />
-                              <Typography variant="caption" fontWeight={700} color={member.active ? 'success.main' : 'error.main'}>
-                                {member.active ? 'Active' : 'Inactive'}
+                            <Box key={attr.key} sx={{ width: '50%', py: 0.6, pr: 1 }}>
+                              <Typography variant="caption" color="textSecondary" display="block" sx={{ fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: '0.3px' }}>
+                                {attr.label}
+                              </Typography>
+                              <Typography variant="caption" fontWeight={700} color="#334155">
+                                {val}
                               </Typography>
                             </Box>
-                          </TableCell>
-                          {memberAttributes.slice(1, -1).map((attr) => {
-                            if (!detailedView && !['name', 'age', 'relationship'].includes(attr.key)) return null;
-                            return (
-                              <TableCell key={attr.key}>{formatValue(attr.key, member[attr.key])}</TableCell>
-                            );
-                          })}
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
+                          );
+                        })}
+                      </Box>
+                    </Card>
+                  ))}
+                </Stack>
               </Box>
             )}
-          </>
+          </Box>
         )}
-        <Box display="flex" justifyContent={{ xs: 'center', md: 'flex-end' }} mt={2}>
-          <Button
-            variant="contained"
-            onClick={() => exportPDF()}
-            disabled={!familyDetails || members.length === 0}
-            sx={{
-              bgcolor: '#0B3D91',
-              color: 'white',
-              borderRadius: 2,
-              px: 3,
-              fontWeight: 700,
-              '&:hover': { bgcolor: '#082d6b' }
-            }}
-          >
-            Export to PDF
-          </Button>
-        </Box>
       </Container>
     </Box>
   );

@@ -1,13 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
-  Box, Typography, Tabs, Tab, Paper, ListItem, ListItemText, Avatar,
-  Divider, CircularProgress, Collapse, ToggleButtonGroup, ToggleButton,
-  Button, Dialog, DialogTitle, DialogContent, DialogActions,
-  FormControl, InputLabel, Select, MenuItem
+  Box, Typography, Paper, Avatar, Divider, CircularProgress,
+  Collapse, Button, Dialog, DialogTitle, DialogContent, DialogActions,
+  FormControl, InputLabel, Select, MenuItem, Chip, Stack,
+  useTheme, useMediaQuery, IconButton
 } from '@mui/material';
 import API_BASE_URL from '../config';
 import { getRandomGreeting } from '../utils/quotes';
+import CakeRoundedIcon from '@mui/icons-material/CakeRounded';
+import FavoriteRoundedIcon from '@mui/icons-material/FavoriteRounded';
+import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
+import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
+import ExpandLessRoundedIcon from '@mui/icons-material/ExpandLessRounded';
+import PhoneRoundedIcon from '@mui/icons-material/PhoneRounded';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 
 const BirthdayReminders = () => {
   const [bdayData, setBdayData] = useState({ today: [], thisWeek: [], thisMonth: [], thisYear: [] });
@@ -26,34 +34,24 @@ const BirthdayReminders = () => {
   const userAnbiyam = localStorage.getItem('anbiyam');
   const token = localStorage.getItem('token');
 
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   const handleGenerateWish = (member) => {
     const greetingMsg = getRandomGreeting(reminderType);
-    
     const headName = member.head_name || "குடும்பத்தினர்";
-    
-    // Translate relationship to Tamil
     const relMap = {
-      "Head": "குடும்பத் தலைவர்",
-      "Spouse": "துணைவர்",
-      "Child": "பிள்ளை",
-      "Parent": "பெற்றோர்",
-      "Other": "உறவினர்"
+      "Head": "குடும்பத் தலைவர்", "Spouse": "துணைவர்", "Child": "பிள்ளை",
+      "Parent": "பெற்றோர்", "Other": "உறவினர்"
     };
     const tamilRel = member.relationship ? relMap[member.relationship] || member.relationship : "";
     const name = member.name;
-
     const eventText = reminderType === 'birthday' ? 'பிறந்தநாள்' : 'திருமண நாள்';
     const icon = reminderType === 'birthday' ? '🎉' : '🎊';
-
-    let introText = "";
-    if (member.relationship === 'Head' || member.name === headName) {
-      introText = `குடும்பத் தலைவர் ${name} அவர்களுக்கு`;
-    } else {
-      introText = `${headName} அவர்களின் ${tamilRel} ${name} அவர்களுக்கு`;
-    }
-      
+    let introText = member.relationship === 'Head' || member.name === headName
+      ? `குடும்பத் தலைவர் ${name} அவர்களுக்கு`
+      : `${headName} அவர்களின் ${tamilRel} ${name} அவர்களுக்கு`;
     const fullWish = `அன்புடையீர் வணக்கம்,\n\n${member.anbiyam ? `${member.anbiyam} அன்பியம் சார்பாக, ` : ""}${introText} எங்களின் மனமார்ந்த இனிய ${eventText} நல்வாழ்த்துக்கள்! ${icon}\n\n${greetingMsg}`;
-    
     setCurrentWish(fullWish);
     setCopySuccess(false);
     setWishModalOpen(true);
@@ -61,74 +59,39 @@ const BirthdayReminders = () => {
 
   const handleCopyWish = () => {
     if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(currentWish)
-        .then(() => setCopySuccess(true))
-        .catch(err => console.error("Clipboard write failed", err));
+      navigator.clipboard.writeText(currentWish).then(() => setCopySuccess(true)).catch(console.error);
     } else {
-      // Fallback for non-HTTPS environments (like local IP access)
       const textArea = document.createElement("textarea");
       textArea.value = currentWish;
       textArea.style.position = "fixed";
       document.body.appendChild(textArea);
       textArea.focus();
       textArea.select();
-      try {
-        document.execCommand('copy');
-        setCopySuccess(true);
-      } catch (err) {
-        console.error('Fallback copy failed', err);
-      }
+      try { document.execCommand('copy'); setCopySuccess(true); } catch (err) {}
       document.body.removeChild(textArea);
     }
   };
 
-
-
   useEffect(() => {
-    const fetchReminders = async () => {
+    const fetchAll = async () => {
       setLoading(true);
       try {
-        const [bdayRes, weddingRes] = await Promise.all([
+        const [bdayRes, weddingRes, anbRes] = await Promise.all([
           axios.get(`${API_BASE_URL}/member/birthdays`, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(`${API_BASE_URL}/member/weddings`, { headers: { Authorization: `Bearer ${token}` } })
+          axios.get(`${API_BASE_URL}/member/weddings`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${API_BASE_URL}/anbiyam`, { headers: { Authorization: `Bearer ${token}` } }),
         ]);
-        
-        setBdayData({
-          today: bdayRes.data.today || [],
-          thisWeek: bdayRes.data.thisWeek || [],
-          thisMonth: bdayRes.data.thisMonth || [],
-          thisYear: bdayRes.data.thisYear || [],
-        });
-        
-        setWeddingData({
-          today: weddingRes.data.today || [],
-          thisWeek: weddingRes.data.thisWeek || [],
-          thisMonth: weddingRes.data.thisMonth || [],
-          thisYear: weddingRes.data.thisYear || [],
-        });
+        setBdayData({ today: bdayRes.data.today || [], thisWeek: bdayRes.data.thisWeek || [], thisMonth: bdayRes.data.thisMonth || [], thisYear: bdayRes.data.thisYear || [] });
+        setWeddingData({ today: weddingRes.data.today || [], thisWeek: weddingRes.data.thisWeek || [], thisMonth: weddingRes.data.thisMonth || [], thisYear: weddingRes.data.thisYear || [] });
+        setAnbiyams(anbRes.data);
+        if (!isAdmin && userAnbiyam) setSelectedAnbiyam(userAnbiyam);
       } catch (err) {
         setError('Failed to fetch reminders');
       } finally {
         setLoading(false);
       }
     };
-
-    const fetchAnbiyams = async () => {
-      try {
-        const res = await axios.get(`${API_BASE_URL}/anbiyam`, { headers: { Authorization: `Bearer ${token}` } });
-        setAnbiyams(res.data);
-        
-        // If user has a specific Anbiyam assigned and is NOT an admin, default filter to it
-        if (!isAdmin && userAnbiyam) {
-          setSelectedAnbiyam(userAnbiyam);
-        }
-      } catch (err) {
-        console.error('Failed to fetch Anbiyams');
-      }
-    };
-
-    fetchReminders();
-    fetchAnbiyams();
+    fetchAll();
   }, [token, isAdmin, userAnbiyam]);
 
   const currentData = reminderType === 'birthday' ? bdayData : weddingData;
@@ -139,245 +102,318 @@ const BirthdayReminders = () => {
   else if (timeFilter === 'thisWeek') filteredByTime = currentData.thisWeek || [];
   else if (timeFilter === 'thisMonth') filteredByTime = currentData.thisMonth || [];
   else {
-    // Specific month
     const monthInt = parseInt(timeFilter);
     filteredByTime = (currentData.thisYear || []).filter(m => new Date(m[dateField]).getMonth() === monthInt);
   }
 
-  const toggleExpand = (id) => setExpandedId((prev) => (prev === id ? null : id));
+  const filteredMembers = filteredByTime.filter(m => selectedAnbiyam === 'All' || m.anbiyam === selectedAnbiyam);
+  const sortedMembers = timeFilter !== 'today'
+    ? [...filteredMembers].sort((a, b) => {
+        const da = new Date(a[dateField]), db = new Date(b[dateField]);
+        return da.getMonth() !== db.getMonth() ? da.getMonth() - db.getMonth() : da.getDate() - db.getDate();
+      })
+    : filteredMembers;
 
-  const renderList = (members) => {
-    // Filter by Anbiyam
-    const filteredMembers = members.filter(m => 
-      selectedAnbiyam === 'All' || m.anbiyam === selectedAnbiyam
-    );
+  const isBirthday = reminderType === 'birthday';
 
-    const sortedMembers = timeFilter !== 'today'
-      ? [...filteredMembers].sort((a, b) => {
-          const dateA = new Date(a[dateField]);
-          const dateB = new Date(b[dateField]);
-          if (dateA.getMonth() !== dateB.getMonth()) {
-            return dateA.getMonth() - dateB.getMonth();
-          }
-          return dateA.getDate() - dateB.getDate();
-        })
-      : filteredMembers;
+  if (loading) return (
+    <Box display="flex" justifyContent="center" pt={8}>
+      <CircularProgress size={40} sx={{ color: '#1E3A8A' }} />
+    </Box>
+  );
+  if (error) return <Typography color="error" sx={{ p: 2 }}>{error}</Typography>;
 
-    return (
-      <Box sx={{ mt: 2 }}>
-        {sortedMembers.length === 0 && (
-          <Box 
-            p={4} 
-            textAlign="center" 
-            sx={{ 
-              bgcolor: 'transparent', 
-              border: '2px dashed #E2E8F0', 
-              borderRadius: 4,
-              mt: 2
-            }}
-          >
-            <Avatar sx={{ width: 64, height: 64, bgcolor: '#F1F5F9', color: '#94A3B8', mx: 'auto', mb: 2 }}>
-              {reminderType === 'birthday' ? '🎂' : '💍'}
-            </Avatar>
-            <Typography variant="subtitle1" fontWeight={800} color="#475569">
-              No {reminderType === 'birthday' ? 'Birthdays' : 'Anniversaries'} Found
-            </Typography>
-            <Typography variant="body2" color="#94A3B8" mt={0.5}>
-              There are no records for the selected period.
-            </Typography>
-          </Box>
-        )}
-        {sortedMembers.map((m, index) => (
-          <Paper 
-            key={m.member_id} 
-            elevation={0}
-            sx={{ 
-              mb: 1.5, 
-              border: '1px solid #E2E8F0', 
-              borderRadius: 3,
-              overflow: 'hidden',
-              transition: 'all 0.2s',
-              '&:hover': { borderColor: '#3B82F6', bgcolor: '#F8FAFC' }
-            }}
-          >
-            <ListItem 
-              button 
-              onClick={() => toggleExpand(m.member_id)}
-              sx={{ p: 2 }}
-            >
-              <Avatar 
-                sx={{ 
-                  bgcolor: reminderType === 'birthday' ? '#FEE2E2' : '#E0E7FF',
-                  color: reminderType === 'birthday' ? '#EF4444' : '#4F46E5',
-                  mr: 2,
-                  width: 48,
-                  height: 48
-                }}
-              >
-                {reminderType === 'birthday' ? '🎂' : '💍'}
-              </Avatar>
-              <ListItemText
-                primary={
-                  <Typography variant="subtitle1" fontWeight={800} color="#1E293B">
-                    {m.name}
-                  </Typography>
-                }
-                secondary={
-                  <Box mt={0.5}>
-                    <Typography component="span" variant="body2" color="#64748B" fontWeight={600}>
-                      {new Date(m[dateField]).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                      {!['today', 'thisWeek', 'thisMonth'].includes(timeFilter) && ` (${new Date(m[dateField]).getFullYear()})`}
-                    </Typography>
-                    <Typography component="span" variant="caption" sx={{ display: 'block', mt: 0.5, color: '#94A3B8' }}>
-                      {m.anbiyam ? `${m.anbiyam} Anbiyam` : 'N/A'}
-                    </Typography>
-                  </Box>
-                }
-              />
-            </ListItem>
-            <Collapse in={expandedId === m.member_id} timeout="auto" unmountOnExit>
-              <Divider />
-              <Box px={3} py={2} bgcolor="#F8FAFC">
-                <Typography variant="body2" color="textSecondary" mb={0.5}>
-                  <strong>Family Head:</strong> {m.head_name || 'N/A'}
-                </Typography>
-                <Typography variant="body2" color="textSecondary" mb={0.5}>
-                  <strong>Relationship:</strong> {m.relationship || 'N/A'}
-                </Typography>
-                <Typography variant="body2" color="textSecondary" mb={1.5}>
-                  <strong>Mobile:</strong> {m.mobile || 'N/A'}
-                </Typography>
-                <Button 
-                  variant="contained" 
-                  size="small" 
-                  fullWidth
-                  sx={{ 
-                    bgcolor: '#1E3A8A', 
-                    borderRadius: 2, 
-                    fontWeight: 700,
-                    textTransform: 'none',
-                    py: 1
-                  }}
-                  onClick={() => handleGenerateWish(m)}
-                >
-                  Generate WhatsApp Wish
-                </Button>
-              </Box>
-            </Collapse>
-          </Paper>
-        ))}
-      </Box>
-    );
-  };
-
-  if (loading) return <Box textAlign="center" py={4}><CircularProgress /></Box>;
-  if (error) return <Typography color="error">{error}</Typography>;
-
-  const todayStr = new Date().toLocaleDateString('en-GB', {
-    weekday: 'long', year: 'numeric', month: 'short', day: 'numeric',
-  });
+  const todayStr = new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
 
   return (
-    <Box p={{ xs: 2, md: 3 }} pb={10}>
-      <Box 
-        display="flex" 
-        flexDirection={{ xs: 'column', sm: 'row' }} 
-        justifyContent="space-between" 
-        alignItems={{ xs: 'flex-start', sm: 'center' }} 
-        gap={1.5}
-        mb={1}
-      >
-        <Typography variant="h5" fontWeight={800} color="#1E3A8A">
+    <Box sx={{ pb: 12, pt: 2.5, px: 2.5 }}>
+      {/* Header */}
+      <Box mb={2.5}>
+        <Typography variant="h5" fontWeight={900} color="#1E293B" sx={{ letterSpacing: '-0.3px', mb: 0.3 }}>
           Reminders
         </Typography>
-        <ToggleButtonGroup
-          color="primary"
-          value={reminderType}
-          exclusive
-          onChange={(e, newType) => { if (newType) setReminderType(newType); setExpandedId(null); }}
-          size="small"
-          sx={{ width: { xs: '100%', sm: 'auto' }, '& .MuiToggleButton-root': { flex: 1, fontWeight: 700 } }}
-        >
-          <ToggleButton value="birthday">Birthdays</ToggleButton>
-          <ToggleButton value="wedding">Anniversaries</ToggleButton>
-        </ToggleButtonGroup>
+        <Typography variant="caption" color="textSecondary" fontWeight={600}>
+          Today is <Box component="span" color="primary.main" fontWeight={800}>{todayStr}</Box>
+        </Typography>
       </Box>
-      <Typography variant="subtitle2" color="textSecondary" mb={3} fontWeight={600}>
-        Today is <Box component="span" color="primary.main">{todayStr}</Box>
-      </Typography>
 
-      <Box 
-        mb={3} 
-        display="flex" 
-        flexDirection={{ xs: 'column', sm: 'row' }} 
-        gap={1.5} 
-        alignItems={{ xs: 'flex-start', sm: 'center' }}
-        sx={{ bgcolor: '#F8FAFC', p: 2, borderRadius: 3, border: '1px solid #E2E8F0' }}
+      {/* Type toggle — pill style */}
+      <Box
+        sx={{
+          display: 'flex',
+          bgcolor: '#F1F5F9',
+          borderRadius: 3,
+          p: 0.5,
+          mb: 2.5,
+        }}
       >
-        <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 220 } }}>
-          <InputLabel>Filter by Anbiyam</InputLabel>
-          <Select
-            value={selectedAnbiyam}
-            label="Filter by Anbiyam"
-            onChange={(e) => setSelectedAnbiyam(e.target.value)}
-            disabled={!isAdmin && !!userAnbiyam}
-            sx={{ bgcolor: '#fff' }}
+        {['birthday', 'wedding'].map((type) => (
+          <Box
+            key={type}
+            onClick={() => { setReminderType(type); setExpandedId(null); }}
+            sx={{
+              flex: 1,
+              py: 1.2,
+              borderRadius: 2.5,
+              textAlign: 'center',
+              cursor: 'pointer',
+              bgcolor: reminderType === type ? '#fff' : 'transparent',
+              boxShadow: reminderType === type ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
+              transition: 'all 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 0.8,
+            }}
           >
-            <MenuItem value="All">All Anbiyams</MenuItem>
-            {anbiyams.map((anb) => (
-              <MenuItem key={anb.id} value={anb.name}>
-                {anb.name}
+            {type === 'birthday'
+              ? <CakeRoundedIcon sx={{ fontSize: 16, color: reminderType === type ? '#E11D48' : '#94A3B8' }} />
+              : <FavoriteRoundedIcon sx={{ fontSize: 16, color: reminderType === type ? '#7C3AED' : '#94A3B8' }} />}
+            <Typography
+              variant="caption"
+              fontWeight={800}
+              color={reminderType === type ? '#1E293B' : '#94A3B8'}
+              sx={{ fontSize: '0.8rem' }}
+            >
+              {type === 'birthday' ? 'Birthdays' : 'Anniversaries'}
+            </Typography>
+          </Box>
+        ))}
+      </Box>
+
+      {/* Filters */}
+      <Box sx={{ display: 'flex', gap: 1.5, mb: 2.5, flexDirection: { xs: 'column', sm: 'row' } }}>
+        <FormControl size="small" fullWidth>
+          <InputLabel sx={{ fontWeight: 700, fontSize: '0.85rem' }}>Timeline</InputLabel>
+          <Select
+            value={timeFilter}
+            label="Timeline"
+            onChange={(e) => { setTimeFilter(e.target.value); setExpandedId(null); }}
+            sx={{ borderRadius: 2.5, bgcolor: '#fff', fontWeight: 700 }}
+          >
+            <MenuItem value="today">Today ({currentData.today?.length || 0})</MenuItem>
+            <MenuItem value="thisWeek">This Week ({currentData.thisWeek?.length || 0})</MenuItem>
+            <MenuItem value="thisMonth">This Month ({currentData.thisMonth?.length || 0})</MenuItem>
+            <Divider />
+            {['January','February','March','April','May','June','July','August','September','October','November','December'].map((month, index) => (
+              <MenuItem key={index} value={index.toString()}>
+                {month} ({(currentData.thisYear || []).filter(m => new Date(m[dateField]).getMonth() === index).length})
               </MenuItem>
             ))}
           </Select>
         </FormControl>
-        {!isAdmin && userAnbiyam && (
-          <Typography variant="caption" sx={{ color: '#059669', fontWeight: 800, bgcolor: '#ECFDF5', px: 1.5, py: 0.5, borderRadius: 2 }}>
-            Locked to {userAnbiyam}
-          </Typography>
-        )}
+
+        <FormControl size="small" fullWidth>
+          <InputLabel sx={{ fontWeight: 700, fontSize: '0.85rem' }}>Anbiyam</InputLabel>
+          <Select
+            value={selectedAnbiyam}
+            label="Anbiyam"
+            onChange={(e) => setSelectedAnbiyam(e.target.value)}
+            disabled={!isAdmin && !!userAnbiyam}
+            sx={{ borderRadius: 2.5, bgcolor: '#fff', fontWeight: 700 }}
+          >
+            <MenuItem value="All">All Anbiyams</MenuItem>
+            {anbiyams.map((anb) => (
+              <MenuItem key={anb.id} value={anb.name}>{anb.name}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
       </Box>
 
-      <Paper elevation={3} sx={{ p: 2, mb: 3 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography variant="subtitle1" fontWeight={800} color="#1E293B">
-            Timeline
-          </Typography>
-          <FormControl size="small" sx={{ minWidth: 160 }}>
-            <Select
-              value={timeFilter}
-              onChange={(e) => { setTimeFilter(e.target.value); setExpandedId(null); }}
-              sx={{ bgcolor: '#F8FAFC', fontWeight: 700, borderRadius: 2 }}
-            >
-              <MenuItem value="today">Today ({currentData.today?.length || 0})</MenuItem>
-              <MenuItem value="thisWeek">This Week ({currentData.thisWeek?.length || 0})</MenuItem>
-              <MenuItem value="thisMonth">This Month ({currentData.thisMonth?.length || 0})</MenuItem>
-              <Divider />
-              {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((month, index) => (
-                <MenuItem key={index} value={index.toString()}>
-                  {month} ({(currentData.thisYear || []).filter(m => new Date(m[dateField]).getMonth() === index).length})
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Box>
-        <Divider sx={{ mb: 1 }} />
-        <Box>{renderList(filteredByTime)}</Box>
-      </Paper>
+      {/* Count badge */}
+      <Box display="flex" alignItems="center" gap={1} mb={1.5}>
+        <Chip
+          label={`${sortedMembers.length} ${isBirthday ? 'Birthdays' : 'Anniversaries'}`}
+          size="small"
+          sx={{
+            bgcolor: isBirthday ? '#FFF1F2' : '#F5F3FF',
+            color: isBirthday ? '#E11D48' : '#7C3AED',
+            fontWeight: 800,
+            fontSize: '0.72rem',
+          }}
+        />
+      </Box>
 
-      <Dialog open={wishModalOpen} onClose={() => setWishModalOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ fontWeight: 700, color: '#1E3A8A' }}>Generated Wish</DialogTitle>
-        <DialogContent dividers>
-          <Paper elevation={0} sx={{ p: 2, backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
-            <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', fontFamily: 'sans-serif' }}>
+      {/* List */}
+      {sortedMembers.length === 0 ? (
+        <Box
+          sx={{
+            textAlign: 'center',
+            py: 8,
+            border: '2px dashed #E2E8F0',
+            borderRadius: 4,
+          }}
+        >
+          <Avatar
+            sx={{ width: 64, height: 64, bgcolor: '#F8FAFC', mx: 'auto', mb: 2, fontSize: '2rem', borderRadius: 3 }}
+          >
+            {isBirthday ? '🎂' : '💍'}
+          </Avatar>
+          <Typography variant="subtitle2" fontWeight={700} color="textSecondary">
+            No {isBirthday ? 'Birthdays' : 'Anniversaries'} Found
+          </Typography>
+          <Typography variant="caption" color="#94A3B8" display="block" mt={0.5}>
+            None in the selected period.
+          </Typography>
+        </Box>
+      ) : (
+        <Box sx={{ bgcolor: '#fff', borderRadius: 4, overflow: 'hidden', border: '1px solid #F1F5F9', boxShadow: '0 2px 16px rgba(0,0,0,0.04)' }}>
+          {sortedMembers.map((m, idx) => (
+            <Box key={m.member_id}>
+              {/* Row */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  px: 2,
+                  py: 1.5,
+                  gap: 2,
+                  cursor: 'pointer',
+                  '&:active': { bgcolor: '#F8FAFC' },
+                  '&:hover': { bgcolor: '#FAFBFC' },
+                }}
+                onClick={() => setExpandedId(expandedId === m.member_id ? null : m.member_id)}
+              >
+                <Avatar
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 3,
+                    bgcolor: isBirthday ? '#FFF1F2' : '#F5F3FF',
+                    fontSize: '1.5rem',
+                    flexShrink: 0,
+                  }}
+                >
+                  {isBirthday ? '🎂' : '💍'}
+                </Avatar>
+                <Box flex={1} minWidth={0}>
+                  <Typography variant="subtitle2" fontWeight={800} color="#1E293B" noWrap>
+                    {m.name}
+                  </Typography>
+                  <Typography variant="caption" color="textSecondary" fontWeight={600}>
+                    {new Date(m[dateField]).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                    {!['today', 'thisWeek', 'thisMonth'].includes(timeFilter) && ` (${new Date(m[dateField]).getFullYear()})`}
+                    {m.anbiyam && ` • ${m.anbiyam}`}
+                  </Typography>
+                </Box>
+                {expandedId === m.member_id
+                  ? <ExpandLessRoundedIcon sx={{ color: '#94A3B8', fontSize: 20 }} />
+                  : <ExpandMoreRoundedIcon sx={{ color: '#CBD5E1', fontSize: 20 }} />}
+              </Box>
+
+              {/* Expanded detail */}
+              <Collapse in={expandedId === m.member_id}>
+                <Box
+                  sx={{
+                    px: 2,
+                    pb: 2,
+                    ml: 9,
+                    bgcolor: '#FAFBFC',
+                    borderTop: '1px solid #F1F5F9',
+                    pt: 1.5,
+                  }}
+                >
+                  <Stack spacing={0.8} sx={{ mb: 1.5 }}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Typography variant="caption" color="textSecondary" fontWeight={700} sx={{ minWidth: 80, fontSize: '0.65rem', textTransform: 'uppercase' }}>
+                        Family Head
+                      </Typography>
+                      <Typography variant="caption" fontWeight={700} color="#334155">{m.head_name || '—'}</Typography>
+                    </Box>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Typography variant="caption" color="textSecondary" fontWeight={700} sx={{ minWidth: 80, fontSize: '0.65rem', textTransform: 'uppercase' }}>
+                        Relation
+                      </Typography>
+                      <Typography variant="caption" fontWeight={700} color="#334155">{m.relationship || '—'}</Typography>
+                    </Box>
+                    {m.mobile && (
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <PhoneRoundedIcon sx={{ fontSize: 12, color: '#94A3B8' }} />
+                        <Typography variant="caption" fontWeight={700} color="#334155">{m.mobile}</Typography>
+                      </Box>
+                    )}
+                  </Stack>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    fullWidth
+                    onClick={() => handleGenerateWish(m)}
+                    sx={{
+                      bgcolor: '#1E3A8A',
+                      borderRadius: 2.5,
+                      fontWeight: 800,
+                      textTransform: 'none',
+                      py: 1,
+                      fontSize: '0.8rem',
+                      '&:hover': { bgcolor: '#172554' },
+                    }}
+                  >
+                    Generate WhatsApp Wish
+                  </Button>
+                </Box>
+              </Collapse>
+
+              {idx < sortedMembers.length - 1 && <Divider sx={{ ml: 9, opacity: 0.5 }} />}
+            </Box>
+          ))}
+        </Box>
+      )}
+
+      {/* Wish Dialog */}
+      <Dialog
+        open={wishModalOpen}
+        onClose={() => setWishModalOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        fullScreen={isMobile}
+        PaperProps={{ sx: { borderRadius: isMobile ? 0 : 5, overflow: 'hidden' } }}
+      >
+        <DialogTitle
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontWeight: 900,
+            fontSize: '1rem',
+            borderBottom: '1px solid #F1F5F9',
+            p: 2.5,
+          }}
+        >
+          Generated Wish
+          <IconButton onClick={() => setWishModalOpen(false)} size="small" sx={{ bgcolor: '#F1F5F9', color: '#64748B' }}>
+            <CloseRoundedIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: 2.5 }}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2.5,
+              bgcolor: '#F8FAFC',
+              border: '1px solid #E2E8F0',
+              borderRadius: 3,
+            }}
+          >
+            <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.8, color: '#334155', fontWeight: 500 }}>
               {currentWish}
             </Typography>
           </Paper>
         </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={() => setWishModalOpen(false)} color="inherit">Close</Button>
-          <Button onClick={handleCopyWish} variant="contained" color={copySuccess ? "success" : "primary"}>
-            {copySuccess ? "Copied!" : "Copy Text"}
+        <DialogActions sx={{ p: 2.5, gap: 1.5, borderTop: '1px solid #F1F5F9' }}>
+          <Button
+            onClick={() => setWishModalOpen(false)}
+            sx={{ fontWeight: 700, color: '#64748B', borderRadius: 3 }}
+          >
+            Close
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleCopyWish}
+            startIcon={copySuccess ? <CheckRoundedIcon /> : <ContentCopyRoundedIcon />}
+            color={copySuccess ? 'success' : 'primary'}
+            sx={{ borderRadius: 3, fontWeight: 800, textTransform: 'none', flex: 1 }}
+          >
+            {copySuccess ? 'Copied!' : 'Copy Text'}
           </Button>
         </DialogActions>
       </Dialog>
