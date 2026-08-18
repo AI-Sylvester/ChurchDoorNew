@@ -101,7 +101,11 @@ const Login = () => {
         }
         navigate('/home');
       } catch (err) {
-        setError(err.response?.data?.message || 'Invalid credentials');
+        if (!err.response) {
+          setError('Network error: Cannot reach the server');
+        } else {
+          setError(err.response.data?.message || 'Invalid credentials');
+        }
       }
     } else {
       if (!username || !password || !mobile || !anbiyam) {
