@@ -14,7 +14,7 @@ const BirthdayReminders = () => {
   const [weddingData, setWeddingData] = useState({ today: [], thisWeek: [], thisMonth: [], thisYear: [] });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [tabIndex, setTabIndex] = useState(0);
+  const [timeFilter, setTimeFilter] = useState('today');
   const [reminderType, setReminderType] = useState('birthday');
   const [expandedId, setExpandedId] = useState(null);
   const [wishModalOpen, setWishModalOpen] = useState(false);
@@ -82,12 +82,7 @@ const BirthdayReminders = () => {
     }
   };
 
-  const tabLabels = [
-    { label: 'Today', key: 'today' },
-    { label: 'Week', key: 'thisWeek' },
-    { label: 'Month', key: 'thisMonth' },
-    { label: 'Year', key: 'thisYear' },
-  ];
+
 
   useEffect(() => {
     const fetchReminders = async () => {
@@ -136,11 +131,20 @@ const BirthdayReminders = () => {
     fetchAnbiyams();
   }, [token, isAdmin, userAnbiyam]);
 
-  const toggleExpand = (id) => setExpandedId((prev) => (prev === id ? null : id));
-
   const currentData = reminderType === 'birthday' ? bdayData : weddingData;
-  const currentKey = tabLabels[tabIndex].key;
   const dateField = reminderType === 'birthday' ? 'dob' : 'marriage_date';
+
+  let filteredByTime = [];
+  if (timeFilter === 'today') filteredByTime = currentData.today || [];
+  else if (timeFilter === 'thisWeek') filteredByTime = currentData.thisWeek || [];
+  else if (timeFilter === 'thisMonth') filteredByTime = currentData.thisMonth || [];
+  else {
+    // Specific month
+    const monthInt = parseInt(timeFilter);
+    filteredByTime = (currentData.thisYear || []).filter(m => new Date(m[dateField]).getMonth() === monthInt);
+  }
+
+  const toggleExpand = (id) => setExpandedId((prev) => (prev === id ? null : id));
 
   const renderList = (members) => {
     // Filter by Anbiyam
@@ -148,7 +152,7 @@ const BirthdayReminders = () => {
       selectedAnbiyam === 'All' || m.anbiyam === selectedAnbiyam
     );
 
-    const sortedMembers = ['thisWeek', 'thisMonth', 'thisYear'].includes(currentKey)
+    const sortedMembers = timeFilter !== 'today'
       ? [...filteredMembers].sort((a, b) => {
           const dateA = new Date(a[dateField]);
           const dateB = new Date(b[dateField]);
@@ -162,9 +166,24 @@ const BirthdayReminders = () => {
     return (
       <Box sx={{ mt: 2 }}>
         {sortedMembers.length === 0 && (
-          <Box p={3} textAlign="center">
-            <Typography variant="body1" color="textSecondary">
-              No {reminderType === 'birthday' ? 'birthdays' : 'anniversaries'} found in this period.
+          <Box 
+            p={4} 
+            textAlign="center" 
+            sx={{ 
+              bgcolor: 'transparent', 
+              border: '2px dashed #E2E8F0', 
+              borderRadius: 4,
+              mt: 2
+            }}
+          >
+            <Avatar sx={{ width: 64, height: 64, bgcolor: '#F1F5F9', color: '#94A3B8', mx: 'auto', mb: 2 }}>
+              {reminderType === 'birthday' ? '🎂' : '💍'}
+            </Avatar>
+            <Typography variant="subtitle1" fontWeight={800} color="#475569">
+              No {reminderType === 'birthday' ? 'Birthdays' : 'Anniversaries'} Found
+            </Typography>
+            <Typography variant="body2" color="#94A3B8" mt={0.5}>
+              There are no records for the selected period.
             </Typography>
           </Box>
         )}
@@ -207,7 +226,7 @@ const BirthdayReminders = () => {
                   <Box mt={0.5}>
                     <Typography component="span" variant="body2" color="#64748B" fontWeight={600}>
                       {new Date(m[dateField]).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                      {currentKey === 'thisYear' && ` (${new Date(m[dateField]).getFullYear()})`}
+                      {!['today', 'thisWeek', 'thisMonth'].includes(timeFilter) && ` (${new Date(m[dateField]).getFullYear()})`}
                     </Typography>
                     <Typography component="span" variant="caption" sx={{ display: 'block', mt: 0.5, color: '#94A3B8' }}>
                       {m.anbiyam ? `${m.anbiyam} Anbiyam` : 'N/A'}
@@ -259,9 +278,16 @@ const BirthdayReminders = () => {
   });
 
   return (
-    <Box p={3}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-        <Typography variant="h5" fontWeight={700} color="primary">
+    <Box p={{ xs: 2, md: 3 }} pb={10}>
+      <Box 
+        display="flex" 
+        flexDirection={{ xs: 'column', sm: 'row' }} 
+        justifyContent="space-between" 
+        alignItems={{ xs: 'flex-start', sm: 'center' }} 
+        gap={1.5}
+        mb={1}
+      >
+        <Typography variant="h5" fontWeight={800} color="#1E3A8A">
           Reminders
         </Typography>
         <ToggleButtonGroup
@@ -270,23 +296,32 @@ const BirthdayReminders = () => {
           exclusive
           onChange={(e, newType) => { if (newType) setReminderType(newType); setExpandedId(null); }}
           size="small"
+          sx={{ width: { xs: '100%', sm: 'auto' }, '& .MuiToggleButton-root': { flex: 1, fontWeight: 700 } }}
         >
           <ToggleButton value="birthday">Birthdays</ToggleButton>
           <ToggleButton value="wedding">Anniversaries</ToggleButton>
         </ToggleButtonGroup>
       </Box>
-      <Typography variant="subtitle1" color="textSecondary" mb={2}>
-        Today is <strong>{todayStr}</strong>
+      <Typography variant="subtitle2" color="textSecondary" mb={3} fontWeight={600}>
+        Today is <Box component="span" color="primary.main">{todayStr}</Box>
       </Typography>
 
-      <Box mb={3} display="flex" gap={2} alignItems="center">
-        <FormControl size="small" sx={{ minWidth: 200 }}>
+      <Box 
+        mb={3} 
+        display="flex" 
+        flexDirection={{ xs: 'column', sm: 'row' }} 
+        gap={1.5} 
+        alignItems={{ xs: 'flex-start', sm: 'center' }}
+        sx={{ bgcolor: '#F8FAFC', p: 2, borderRadius: 3, border: '1px solid #E2E8F0' }}
+      >
+        <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 220 } }}>
           <InputLabel>Filter by Anbiyam</InputLabel>
           <Select
             value={selectedAnbiyam}
             label="Filter by Anbiyam"
             onChange={(e) => setSelectedAnbiyam(e.target.value)}
             disabled={!isAdmin && !!userAnbiyam}
+            sx={{ bgcolor: '#fff' }}
           >
             <MenuItem value="All">All Anbiyams</MenuItem>
             {anbiyams.map((anb) => (
@@ -297,29 +332,37 @@ const BirthdayReminders = () => {
           </Select>
         </FormControl>
         {!isAdmin && userAnbiyam && (
-          <Typography variant="caption" color="primary" fontWeight={600}>
-            Showing only {userAnbiyam}
+          <Typography variant="caption" sx={{ color: '#059669', fontWeight: 800, bgcolor: '#ECFDF5', px: 1.5, py: 0.5, borderRadius: 2 }}>
+            Locked to {userAnbiyam}
           </Typography>
         )}
       </Box>
 
-      <Paper elevation={3} sx={{ p: 1, mb: 3 }}>
-        <Tabs
-          value={tabIndex}
-          onChange={(e, newValue) => { setTabIndex(newValue); setExpandedId(null); }}
-          variant="fullWidth"
-          textColor="primary"
-          indicatorColor="primary"
-        >
-          {tabLabels.map((tab) => (
-            <Tab
-              key={tab.key}
-              label={`${tab.label} (${currentData[tab.key]?.length || 0})`}
-            />
-          ))}
-        </Tabs>
+      <Paper elevation={3} sx={{ p: 2, mb: 3 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Typography variant="subtitle1" fontWeight={800} color="#1E293B">
+            Timeline
+          </Typography>
+          <FormControl size="small" sx={{ minWidth: 160 }}>
+            <Select
+              value={timeFilter}
+              onChange={(e) => { setTimeFilter(e.target.value); setExpandedId(null); }}
+              sx={{ bgcolor: '#F8FAFC', fontWeight: 700, borderRadius: 2 }}
+            >
+              <MenuItem value="today">Today ({currentData.today?.length || 0})</MenuItem>
+              <MenuItem value="thisWeek">This Week ({currentData.thisWeek?.length || 0})</MenuItem>
+              <MenuItem value="thisMonth">This Month ({currentData.thisMonth?.length || 0})</MenuItem>
+              <Divider />
+              {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((month, index) => (
+                <MenuItem key={index} value={index.toString()}>
+                  {month} ({(currentData.thisYear || []).filter(m => new Date(m[dateField]).getMonth() === index).length})
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
         <Divider sx={{ mb: 1 }} />
-        <Box sx={{ p: 2 }}>{renderList(currentData[currentKey])}</Box>
+        <Box>{renderList(filteredByTime)}</Box>
       </Paper>
 
       <Dialog open={wishModalOpen} onClose={() => setWishModalOpen(false)} maxWidth="sm" fullWidth>

@@ -40,14 +40,18 @@ const ContactBook = () => {
     fetchContacts();
   }, [token]);
 
-  const filteredContacts = families.filter(fam => 
-    fam.head_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (fam.anbiyam && fam.anbiyam.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (fam.mobile_number && fam.mobile_number.includes(searchQuery))
-  );
+  const filteredContacts = families.filter(fam => {
+    const headName = fam.head_name || '';
+    return (
+      headName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (fam.anbiyam && fam.anbiyam.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (fam.mobile_number && fam.mobile_number.includes(searchQuery))
+    );
+  });
 
   const groupedContacts = filteredContacts.reduce((acc, fam) => {
-    const firstLetter = fam.head_name.charAt(0).toUpperCase();
+    const headName = fam.head_name || 'Unknown';
+    const firstLetter = headName.charAt(0).toUpperCase();
     if (!acc[firstLetter]) acc[firstLetter] = [];
     acc[firstLetter].push(fam);
     return acc;
@@ -144,7 +148,7 @@ const ContactBook = () => {
             </Box>
 
             <Stack divider={<Box sx={{ height: '1px', bgcolor: 'rgba(0,0,0,0.04)', mx: 2 }} />}>
-              {groupedContacts[letter].sort((a, b) => a.head_name.localeCompare(b.head_name)).map((fam) => (
+              {groupedContacts[letter].sort((a, b) => (a.head_name || 'Unknown').localeCompare(b.head_name || 'Unknown')).map((fam) => (
                 <Box 
                   key={fam.family_id}
                   sx={{ 
@@ -175,12 +179,12 @@ const ContactBook = () => {
                         fontWeight: 700
                       }}
                     >
-                      {fam.head_name.charAt(0).toUpperCase()}
+                      {(fam.head_name || 'U').charAt(0).toUpperCase()}
                     </Avatar>
                     
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                       <Typography variant="body1" fontWeight={700} color="#1E293B" sx={{ lineHeight: 1.2 }}>
-                        {fam.head_name}
+                        {fam.head_name || 'Unknown'}
                       </Typography>
                       <Typography variant="caption" color="#64748B" display="block">
                         {fam.anbiyam || 'General Area'}

@@ -150,12 +150,13 @@ const AnbiyamFamilyView = () => {
 
       autoTable(doc, {
         startY: currentY + 5,
-        head: [['S.No', 'Member ID', 'Name', 'Gender', 'Mobile', 'Age']],
+        head: [['S.No', 'Member ID', 'Name', 'Gender', 'DOB', 'Mobile', 'Age']],
         body: members.map((mem, index) => [
           index + 1,
           mem.member_id || '-',
           mem.name || '-',
           mem.sex || '-',
+          mem.dob ? new Date(mem.dob).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-',
           mem.mobile || '-',
           mem.age || '-',
         ]),
@@ -431,10 +432,13 @@ const AnbiyamFamilyView = () => {
                               <Avatar sx={{ width: 36, height: 36, fontSize: '0.9rem', bgcolor: '#6366F1', mr: 2, fontWeight: 900 }}>{idx + 1}</Avatar>
                               <Typography variant="subtitle1" fontWeight={900} color="#1E293B">{mem.name}</Typography>
                             </Box>
-                            <Stack direction="row" spacing={1} mb={2}>
+                            <Box display="flex" flexWrap="wrap" gap={1} mb={2}>
                               <Chip label={mem.sex} size="small" sx={{ fontWeight: 800, bgcolor: mem.sex === 'Male' ? '#EFF6FF' : '#FFF1F2', color: mem.sex === 'Male' ? '#1E3A8A' : '#BE123C' }} />
                               <Chip label={`Age: ${mem.age}`} size="small" variant="outlined" sx={{ fontWeight: 800 }} />
-                            </Stack>
+                              {mem.dob && (
+                                <Chip label={`DOB: ${new Date(mem.dob).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`} size="small" variant="outlined" sx={{ fontWeight: 800 }} />
+                              )}
+                            </Box>
                             <Stack direction="row" spacing={2}>
                               <Box sx={{ flex: 1 }}>
                                 <Typography variant="caption" color="textSecondary" fontWeight={700}>MEMBER ID</Typography>
@@ -457,6 +461,7 @@ const AnbiyamFamilyView = () => {
                               <TableCell sx={{ fontWeight: 900, color: '#475569' }}>Member ID</TableCell>
                               <TableCell sx={{ fontWeight: 900, color: '#475569' }}>Name</TableCell>
                               <TableCell sx={{ fontWeight: 900, color: '#475569' }}>Gender</TableCell>
+                              <TableCell sx={{ fontWeight: 900, color: '#475569' }}>DOB</TableCell>
                               <TableCell sx={{ fontWeight: 900, color: '#475569' }}>Mobile</TableCell>
                               <TableCell sx={{ fontWeight: 900, color: '#475569' }}>Age</TableCell>
                             </TableRow>
@@ -469,6 +474,9 @@ const AnbiyamFamilyView = () => {
                                 <TableCell fontWeight={700}>{mem.name}</TableCell>
                                 <TableCell>
                                   <Chip label={mem.sex} size="small" sx={{ fontWeight: 800, bgcolor: mem.sex === 'Male' ? '#EFF6FF' : '#FFF1F2', color: mem.sex === 'Male' ? '#1E3A8A' : '#BE123C' }} />
+                                </TableCell>
+                                <TableCell fontWeight={600}>
+                                  {mem.dob ? new Date(mem.dob).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
                                 </TableCell>
                                 <TableCell fontWeight={600}>{mem.mobile}</TableCell>
                                 <TableCell fontWeight={800}>{mem.age}</TableCell>
