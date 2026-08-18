@@ -283,6 +283,7 @@ class MemberService {
     const todayList = [];
     const thisWeekList = [];
     const thisMonthList = [];
+    const thisYearList = [];
 
     result.rows.forEach(member => {
       const dob = moment(member.dob);
@@ -307,12 +308,15 @@ class MemberService {
       if (dobMonth === currentMonth) {
         thisMonthList.push(member);
       }
+      
+      thisYearList.push(member);
     });
 
     return {
       today: todayList,
       thisWeek: thisWeekList,
       thisMonth: thisMonthList,
+      thisYear: thisYearList,
     };
   }
 
@@ -342,6 +346,7 @@ class MemberService {
     const todayList = [];
     const thisWeekList = [];
     const thisMonthList = [];
+    const thisYearList = [];
 
     result.rows.forEach(member => {
       const marriageDate = moment(member.marriage_date);
@@ -366,12 +371,15 @@ class MemberService {
       if (marriageMonth === currentMonth) {
         thisMonthList.push(member);
       }
+      
+      thisYearList.push(member);
     });
 
     return {
       today: todayList,
       thisWeek: thisWeekList,
       thisMonth: thisMonthList,
+      thisYear: thisYearList,
     };
   }
 }

@@ -143,6 +143,7 @@ const Home = () => {
   } else if (role === 'incharge') {
     actions.push(
       { title: 'My Anbiyam', subtitle: `Manage ${anbiyamName}`, path: '/anbiyamfam', icon: <MapRoundedIcon />, color: '#7C3AED' },
+      { title: 'Add Family', subtitle: 'Register new family', path: '/add-family', icon: <HomeWorkIcon />, color: '#10B981' },
       { title: 'Add Member', subtitle: 'Register new individual', path: '/add-member', icon: <PersonAddAltRoundedIcon />, color: '#3B82F6' },
       { title: 'Verify Families', subtitle: 'Vet new families', path: '/verify-registrations?tab=0', icon: <HomeWorkIcon />, color: '#10B981' },
       { title: 'Verify Members', subtitle: 'Vet individuals', path: '/verify-registrations?tab=1', icon: <Diversity3RoundedIcon />, color: '#3B82F6' },

@@ -31,6 +31,8 @@ import RaiseUpdate from './components/panels/RaiseUpdate';
 import SubmitReport from './components/panels/SubmitReport';
 import VerifyRegistrations from './components/panels/VerifyRegistrations';
 
+import RoleRoute from './RoleRoute';
+
 const BackButtonHandler = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -64,168 +66,38 @@ function App() {
         {/* Default route: Redirect to /login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* Protected routes */}
-        <Route
-          path="/home"
-          element={
-            <PrivateRoute>
-              <Layout>
-                <Home />
-              </Layout>
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/add-family"
-          element={
-            <PrivateRoute>
-              <Layout>
-                <AddFamily />
-              </Layout>
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/add-member"
-          element={
-            <PrivateRoute>
-              <Layout>
-                <AddMember />
-              </Layout>
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/familylist"
-          element={
-            <PrivateRoute>
-              <Layout>
-                <FamilyList />
-              </Layout>
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/edit-family/:familyId"
-          element={
-            <PrivateRoute>
-              <Layout>
-                <AddFamily isEdit={true} />
-              </Layout>
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/anbiyam"
-          element={
-            <PrivateRoute>
-              <Layout>
-                <AnbiyamManager />
-              </Layout>
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/anbiyamfam"
-          element={
-            <PrivateRoute>
-              <Layout>
-                <AnbiyamFamilyView />
-              </Layout>
-            </PrivateRoute>
-          }
-        />
-          <Route
-          path="/familymap"
-          element={
-            <PrivateRoute>
-              <Layout>
-                <FamilyMap />
-              </Layout>
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/memlist"
-          element={
-            <PrivateRoute>
-              <Layout>
-                <MemberList />
-              </Layout>
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/familydet/:familyId?"
-          element={
-            <PrivateRoute>
-              <Layout>
-                <FamilyDetailsView />
-              </Layout>
-            </PrivateRoute>
-          }
-        />
-         <Route
-          path="/familycard"
-          element={
-            <PrivateRoute>
-              <Layout>
-                <FamilyCard />
-              </Layout>
-            </PrivateRoute>
-          }
-        />
-          <Route
-          path="/birthdays"
-          element={
-            <PrivateRoute>
-              <Layout>
-                <BirthdayReminders />
-              </Layout>
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/stats"
-          element={
-            <PrivateRoute>
-              <Layout>
-                <StatsPage />
-              </Layout>
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/user-management"
-          element={
-            <PrivateRoute>
-              <Layout>
-                <UserManagement />
-              </Layout>
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/contacts"
-          element={
-            <PrivateRoute>
-              <Layout>
-                <ContactBook />
-              </Layout>
-            </PrivateRoute>
-          }
-        />
-        <Route path="/approvals" element={<PrivateRoute><Layout><AdminApprovals /></Layout></PrivateRoute>} />
-        <Route path="/updates" element={<PrivateRoute><Layout><UpdateRequests /></Layout></PrivateRoute>} />
-        <Route path="/group-updates" element={<PrivateRoute><Layout><GroupUpdateRequests /></Layout></PrivateRoute>} />
-        <Route path="/reports" element={<PrivateRoute><Layout><EventReports /></Layout></PrivateRoute>} />
+        {/* Protected routes - Available to all authenticated users */}
+        <Route path="/home" element={<PrivateRoute><Layout><Home /></Layout></PrivateRoute>} />
+        <Route path="/add-family" element={<PrivateRoute><Layout><AddFamily /></Layout></PrivateRoute>} />
+        <Route path="/add-member" element={<PrivateRoute><Layout><AddMember /></Layout></PrivateRoute>} />
+        <Route path="/edit-family/:familyId" element={<PrivateRoute><Layout><AddFamily isEdit={true} /></Layout></PrivateRoute>} />
+        <Route path="/familylist" element={<PrivateRoute><Layout><FamilyList /></Layout></PrivateRoute>} />
+        <Route path="/familydet/:familyId?" element={<PrivateRoute><Layout><FamilyDetailsView /></Layout></PrivateRoute>} />
+        <Route path="/familycard" element={<PrivateRoute><Layout><FamilyCard /></Layout></PrivateRoute>} />
+        <Route path="/birthdays" element={<PrivateRoute><Layout><BirthdayReminders /></Layout></PrivateRoute>} />
+        <Route path="/contacts" element={<PrivateRoute><Layout><ContactBook /></Layout></PrivateRoute>} />
         <Route path="/my-family" element={<PrivateRoute><Layout><MyFamily /></Layout></PrivateRoute>} />
-        <Route path="/anbiyam-summary" element={<PrivateRoute><Layout><AnbiyamSummary /></Layout></PrivateRoute>} />
+        <Route path="/raise-update" element={<PrivateRoute><Layout><RaiseUpdate /></Layout></PrivateRoute>} />
         <Route path="/payments" element={<PrivateRoute><Layout><Payments type="subscription" /></Layout></PrivateRoute>} />
         <Route path="/donations" element={<PrivateRoute><Layout><Payments type="donation" /></Layout></PrivateRoute>} />
-        <Route path="/raise-update" element={<PrivateRoute><Layout><RaiseUpdate /></Layout></PrivateRoute>} />
-        <Route path="/submit-report" element={<PrivateRoute><Layout><SubmitReport /></Layout></PrivateRoute>} />
-        <Route path="/verify-registrations" element={<PrivateRoute><Layout><VerifyRegistrations /></Layout></PrivateRoute>} />
+
+        {/* Admin and Incharge only routes */}
+        <Route path="/anbiyamfam" element={<PrivateRoute><RoleRoute allowedRoles={['admin', 'incharge']}><Layout><AnbiyamFamilyView /></Layout></RoleRoute></PrivateRoute>} />
+        <Route path="/memlist" element={<PrivateRoute><RoleRoute allowedRoles={['admin', 'incharge']}><Layout><MemberList /></Layout></RoleRoute></PrivateRoute>} />
+        <Route path="/group-updates" element={<PrivateRoute><RoleRoute allowedRoles={['admin', 'incharge']}><Layout><GroupUpdateRequests /></Layout></RoleRoute></PrivateRoute>} />
+        <Route path="/submit-report" element={<PrivateRoute><RoleRoute allowedRoles={['admin', 'incharge']}><Layout><SubmitReport /></Layout></RoleRoute></PrivateRoute>} />
+        <Route path="/verify-registrations" element={<PrivateRoute><RoleRoute allowedRoles={['admin', 'incharge']}><Layout><VerifyRegistrations /></Layout></RoleRoute></PrivateRoute>} />
+
+        {/* Admin only routes */}
+        <Route path="/anbiyam" element={<PrivateRoute><RoleRoute allowedRoles={['admin']}><Layout><AnbiyamManager /></Layout></RoleRoute></PrivateRoute>} />
+        <Route path="/familymap" element={<PrivateRoute><RoleRoute allowedRoles={['admin']}><Layout><FamilyMap /></Layout></RoleRoute></PrivateRoute>} />
+        <Route path="/stats" element={<PrivateRoute><RoleRoute allowedRoles={['admin']}><Layout><StatsPage /></Layout></RoleRoute></PrivateRoute>} />
+        <Route path="/user-management" element={<PrivateRoute><RoleRoute allowedRoles={['admin']}><Layout><UserManagement /></Layout></RoleRoute></PrivateRoute>} />
+        <Route path="/approvals" element={<PrivateRoute><RoleRoute allowedRoles={['admin']}><Layout><AdminApprovals /></Layout></RoleRoute></PrivateRoute>} />
+        <Route path="/updates" element={<PrivateRoute><RoleRoute allowedRoles={['admin']}><Layout><UpdateRequests /></Layout></RoleRoute></PrivateRoute>} />
+        <Route path="/reports" element={<PrivateRoute><RoleRoute allowedRoles={['admin']}><Layout><EventReports /></Layout></RoleRoute></PrivateRoute>} />
+        <Route path="/anbiyam-summary" element={<PrivateRoute><RoleRoute allowedRoles={['admin']}><Layout><AnbiyamSummary /></Layout></RoleRoute></PrivateRoute>} />
+
       </Routes>
     </BrowserRouter>
   );

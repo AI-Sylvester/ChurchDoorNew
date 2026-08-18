@@ -156,6 +156,7 @@ const Layout = ({ children }) => {
 
           {role === 'incharge' && [
             <BottomNavigationAction key="a" label="Families" value="/anbiyamfam" icon={<GroupsRoundedIcon />} />,
+            <BottomNavigationAction key="f" label="Add Family" value="/add-family" icon={<PersonAddAltRoundedIcon />} />,
             <BottomNavigationAction key="m" label="Add Member" value="/add-member" icon={<PersonAddAltRoundedIcon />} />,
             <BottomNavigationAction key="v" label="Verify" value="/verify-registrations" icon={<GroupRoundedIcon />} />
           ]}

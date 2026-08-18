@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
-  Box, Typography, Tabs, Tab, Paper, List, ListItem, ListItemText,
+  Box, Typography, Tabs, Tab, Paper, ListItem, ListItemText, Avatar,
   Divider, CircularProgress, Collapse, ToggleButtonGroup, ToggleButton,
   Button, Dialog, DialogTitle, DialogContent, DialogActions,
   FormControl, InputLabel, Select, MenuItem
@@ -10,8 +10,8 @@ import API_BASE_URL from '../config';
 import { getRandomGreeting } from '../utils/quotes';
 
 const BirthdayReminders = () => {
-  const [bdayData, setBdayData] = useState({ today: [], thisWeek: [], thisMonth: [] });
-  const [weddingData, setWeddingData] = useState({ today: [], thisWeek: [], thisMonth: [] });
+  const [bdayData, setBdayData] = useState({ today: [], thisWeek: [], thisMonth: [], thisYear: [] });
+  const [weddingData, setWeddingData] = useState({ today: [], thisWeek: [], thisMonth: [], thisYear: [] });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [tabIndex, setTabIndex] = useState(0);
@@ -86,6 +86,7 @@ const BirthdayReminders = () => {
     { label: 'Today', key: 'today' },
     { label: 'Week', key: 'thisWeek' },
     { label: 'Month', key: 'thisMonth' },
+    { label: 'Year', key: 'thisYear' },
   ];
 
   useEffect(() => {
@@ -101,12 +102,14 @@ const BirthdayReminders = () => {
           today: bdayRes.data.today || [],
           thisWeek: bdayRes.data.thisWeek || [],
           thisMonth: bdayRes.data.thisMonth || [],
+          thisYear: bdayRes.data.thisYear || [],
         });
         
         setWeddingData({
           today: weddingRes.data.today || [],
           thisWeek: weddingRes.data.thisWeek || [],
           thisMonth: weddingRes.data.thisMonth || [],
+          thisYear: weddingRes.data.thisYear || [],
         });
       } catch (err) {
         setError('Failed to fetch reminders');
@@ -145,59 +148,106 @@ const BirthdayReminders = () => {
       selectedAnbiyam === 'All' || m.anbiyam === selectedAnbiyam
     );
 
-    const sortedMembers = ['thisWeek', 'thisMonth'].includes(currentKey)
-      ? [...filteredMembers].sort((a, b) => new Date(b[dateField]) - new Date(a[dateField]))
+    const sortedMembers = ['thisWeek', 'thisMonth', 'thisYear'].includes(currentKey)
+      ? [...filteredMembers].sort((a, b) => {
+          const dateA = new Date(a[dateField]);
+          const dateB = new Date(b[dateField]);
+          if (dateA.getMonth() !== dateB.getMonth()) {
+            return dateA.getMonth() - dateB.getMonth();
+          }
+          return dateA.getDate() - dateB.getDate();
+        })
       : filteredMembers;
 
     return (
-      <List dense>
+      <Box sx={{ mt: 2 }}>
         {sortedMembers.length === 0 && (
-          <ListItem>
-            <ListItemText primary={`No ${reminderType === 'birthday' ? 'birthdays' : 'anniversaries'}`} />
-          </ListItem>
+          <Box p={3} textAlign="center">
+            <Typography variant="body1" color="textSecondary">
+              No {reminderType === 'birthday' ? 'birthdays' : 'anniversaries'} found in this period.
+            </Typography>
+          </Box>
         )}
         {sortedMembers.map((m, index) => (
-          <React.Fragment key={m.member_id}>
-            <ListItem button onClick={() => toggleExpand(m.member_id)}>
+          <Paper 
+            key={m.member_id} 
+            elevation={0}
+            sx={{ 
+              mb: 1.5, 
+              border: '1px solid #E2E8F0', 
+              borderRadius: 3,
+              overflow: 'hidden',
+              transition: 'all 0.2s',
+              '&:hover': { borderColor: '#3B82F6', bgcolor: '#F8FAFC' }
+            }}
+          >
+            <ListItem 
+              button 
+              onClick={() => toggleExpand(m.member_id)}
+              sx={{ p: 2 }}
+            >
+              <Avatar 
+                sx={{ 
+                  bgcolor: reminderType === 'birthday' ? '#FEE2E2' : '#E0E7FF',
+                  color: reminderType === 'birthday' ? '#EF4444' : '#4F46E5',
+                  mr: 2,
+                  width: 48,
+                  height: 48
+                }}
+              >
+                {reminderType === 'birthday' ? '🎂' : '💍'}
+              </Avatar>
               <ListItemText
                 primary={
-                  <Typography variant="subtitle1" fontWeight={600}>
+                  <Typography variant="subtitle1" fontWeight={800} color="#1E293B">
                     {m.name}
                   </Typography>
                 }
                 secondary={
-                  <>
-                    <Typography component="span" variant="body2">
-                      {reminderType === 'birthday' ? 'DOB: ' : 'Anniversary: '}
-                      {new Date(m[dateField]).toLocaleDateString('en-GB')}
+                  <Box mt={0.5}>
+                    <Typography component="span" variant="body2" color="#64748B" fontWeight={600}>
+                      {new Date(m[dateField]).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                      {currentKey === 'thisYear' && ` (${new Date(m[dateField]).getFullYear()})`}
                     </Typography>
-                    <br />
-                    <Typography component="span" variant="body2">
-                      Anbiyam: {m.anbiyam || 'N/A'}
+                    <Typography component="span" variant="caption" sx={{ display: 'block', mt: 0.5, color: '#94A3B8' }}>
+                      {m.anbiyam ? `${m.anbiyam} Anbiyam` : 'N/A'}
                     </Typography>
-                  </>
+                  </Box>
                 }
               />
             </ListItem>
             <Collapse in={expandedId === m.member_id} timeout="auto" unmountOnExit>
-              <Box px={4} pb={2}>
-                <Typography variant="body2">Member ID: {m.member_id}</Typography>
-                <Typography variant="body2">Mobile: {m.mobile || 'N/A'}</Typography>
-                <Typography variant="body2">Family Head: {m.head_name || 'N/A'}</Typography>
+              <Divider />
+              <Box px={3} py={2} bgcolor="#F8FAFC">
+                <Typography variant="body2" color="textSecondary" mb={0.5}>
+                  <strong>Family Head:</strong> {m.head_name || 'N/A'}
+                </Typography>
+                <Typography variant="body2" color="textSecondary" mb={0.5}>
+                  <strong>Relationship:</strong> {m.relationship || 'N/A'}
+                </Typography>
+                <Typography variant="body2" color="textSecondary" mb={1.5}>
+                  <strong>Mobile:</strong> {m.mobile || 'N/A'}
+                </Typography>
                 <Button 
-                  variant="outlined" 
+                  variant="contained" 
                   size="small" 
-                  sx={{ mt: 1, borderColor: '#1E3A8A', color: '#1E3A8A' }}
+                  fullWidth
+                  sx={{ 
+                    bgcolor: '#1E3A8A', 
+                    borderRadius: 2, 
+                    fontWeight: 700,
+                    textTransform: 'none',
+                    py: 1
+                  }}
                   onClick={() => handleGenerateWish(m)}
                 >
-                  Generate Wish
+                  Generate WhatsApp Wish
                 </Button>
               </Box>
             </Collapse>
-            {index < sortedMembers.length - 1 && <Divider />}
-          </React.Fragment>
+          </Paper>
         ))}
-      </List>
+      </Box>
     );
   };
 

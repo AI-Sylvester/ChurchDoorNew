@@ -1,7 +1,8 @@
+const path = require('path');
 const { exec } = require('child_process');
 
-const backendPath = 'D:\\cuscgurch\\Churchmember\\backend';
-const frontendPath = 'D:\\cuscgurch\\Churchmember\\frontend';
+const backendPath = __dirname;
+const frontendPath = path.join(__dirname, '..', 'frontend');
 
 // Start Backend
 console.log('🔧 Starting backend...');
