@@ -9,7 +9,7 @@ if (Capacitor.isNativePlatform()) {
   // - If using an Android Emulator to test locally, uncomment the 10.0.2.2 line.
   // - If using a physical Android device on WiFi, use your PC's IPv4 address (e.g., http://192.168.x.x:5000/api).
   // - For production, use the Render URL.
-  
+
   // API_BASE_URL = 'http://10.0.2.2:5000/api'; // (Local Android Emulator)
   API_BASE_URL = 'https://churchdoornew.onrender.com/api'; // (Production)
 } else if (isLocalhost) {

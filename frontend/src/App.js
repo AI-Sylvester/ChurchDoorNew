@@ -90,7 +90,7 @@ function App() {
 
         {/* Admin only routes */}
         <Route path="/anbiyam" element={<PrivateRoute><RoleRoute allowedRoles={['admin']}><Layout><AnbiyamManager /></Layout></RoleRoute></PrivateRoute>} />
-        <Route path="/familymap" element={<PrivateRoute><RoleRoute allowedRoles={['admin']}><Layout><FamilyMap /></Layout></RoleRoute></PrivateRoute>} />
+        <Route path="/familymap" element={<PrivateRoute><RoleRoute allowedRoles={['admin', 'incharge']}><Layout><FamilyMap /></Layout></RoleRoute></PrivateRoute>} />
         <Route path="/stats" element={<PrivateRoute><RoleRoute allowedRoles={['admin']}><Layout><StatsPage /></Layout></RoleRoute></PrivateRoute>} />
         <Route path="/user-management" element={<PrivateRoute><RoleRoute allowedRoles={['admin']}><Layout><UserManagement /></Layout></RoleRoute></PrivateRoute>} />
         <Route path="/approvals" element={<PrivateRoute><RoleRoute allowedRoles={['admin']}><Layout><AdminApprovals /></Layout></RoleRoute></PrivateRoute>} />

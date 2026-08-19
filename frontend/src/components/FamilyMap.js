@@ -50,6 +50,8 @@ const FamilyMap = () => {
   }, []);
 
   useEffect(() => {
+    let currentMapCenter = mapCenter;
+
     const fetchData = async () => {
       setLoading(true);
       try {
@@ -57,14 +59,15 @@ const FamilyMap = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        const familyData = res.data || [];
+        // The API might return an array directly, or a paginated object { families: [...] }
+        const familyData = Array.isArray(res.data) ? res.data : (res.data?.families || []);
         setFamilies(familyData);
 
         const uniqueAnbiyams = [...new Set(familyData.map(f => f.anbiyam).filter(Boolean))];
         setAnbiyamList(uniqueAnbiyams);
 
         // Auto-center logic
-        if (!mapCenter && familyData.length > 0) {
+        if (!currentMapCenter && familyData.length > 0) {
           const validLocations = familyData
             .map(f => f.location?.split(',').map(Number))
             .filter(loc => loc && !isNaN(loc[0]) && !isNaN(loc[1]));
@@ -83,7 +86,8 @@ const FamilyMap = () => {
     };
 
     fetchData();
-  }, [token, mapCenter]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   const filteredFamilies = useMemo(() => {
     return families.filter(f =>
@@ -175,7 +179,7 @@ const FamilyMap = () => {
       )}
 
       {/* Map Display */}
-      {loading || !mapCenter ? (
+      {loading ? (
         <Box textAlign="center" py={5}>
           <CircularProgress />
         </Box>
